@@ -4,7 +4,7 @@ import { MemDogError } from "./types.js";
 type Params = Record<string, string | number | boolean | undefined>;
 
 /**
- * Full-coverage mem-dog API client (~80 methods).
+ * Full-coverage memdog API client (~80 methods).
  *
  * For a simpler 7-method facade see {@link MemDog} in `simple.ts`.
  */

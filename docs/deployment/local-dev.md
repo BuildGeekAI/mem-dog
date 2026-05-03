@@ -36,7 +36,7 @@ For local Kubernetes dev (minikube):
 skaffold dev
 ```
 
-Port-forwards `api` → :8080, `ui` → :3000. Ingress at `mem-dog.local` / `api.mem-dog.local`.
+Port-forwards `api` → :8080, `ui` → :3000. Ingress at `memdog.local` / `api.memdog.local`.
 
 ## Environment Files
 

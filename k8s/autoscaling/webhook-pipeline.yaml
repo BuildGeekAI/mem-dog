@@ -7,7 +7,7 @@ metadata:
   name: webhook-agent-scaler
   namespace: webhook-pipeline
   labels:
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
 spec:
   scaleTargetRef:
     name: webhook-agent
@@ -36,7 +36,7 @@ metadata:
   name: webhook-receiver-scaler
   namespace: webhook-pipeline
   labels:
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
 spec:
   scaleTargetRef:
     name: webhook-receiver
@@ -62,7 +62,7 @@ metadata:
   name: webhook-pull-worker-scaler
   namespace: webhook-pipeline
   labels:
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
 spec:
   scaleTargetRef:
     name: webhook-pull-worker

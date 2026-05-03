@@ -1,4 +1,4 @@
-# Deploying mem-dog on a Mac Mini
+# Deploying memdog on a Mac Mini
 
 Two deployment modes: **local-only** (Docker Compose, no cloud) and **GKE** (Mac Mini as build/deploy machine pushing to Google Cloud).
 
@@ -21,8 +21,8 @@ docker info
 ### Deploy
 
 ```bash
-git clone https://github.com/BuildGeekAI/mem-dog.git
-cd mem-dog
+git clone https://github.com/BuildGeekAI/memdog.git
+cd memdog
 docker compose up
 ```
 
@@ -59,7 +59,7 @@ Add to `~/.claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "mem-dog": {
+    "memdog": {
       "url": "http://localhost:8091/mcp/sse"
     }
   }
@@ -122,7 +122,7 @@ Claude Desktop config on your laptop:
 ```json
 {
   "mcpServers": {
-    "mem-dog": {
+    "memdog": {
       "url": "http://<mac-mini-ip>:8091/mcp/sse"
     }
   }
@@ -145,9 +145,9 @@ ngrok http 3000  # Tunnel UI (separate terminal)
 
 # Option 3: Cloudflare Tunnel (free, persistent)
 brew install cloudflared
-cloudflared tunnel create mem-dog
-cloudflared tunnel route dns mem-dog mcp.yourdomain.com
-cloudflared tunnel run --url http://localhost:8091 mem-dog
+cloudflared tunnel create memdog
+cloudflared tunnel route dns memdog mcp.yourdomain.com
+cloudflared tunnel run --url http://localhost:8091 memdog
 ```
 
 ### Data Persistence
@@ -156,10 +156,10 @@ Data persists in Docker volumes:
 
 ```bash
 # List volumes
-docker volume ls | grep mem-dog
+docker volume ls | grep memdog
 
 # Volumes:
-#   mem-dog-data       — API data (local filesystem storage)
+#   memdog-data       — API data (local filesystem storage)
 #   pgdata             — PostgreSQL (metadata, embeddings, memories)
 #   neo4j-data         — Neo4j knowledge graph
 #   ollama-*-data      — Downloaded model weights
@@ -271,7 +271,7 @@ SUPABASE_AUTH_URL="http://$GATEWAY_IP" \
 GATEWAY_IP=$(kubectl get gateway open-jaws -n webhook-gateway -o jsonpath='{.status.addresses[0].value}')
 
 # All pods
-kubectl get pods -n mem-dog
+kubectl get pods -n memdog
 kubectl get pods -n webhook-pipeline
 kubectl get pods -n webhook-gateway
 kubectl get pods -n supabase
@@ -290,7 +290,7 @@ curl http://$GATEWAY_IP/mcp/health
 ```json
 {
   "mcpServers": {
-    "mem-dog": {
+    "memdog": {
       "url": "http://<GATEWAY_IP>/mcp/sse",
       "headers": {
         "x-api-key": "md_your_api_key"
@@ -322,7 +322,7 @@ curl -X POST http://$GATEWAY_IP/gke-api/api/v1/users/<user_id>/api-keys \
   │ /gke-api │ /webhooks  │  /mcp/*  │  /oc/*   │/auth/* │
   │    ↓     │ /channels  │    ↓     │    ↓     │   ↓    │
   │   API    │     ↓      │   MCP    │ DigiMe   │GoTrue  │
-  │(mem-dog) │  Gateway   │  Server  │  Agent   │(supa)  │
+  │(memdog) │  Gateway   │  Server  │  Agent   │(supa)  │
   └──────────┴─────┬──────┴──────────┴──────────┴────────┘
                    │
                    v
@@ -336,7 +336,7 @@ curl -X POST http://$GATEWAY_IP/gke-api/api/v1/users/<user_id>/api-keys \
 
 | Namespace | Components |
 |-----------|-----------|
-| `mem-dog` | API, MCP Server |
+| `memdog` | API, MCP Server |
 | `webhook-pipeline` | NATS, agents, Ollama |
 | `webhook-gateway` | Gateway, DigiMe, `open-jaws` LB |
 | `supabase` | PostgreSQL, PostgREST, GoTrue, Kong |
@@ -362,8 +362,8 @@ SUPABASE_AUTH_URL="http://$GATEWAY_IP" \
 ### Logs
 
 ```bash
-kubectl logs -n mem-dog deployment/api -f --tail=50
-kubectl logs -n mem-dog deployment/mcp-server -f --tail=50
+kubectl logs -n memdog deployment/api -f --tail=50
+kubectl logs -n memdog deployment/mcp-server -f --tail=50
 kubectl logs -n webhook-gateway deployment/webhook-gateway -f --tail=50
 kubectl logs -n webhook-pipeline deployment/webhook-agent -f --tail=50
 ```

@@ -1,6 +1,6 @@
 # Trello
 
-Connect Trello to mem-dog to sync boards, cards, and team activity.
+Connect Trello to memdog to sync boards, cards, and team activity.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Trello to mem-dog to sync boards, cards, and team activity.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Trello
@@ -18,7 +18,7 @@ Connect Trello to mem-dog to sync boards, cards, and team activity.
 1. In the UI, go to **Settings > Apps**
 2. Find **Trello** under the "Productivity" category
 3. Click **Connect**
-4. Authorize mem-dog via Trello's OAuth consent screen
+4. Authorize memdog via Trello's OAuth consent screen
 5. The Trello card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -50,9 +50,9 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/trello/1/webhooks \
 - Comments and attachments
 - Member activity
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Trello and store in mem-dog:
+Pull data from Trello and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

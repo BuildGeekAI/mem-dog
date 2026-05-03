@@ -1,13 +1,13 @@
 # OpsGenie Integration — Setup Guide
 
-Ingest OpsGenie alert events into mem-dog.
+Ingest OpsGenie alert events into memdog.
 
 ## Architecture
 
 ```mermaid
 graph LR
     OG[OpsGenie] -- "webhook POST" --> GW[Webhook Gateway<br/>/webhooks/opsgenie]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

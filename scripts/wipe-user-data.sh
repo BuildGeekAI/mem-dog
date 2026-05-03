@@ -44,14 +44,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-echo "=== mem-dog wipe-user-data ==="
+echo "=== memdog wipe-user-data ==="
 echo "Environment : ${ENVIRONMENT}"
 echo "Project     : ${GCP_PROJECT:-<from gcloud config>}"
 echo "Dry run     : ${DRY_RUN}"
 echo ""
 
 # ─── Load system config to resolve bucket names ──────────────────────────────
-# Prefer env vars; fall back to naming convention: {project}-mem-dog-{store}-{env}
+# Prefer env vars; fall back to naming convention: {project}-memdog-{store}-{env}
 resolve_bucket() {
   local env_var="$1"
   local store_name="$2"
@@ -59,7 +59,7 @@ resolve_bucket() {
   if [[ -n "$value" ]]; then
     echo "$value"
   elif [[ -n "$GCP_PROJECT" ]]; then
-    echo "${GCP_PROJECT}-mem-dog-${store_name}-${ENVIRONMENT}"
+    echo "${GCP_PROJECT}-memdog-${store_name}-${ENVIRONMENT}"
   else
     echo ""
   fi

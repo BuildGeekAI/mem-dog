@@ -7,7 +7,7 @@ Ingest Trustpilot reviews via webhooks.
 ```mermaid
 graph LR
     SRC[Trustpilot] -- "Direct webhook" --> GW[Webhook Gateway<br/>/webhooks/trustpilot]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

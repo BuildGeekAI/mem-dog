@@ -44,13 +44,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```bash
 # Build
-docker build -t mem-dog-ui \
+docker build -t memdog-ui \
   --build-arg NEXT_PUBLIC_API_URL=http://localhost:8080 \
   --build-arg NEXT_PUBLIC_WEBHOOK_GATEWAY_URL="${NEXT_PUBLIC_WEBHOOK_GATEWAY_URL:-}" \
   --build-arg NEXT_PUBLIC_WEBHOOK_API_KEY="${NEXT_PUBLIC_WEBHOOK_API_KEY:-}" .
 
 # Run
-docker run -p 3000:3000 mem-dog-ui
+docker run -p 3000:3000 memdog-ui
 ```
 
 ## E2E Testing

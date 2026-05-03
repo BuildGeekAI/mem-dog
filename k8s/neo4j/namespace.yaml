@@ -3,4 +3,4 @@ kind: Namespace
 metadata:
   name: neo4j
   labels:
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog

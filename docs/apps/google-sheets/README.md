@@ -1,6 +1,6 @@
 # Google Sheets
 
-Connect Google Sheets to mem-dog to sync spreadsheet data into your knowledge base.
+Connect Google Sheets to memdog to sync spreadsheet data into your knowledge base.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Google Sheets to mem-dog to sync spreadsheet data into your knowledge ba
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Google Sheets
@@ -18,7 +18,7 @@ Connect Google Sheets to mem-dog to sync spreadsheet data into your knowledge ba
 1. In the UI, go to **Settings > Apps**
 2. Find **Google Sheets** under the "Productivity" category
 3. Click **Connect**
-4. Authorize mem-dog via Google Sheets's OAuth consent screen
+4. Authorize memdog via Google Sheets's OAuth consent screen
 5. The Google Sheets card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -42,9 +42,9 @@ curl https://<your-api>/api/v1/integrations/proxy/google-sheets/v4/spreadsheets/
 - Sheet metadata
 - Charts and pivot tables
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Google Sheets and store in mem-dog:
+Pull data from Google Sheets and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -1,6 +1,6 @@
 # Slack
 
-Connect Slack to mem-dog to automatically ingest messages, threads, and files from your workspace.
+Connect Slack to memdog to automatically ingest messages, threads, and files from your workspace.
 
 **Category:** Chat
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Slack to mem-dog to automatically ingest messages, threads, and files fr
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI (e.g. `https://mem-dog-ui-dev-....run.app`)
+1. Go to your memdog UI (e.g. `https://memdog-ui-dev-....run.app`)
 2. Click **Sign in with Google** (or use email/password)
 3. Your user profile is auto-created on first login
 
@@ -21,7 +21,7 @@ Connect Slack to mem-dog to automatically ingest messages, threads, and files fr
 3. Click **Connect**
 4. You'll be redirected to Slack's OAuth consent screen
 5. Select the workspace you want to connect and click **Allow**
-6. You'll be redirected back to mem-dog — the Slack card should now show **Active**
+6. You'll be redirected back to memdog — the Slack card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango. Tokens are automatically refreshed.
 
@@ -72,11 +72,11 @@ Your Slack messages are now searchable via vector, full-text, hybrid, graph, or 
 
 ## Outbound Capabilities
 
-mem-dog can also call Slack's API on your behalf via the integration proxy:
+memdog can also call Slack's API on your behalf via the integration proxy:
 
 ```bash
 curl https://<your-api>/api/v1/integrations/proxy/slack/chat.postMessage \
   -H "Authorization: Bearer <your-jwt>" \
   -H "Content-Type: application/json" \
-  -d '{"channel": "C01ABC", "text": "Hello from mem-dog!"}'
+  -d '{"channel": "C01ABC", "text": "Hello from memdog!"}'
 ```

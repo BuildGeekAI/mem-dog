@@ -1,6 +1,6 @@
 # Google Cloud Storage
 
-Connect GCS to mem-dog to sync files and objects from your buckets.
+Connect GCS to memdog to sync files and objects from your buckets.
 
 **Category:** Cloud & Storage
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect GCS to mem-dog to sync files and objects from your buckets.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Google Cloud Storage
@@ -18,7 +18,7 @@ Connect GCS to mem-dog to sync files and objects from your buckets.
 1. In the UI, go to **Settings > Apps**
 2. Find **Google Cloud Storage** under the "Cloud & Storage" category
 3. Click **Connect**
-4. Authorize mem-dog via Google Cloud Storage's OAuth consent screen
+4. Authorize memdog via Google Cloud Storage's OAuth consent screen
 5. The Google Cloud Storage card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -37,9 +37,9 @@ For change notifications:
 - Pub/Sub notifications for changes
 - Bucket access logs
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Google Cloud Storage and store in mem-dog:
+Pull data from Google Cloud Storage and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

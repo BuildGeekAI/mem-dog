@@ -19,7 +19,7 @@ const CAPABILITIES = [
   { icon: Database, title: 'Versioned Storage', desc: 'Every mutation tracked. Full version history with diffs, rollback, and audit trail out of the box.' },
   { icon: Brain, title: 'AI Enrichment', desc: '40+ specialized agents classify, analyze, and generate embeddings automatically on ingest.' },
   { icon: Globe, title: '300+ Apps', desc: 'Powered by Nango — connect to Slack, WhatsApp, Salesforce, GitHub, and 300+ more services with automatic OAuth token refresh. Per-user webhook endpoints (whk_<ulid>) for inbound channels.' },
-  { icon: Cpu, title: 'DigiMe Agent', desc: 'OpenClaw-powered AI agent that lives in your channels — query, search, and ingest data through natural conversation with the mem-dog RAG system.' },
+  { icon: Cpu, title: 'DigiMe Agent', desc: 'OpenClaw-powered AI agent that lives in your channels — query, search, and ingest data through natural conversation with the memdog RAG system.' },
   { icon: Zap, title: 'Real-Time Pipeline', desc: 'NATS-powered streaming with per-user webhook endpoints (whk_<ulid>), 6-layer data classification, and tiered LLM routing (4b → 27b → multimodal).' },
   { icon: Search, title: 'Semantic Search', desc: 'pgvector embeddings with cosine similarity. RAG chat with inline citations across all your data.' },
   { icon: Shield, title: 'Secure by Default', desc: 'Per-user scoping, AES-256 encrypted credentials (Nango + Fernet), per-item ACLs, and full OpenTelemetry observability.' },
@@ -101,7 +101,7 @@ m.search("hello", use_ai=True)`,
   {
     icon: Puzzle,
     title: 'Agent Adapters',
-    desc: 'Drop-in memory backends for LangChain (ChatMessageHistory + Retriever), CrewAI (save/search), and OpenAI function calling. Install extras: pip install mem-dog-client[langchain].',
+    desc: 'Drop-in memory backends for LangChain (ChatMessageHistory + Retriever), CrewAI (save/search), and OpenAI function calling. Install extras: pip install memdog-client[langchain].',
     code: `from mem_dog_client.adapters.langchain \\
   import MemDogChatMessageHistory
 history = MemDogChatMessageHistory(m)`,
@@ -1021,12 +1021,12 @@ export default function LoginPage() {
                 transition={{ duration: 0.6 }}
               >
                 <p className="text-white/35 mb-8 leading-relaxed text-sm">
-                  DigiMe lives inside your messaging apps as an AI agent — ask questions, search memories, and ingest data through natural conversation with the mem-dog RAG system. No context switching, no extra tools.
+                  DigiMe lives inside your messaging apps as an AI agent — ask questions, search memories, and ingest data through natural conversation with the memdog RAG system. No context switching, no extra tools.
                 </p>
                 <div className="space-y-4">
                   {[
                     { icon: MessageCircle, text: 'Lives in WhatsApp, Telegram, Signal, Slack, Discord, Matrix, 15+ more' },
-                    { icon: Search, text: 'Natural language queries against the mem-dog RAG system' },
+                    { icon: Search, text: 'Natural language queries against the memdog RAG system' },
                     { icon: Brain, text: 'Semantic search across all ingested data' },
                     { icon: Zap, text: 'Ingest new data directly from conversations' },
                     { icon: Database, text: 'Retrieve and summarize memories on demand' },

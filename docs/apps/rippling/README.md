@@ -1,6 +1,6 @@
 # Rippling
 
-Connect Rippling to mem-dog to sync employee, payroll, and device management data.
+Connect Rippling to memdog to sync employee, payroll, and device management data.
 
 **Category:** HR & People
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Rippling to mem-dog to sync employee, payroll, and device management dat
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Rippling
@@ -18,7 +18,7 @@ Connect Rippling to mem-dog to sync employee, payroll, and device management dat
 1. In the UI, go to **Settings > Apps**
 2. Find **Rippling** under the "HR & People" category
 3. Click **Connect**
-4. Authorize mem-dog via Rippling's OAuth consent screen
+4. Authorize memdog via Rippling's OAuth consent screen
 5. The Rippling card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -41,9 +41,9 @@ curl https://<your-api>/api/v1/integrations/proxy/rippling/platform/api/employee
 - Device management data
 - App and access provisioning
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Rippling and store in mem-dog:
+Pull data from Rippling and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

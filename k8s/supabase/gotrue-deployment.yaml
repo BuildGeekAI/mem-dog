@@ -5,7 +5,7 @@ metadata:
   namespace: supabase
   labels:
     app.kubernetes.io/name: supabase-auth
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
     app.kubernetes.io/component: supabase
 spec:
   replicas: 1
@@ -16,7 +16,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: supabase-auth
-        app.kubernetes.io/part-of: mem-dog
+        app.kubernetes.io/part-of: memdog
         app.kubernetes.io/component: supabase
     spec:
       containers:
@@ -42,9 +42,9 @@ spec:
             - name: GOTRUE_DB_DATABASE_URL
               value: "postgres://postgres:$(POSTGRES_PASSWORD)@supabase-db.supabase.svc.cluster.local:5432/postgres?search_path=auth"
             - name: GOTRUE_SITE_URL
-              value: "https://mem-dog-ui-dev-204556389124.us-central1.run.app"
+              value: "https://memdog-ui-dev-204556389124.us-central1.run.app"
             - name: GOTRUE_URI_ALLOW_LIST
-              value: "https://mem-dog-ui-dev-204556389124.us-central1.run.app"
+              value: "https://memdog-ui-dev-204556389124.us-central1.run.app"
             - name: GOTRUE_DISABLE_SIGNUP
               value: "false"
             - name: GOTRUE_JWT_SECRET
@@ -75,7 +75,7 @@ spec:
                   name: supabase-auth-oauth
                   key: GOOGLE_CLIENT_SECRET
             - name: GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI
-              value: "https://mem-dog-ui-dev-204556389124.us-central1.run.app/auth/v1/callback"
+              value: "https://memdog-ui-dev-204556389124.us-central1.run.app/auth/v1/callback"
           resources:
             requests:
               cpu: 100m

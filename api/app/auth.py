@@ -30,7 +30,7 @@ def get_effective_user_id(
 
 
 async def ensure_jwt_user_profile(sub: str, payload: dict) -> None:
-    """Auto-create a mem-dog user profile on first JWT-authenticated request.
+    """Auto-create a memdog user profile on first JWT-authenticated request.
 
     Uses the Supabase JWT ``sub`` (UUID) as the user_id.  Email and display
     name are extracted from standard JWT claims when available.

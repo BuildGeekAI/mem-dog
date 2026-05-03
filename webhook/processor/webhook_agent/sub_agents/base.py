@@ -360,7 +360,7 @@ class BaseSubAgent(ABC):
 
         Args:
             payload_json: The raw payload as a JSON string.
-            data_id: The mem-dog data ID returned by ``write_record()``.
+            data_id: The memdog data ID returned by ``write_record()``.
             group_context: Optional group context forwarded from the router.
             payload_meta: Optional dict carrying detection-layer metadata.
             trace_context: Optional OTel trace context dict (``trace_id``,
@@ -420,7 +420,7 @@ class BaseSubAgent(ABC):
 
         Args:
             payload_json: The raw payload as a JSON string.
-            data_id: The mem-dog data ID returned by ``write_record()``.
+            data_id: The memdog data ID returned by ``write_record()``.
                 All enrichment objects (viewpoint, embedding) are linked
                 to this ID.
             group_context: Optional group context forwarded from the

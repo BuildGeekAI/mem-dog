@@ -5,7 +5,7 @@ metadata:
   namespace: supabase
   labels:
     app.kubernetes.io/name: supabase-studio
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
     app.kubernetes.io/component: supabase
 spec:
   replicas: 1
@@ -16,7 +16,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: supabase-studio
-        app.kubernetes.io/part-of: mem-dog
+        app.kubernetes.io/part-of: memdog
         app.kubernetes.io/component: supabase
     spec:
       containers:
@@ -27,9 +27,9 @@ spec:
               name: http
           env:
             - name: STUDIO_DEFAULT_ORGANIZATION
-              value: mem-dog
+              value: memdog
             - name: STUDIO_DEFAULT_PROJECT
-              value: mem-dog
+              value: memdog
             - name: STUDIO_PORT
               value: "3000"
             - name: SUPABASE_PUBLIC_URL

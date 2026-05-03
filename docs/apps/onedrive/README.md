@@ -1,6 +1,6 @@
 # OneDrive
 
-Connect OneDrive to mem-dog to sync files and documents from your Microsoft account.
+Connect OneDrive to memdog to sync files and documents from your Microsoft account.
 
 **Category:** Cloud & Storage
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect OneDrive to mem-dog to sync files and documents from your Microsoft acco
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect OneDrive
@@ -18,7 +18,7 @@ Connect OneDrive to mem-dog to sync files and documents from your Microsoft acco
 1. In the UI, go to **Settings > Apps**
 2. Find **OneDrive** under the "Cloud & Storage" category
 3. Click **Connect**
-4. Authorize mem-dog via OneDrive's OAuth consent screen
+4. Authorize memdog via OneDrive's OAuth consent screen
 5. The OneDrive card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ For change notifications, create a Microsoft Graph subscription pointing to your
 - Recent activity
 - Office document content
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from OneDrive and store in mem-dog:
+Pull data from OneDrive and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

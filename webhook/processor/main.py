@@ -170,7 +170,7 @@ def _normalize_payload(payload: dict) -> tuple[dict, dict]:
 
 
 def _create_tracing_memory(user_id: str | None = None) -> str | None:
-    """Create a per-invocation tracing memory via the mem-dog API. Returns memory_id or None."""
+    """Create a per-invocation tracing memory via the memdog API. Returns memory_id or None."""
     if not _MEM_DOG_API_URL:
         return None
     uid = user_id or _SYSTEM_USER_ID

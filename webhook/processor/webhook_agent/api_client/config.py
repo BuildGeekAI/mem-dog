@@ -1,4 +1,4 @@
-"""Shared configuration for the mem-dog API client.
+"""Shared configuration for the memdog API client.
 
 All API client modules read from this single source of truth so that
 the base URL, timeouts, and feature flags are never duplicated.
@@ -6,10 +6,10 @@ the base URL, timeouts, and feature flags are never duplicated.
 
 import os
 
-# Base URL of the mem-dog API (set via env var in production)
+# Base URL of the memdog API (set via env var in production)
 MEM_DOG_API_URL: str = os.environ.get("MEM_DOG_API_URL", "http://localhost:8080")
 
-# API key for authenticating with the mem-dog API (required when API has API_KEY set)
+# API key for authenticating with the memdog API (required when API has API_KEY set)
 MEM_DOG_API_KEY: str = os.environ.get("MEM_DOG_API_KEY", "")
 
 # Default user for agent-owned memories
@@ -28,7 +28,7 @@ UPLOAD_TIMEOUT: int = 30
 WEBHOOK_STAGING_BUCKET: str = os.environ.get("WEBHOOK_STAGING_BUCKET", "")
 
 # ---------------------------------------------------------------------------
-# AI enrichment — viewpoints + embeddings posted to the mem-dog AI API
+# AI enrichment — viewpoints + embeddings posted to the memdog AI API
 # ---------------------------------------------------------------------------
 
 # AI engine identifier forwarded to POST /api/v1/ai/viewpoints and

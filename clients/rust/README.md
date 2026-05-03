@@ -1,6 +1,6 @@
 # memdog — Rust SDK
 
-Async Rust client for the [mem-dog](https://github.com/mem-dog/mem-dog) private AI system.
+Async Rust client for the [memdog](https://github.com/memdog/memdog) private AI system.
 
 ## Install
 

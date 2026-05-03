@@ -2,10 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
-  namespace: mem-dog
+  namespace: memdog
   labels:
     app.kubernetes.io/name: api
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
 spec:
   replicas: 1
   strategy:
@@ -17,12 +17,12 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: api
-        app.kubernetes.io/part-of: mem-dog
+        app.kubernetes.io/part-of: memdog
     spec:
       serviceAccountName: api-sa
       containers:
         - name: api
-          image: mem-dog-api
+          image: memdog-api
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

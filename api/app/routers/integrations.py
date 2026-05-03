@@ -372,7 +372,7 @@ async def create_api_key_connection(body: IntegrationConnectionCreate) -> Integr
 @router.get("/oauth/authorize/{provider_key}")
 async def get_oauth_authorize_url(
     provider_key: str,
-    user_id: str = Query(..., description="mem-dog user ID"),
+    user_id: str = Query(..., description="memdog user ID"),
     redirect_uri: str = Query("", description="OAuth callback URI (unused, Nango handles callback)"),
     scopes: Optional[str] = Query(None, description="Override default scopes"),
 ) -> Dict[str, str]:

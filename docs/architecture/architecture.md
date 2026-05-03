@@ -31,7 +31,7 @@
 
 | Component | Stack | Namespace | Port | Deployment |
 |-----------|-------|-----------|------|------------|
-| **API** | Python 3.12, FastAPI, 70+ endpoints | `mem-dog` | 8080 | GKE |
+| **API** | Python 3.12, FastAPI, 70+ endpoints | `memdog` | 8080 | GKE |
 | **UI** | Next.js 14, React 18, TypeScript | -- | 3000 | Cloud Run |
 | **Webhook Pipeline** | Python 3.12, NATS JetStream, ADK | `webhook-pipeline` | 8080 | GKE |
 | **Webhook Gateway** | Python 3.12, FastAPI, LiteLLM | `webhook-gateway` | 8080 | GKE |
@@ -39,7 +39,7 @@
 | **DigiMe Agent** | Node.js, OpenClaw runtime | `webhook-gateway` | 18789 | GKE |
 | **Supabase** | Postgres 16 + pgvector, GoTrue, Kong | `supabase` | 5432 | GKE |
 | **Nango** | OAuth, token refresh, credential encryption, 300+ providers | `nango` | 3003 | GKE |
-| **MCP Server** | Python 3.12, FastMCP, SSE transport, 8 tools | `mem-dog` | 8080 | GKE |
+| **MCP Server** | Python 3.12, FastMCP, SSE transport, 8 tools | `memdog` | 8080 | GKE |
 | **Ollama** | gemma3 4b/12b/27b, embeddinggemma | `webhook-pipeline` | 11434 | GKE |
 
 ## Data Flow
@@ -96,7 +96,7 @@ Configured via `STORAGE_BACKEND` env var:
 
 | Backend | Structured Data | Embeddings | Raw Binary | Use case |
 |---------|----------------|------------|------------|----------|
-| `local` | Filesystem (`~/.mem-dog`) | In-memory scan | Filesystem | Local dev |
+| `local` | Filesystem (`~/.memdog`) | In-memory scan | Filesystem | Local dev |
 | `gcs` | GCS buckets | GCS bucket | GCS bucket | Cloud (legacy) |
 | `supabase` | `mem_dog_blobs` table | `mem_dog_embeddings` (pgvector) | GCS (`RAW_BUCKET`) | Production |
 
@@ -165,7 +165,7 @@ External traffic enters through the `open-jaws` Gateway (L7 Global External Mana
 | `/oc/*` | `openclaw-node` (prefix stripped) | 30s |
 | `/webhooks`, `/channels`, `/query`, `/chat`, etc. | `webhook-gateway` | 30s |
 
-Internal service discovery: Kubernetes DNS (e.g. `api.mem-dog.svc.cluster.local:8080`, `neo4j.neo4j.svc.cluster.local:7687`).
+Internal service discovery: Kubernetes DNS (e.g. `api.memdog.svc.cluster.local:8080`, `neo4j.neo4j.svc.cluster.local:7687`).
 
 ## Security
 

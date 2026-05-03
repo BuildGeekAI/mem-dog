@@ -1,6 +1,6 @@
 # Webhook Pipeline
 
-Ingest external data into the mem-dog private AI system via a serverless webhook pipeline on Google Cloud.  All model inference uses open-source Gemma 3 GGUF models — no external AI API keys required.
+Ingest external data into the memdog private AI system via a serverless webhook pipeline on Google Cloud.  All model inference uses open-source Gemma 3 GGUF models — no external AI API keys required.
 
 ---
 
@@ -40,7 +40,7 @@ sequenceDiagram
 |-----------|-------------|
 | **API Gateway** | HTTPS endpoint with API key authentication (`x-api-key` header) |
 | **Receiver Function** | HTTP-triggered Cloud Function that validates JSON and publishes to Pub/Sub |
-| **Pub/Sub Topic** | `mem-dog-webhook-{env}` — decouples ingestion from processing |
+| **Pub/Sub Topic** | `memdog-webhook-{env}` — decouples ingestion from processing |
 | **Processor Function** | Pub/Sub-triggered Cloud Function that calls Cloud Run A via authenticated HTTP |
 | **Cloud Run A — ADK Agent** | `adk api_server`; orchestrates the log → route → stats tool-call loop; no in-process LLM |
 | **Cloud Run B — Model Server** | Ollama; OpenAI-compatible API |
@@ -124,7 +124,7 @@ The ADK agent automatically detects the data type of every incoming payload and 
 
 ### Download sub-agent and url_context
 
-When the router sends a payload to the **download sub-agent** (`url_download`), that agent uses the **url_context** tool to resolve the given `url` to either a single direct resource or a list of URLs extracted from a page (HTML). An optional `prompt` in message metadata (e.g. “download all document files”) can filter links (e.g. by extension). After downloading each URL, the agent uploads the content to the mem-dog API and re-sends the request to the webhook pipeline with `data_id` and `is_downloaded=true`, so the router dispatches to the appropriate typed sub-agent for processing.
+When the router sends a payload to the **download sub-agent** (`url_download`), that agent uses the **url_context** tool to resolve the given `url` to either a single direct resource or a list of URLs extracted from a page (HTML). An optional `prompt` in message metadata (e.g. “download all document files”) can filter links (e.g. by extension). After downloading each URL, the agent uploads the content to the memdog API and re-sends the request to the webhook pipeline with `data_id` and `is_downloaded=true`, so the router dispatches to the appropriate typed sub-agent for processing.
 
 ### Grouping payloads
 
@@ -148,7 +148,7 @@ Both land in `timeline-ord-42` and `session-ord-42`.
 - Docker installed (for building Cloud Run images)
 - `uv` installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - A GCS bucket with the GGUF model file (see **Model Upload** below)
-- The mem-dog API deployed to Cloud Run (the processor function calls it)
+- The memdog API deployed to Cloud Run (the processor function calls it)
 
 ---
 
@@ -159,7 +159,7 @@ Upload the Gemma 3 GGUF file to GCS before deploying the model server:
 ```bash
 PROJECT_ID=your-project-id
 ENV=dev
-MODELS_BUCKET="${PROJECT_ID}-mem-dog-models-${ENV}"
+MODELS_BUCKET="${PROJECT_ID}-memdog-models-${ENV}"
 
 # Create the bucket (once)
 gcloud storage buckets create "gs://$MODELS_BUCKET" \
@@ -221,7 +221,7 @@ make test
 ### Send a Test Webhook
 
 ```bash
-GATEWAY_URL="https://mem-dog-webhook-gw-dev.apigateway.YOUR_PROJECT.cloud.goog"
+GATEWAY_URL="https://memdog-webhook-gw-dev.apigateway.YOUR_PROJECT.cloud.goog"
 API_KEY="your-gcp-api-key"
 
 curl -X POST "$GATEWAY_URL/webhook" \
@@ -263,7 +263,7 @@ make model-health
 Run router, download agent, and url_context unit tests with **uv** from the repository root:
 
 ```bash
-# From repo root (mem-dog/)
+# From repo root (memdog/)
 PYTHONPATH=. uv run --project testing/api pytest \
   testing/api/unit/test_agent_routing.py \
   testing/api/unit/test_url_download_agent.py \
@@ -282,7 +282,7 @@ Requires [uv](https://docs.astral.sh/uv/). `uv run --project testing/api` uses t
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `GCP_PROJECT_ID` | Google Cloud project ID | (required) |
-| `WEBHOOK_PUBSUB_TOPIC` | Pub/Sub topic name | `mem-dog-webhook-dev` |
+| `WEBHOOK_PUBSUB_TOPIC` | Pub/Sub topic name | `memdog-webhook-dev` |
 | `MAX_PAYLOAD_BYTES` | Maximum payload size in bytes | `1048576` (1 MB) |
 
 ### Processor Function
@@ -302,7 +302,7 @@ Agents use **Gemini by default** and fall back to open models when the model ser
 | `MODEL_SERVER_URL` | Base URL of the model server (Cloud Run B). Required only when `ADK_MODEL=openai/...`. | *(none)* |
 | `AGENT_PREFER_GEMINI` | If `true`, classifier and sub-agents try Gemini first and fall back to the model server on failure. | `true` |
 | `MODEL_SERVER_MODEL` | Model name in request body (any value; server ignores it) | `gemma` |
-| `MEM_DOG_API_URL` | mem-dog API base URL | `http://localhost:8080` |
+| `MEM_DOG_API_URL` | memdog API base URL | `http://localhost:8080` |
 | `WEBHOOK_STAGING_BUCKET` | GCS bucket for content staging (empty = skip) | *(none)* |
 | `WEBHOOK_GATEWAY_URL` | Webhook pipeline gateway URL (set by `deploy-agent` when gateway exists, or `MEM_DOG_WEBHOOK_GATEWAY_URL`) | *(none)* |
 
@@ -333,12 +333,12 @@ gcloud pubsub topics list --project=YOUR_PROJECT_ID
 
 **ADK agent errors**
 ```bash
-gcloud run services logs read mem-dog-webhook-agent-dev \
+gcloud run services logs read memdog-webhook-agent-dev \
   --region=us-central1 --project=YOUR_PROJECT_ID
 ```
 
 **Model server errors**
 ```bash
-gcloud run services logs read mem-dog-model-server-dev \
+gcloud run services logs read memdog-model-server-dev \
   --region=us-central1 --project=YOUR_PROJECT_ID
 ```

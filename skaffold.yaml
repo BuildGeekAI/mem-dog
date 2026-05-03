@@ -1,16 +1,16 @@
 apiVersion: skaffold/v4beta11
 kind: Config
 metadata:
-  name: mem-dog
+  name: memdog
 build:
   local:
     push: false
   artifacts:
-    - image: mem-dog-api
+    - image: memdog-api
       context: api
       docker:
         dockerfile: Dockerfile
-    - image: mem-dog-ui
+    - image: memdog-ui
       context: ui
       docker:
         dockerfile: Dockerfile
@@ -32,11 +32,11 @@ deploy:
 portForward:
   - resourceType: service
     resourceName: api
-    namespace: mem-dog
+    namespace: memdog
     port: 8080
     localPort: 8080
   - resourceType: service
     resourceName: ui
-    namespace: mem-dog
+    namespace: memdog
     port: 3000
     localPort: 3000

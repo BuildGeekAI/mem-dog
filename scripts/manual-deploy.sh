@@ -2,9 +2,9 @@
 set -e
 
 # =============================================================================
-# Manual Deployment Script for mem-dog
+# Manual Deployment Script for memdog
 # =============================================================================
-# This script deploys mem-dog without requiring Workload Identity Federation.
+# This script deploys memdog without requiring Workload Identity Federation.
 # It uses your local gcloud credentials instead.
 #
 # Prerequisites:
@@ -68,20 +68,20 @@ set -e
 #                          Runs alongside the Python gateway, routes /oc/* to it.
 #                          Bridges messages to the Python gateway via /webhooks/openclaw.
 #   deploy-supabase-gke - Deploy self-hosted Supabase stack to GKE (Postgres+pgvector,
-#                          PostgREST, GoTrue, Kong, Realtime, Meta, Studio). Seeds mem-dog
+#                          PostgREST, GoTrue, Kong, Realtime, Meta, Studio). Seeds memdog
 #                          tables. Stores credentials in Secret Manager. Creates
-#                          api-supabase-secrets in mem-dog namespace for API wiring.
+#                          api-supabase-secrets in memdog namespace for API wiring.
 #   redeploy-supabase-gke - Re-apply Supabase manifests and re-run seed in GKE, reusing
 #                          existing supabase-secrets so credentials and data are preserved.
 #                          Set GKE_CLUSTER and GKE_ZONE to target your cluster.
 #   seed-supabase-gke   - Re-run the Supabase seed job (schema updates). Idempotent.
-#   destroy-supabase-data-gke - Wipe mem-dog data from Supabase tables (keeps environment).
+#   destroy-supabase-data-gke - Wipe memdog data from Supabase tables (keeps environment).
 #                          Requires --confirm.
 #   destroy-supabase-gke - Delete entire Supabase namespace and all resources.
 #                          Requires --confirm. Optional: --delete-secrets to also remove
 #                          Secret Manager entries.
 #   status              - Show deployment status (includes URL dependencies and API env vars)
-#   restart-gke         - Rollout restart all deployments (and statefulsets) in mem-dog, webhook-gateway,
+#   restart-gke         - Rollout restart all deployments (and statefulsets) in memdog, webhook-gateway,
 #                         webhook-pipeline, and supabase namespaces. Use after config/secret changes.
 #
 # When running any deploy command, a URL-dependencies check runs first and prints
@@ -258,11 +258,11 @@ setup_postgres() {
         exit 1
     fi
 
-    local INSTANCE_NAME="mem-dog-pg-${ENVIRONMENT}"
+    local INSTANCE_NAME="memdog-pg-${ENVIRONMENT}"
     local DB_NAME="memdog"
     local DB_USER="memdog"
-    local SECRET_NAME="mem-dog-postgres-url-${ENVIRONMENT}"
-    local SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    local SECRET_NAME="memdog-postgres-url-${ENVIRONMENT}"
+    local SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
 
     # ── Enable required APIs ────────────────────────────────────────────────
     print_info "Enabling Cloud SQL, Secret Manager, and Compute APIs..."
@@ -449,8 +449,8 @@ destroy_postgres() {
         exit 1
     fi
 
-    local INSTANCE_NAME="mem-dog-pg-${ENVIRONMENT}"
-    local SECRET_NAME="mem-dog-postgres-url-${ENVIRONMENT}"
+    local INSTANCE_NAME="memdog-pg-${ENVIRONMENT}"
+    local SECRET_NAME="memdog-postgres-url-${ENVIRONMENT}"
 
     # Cloud SQL instance (unless --keep-instance)
     if [ -z "${KEEP_INSTANCE:-}" ]; then
@@ -497,8 +497,8 @@ setup_redis() {
         exit 1
     fi
 
-    local SECRET_NAME="mem-dog-redis-url-${ENVIRONMENT}"
-    local SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    local SECRET_NAME="memdog-redis-url-${ENVIRONMENT}"
+    local SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
 
     print_info "Storing REDIS_URL in Secret Manager as $SECRET_NAME..."
     if gcloud secrets describe "$SECRET_NAME" \
@@ -539,15 +539,15 @@ deploy_redis() {
         exit 1
     fi
 
-    local SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    local SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
     if ! gcloud iam service-accounts describe "$SA_EMAIL" --project="$PROJECT_ID" &>/dev/null; then
         print_error "Service account $SA_EMAIL not found. Run setup-env first."
         exit 1
     fi
 
-    local INSTANCE_NAME="mem-dog-redis-${ENVIRONMENT}"
-    local SECRET_NAME="mem-dog-redis-url-${ENVIRONMENT}"
-    local VPC_SECRET_NAME="mem-dog-redis-vpc-${ENVIRONMENT}"
+    local INSTANCE_NAME="memdog-redis-${ENVIRONMENT}"
+    local SECRET_NAME="memdog-redis-url-${ENVIRONMENT}"
+    local VPC_SECRET_NAME="memdog-redis-vpc-${ENVIRONMENT}"
 
     # ── Enable APIs ─────────────────────────────────────────────────────────
     print_info "Enabling Redis and Secret Manager APIs..."
@@ -669,9 +669,9 @@ setup_supabase() {
         exit 1
     fi
 
-    local URL_SECRET="mem-dog-supabase-url-${ENVIRONMENT}"
-    local KEY_SECRET="mem-dog-supabase-key-${ENVIRONMENT}"
-    local SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    local URL_SECRET="memdog-supabase-url-${ENVIRONMENT}"
+    local KEY_SECRET="memdog-supabase-key-${ENVIRONMENT}"
+    local SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
 
     print_info "Storing SUPABASE_URL in Secret Manager as $URL_SECRET..."
     if gcloud secrets describe "$URL_SECRET" --project="$PROJECT_ID" &>/dev/null; then
@@ -721,7 +721,7 @@ redeploy_supabase_gke() {
         exit 1
     fi
 
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
 
     print_info "Connecting to GKE cluster $GKE_CLUSTER..."
@@ -765,7 +765,7 @@ deploy_supabase_gke() {
         exit 1
     fi
 
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
     K8S_DIR="$ROOT_DIR/k8s/supabase"
 
@@ -791,10 +791,10 @@ deploy_supabase_gke() {
 
     # ── Generate or resolve secrets ─────────────────────────────────────────
     local JWT_SECRET ANON_KEY SERVICE_ROLE_KEY PG_PASSWORD
-    local URL_SECRET_NAME="mem-dog-supabase-url-${ENVIRONMENT}"
-    local KEY_SECRET_NAME="mem-dog-supabase-key-${ENVIRONMENT}"
-    local JWT_SECRET_NAME="mem-dog-supabase-jwt-secret-${ENVIRONMENT}"
-    local PG_SECRET_NAME="mem-dog-supabase-pg-password-${ENVIRONMENT}"
+    local URL_SECRET_NAME="memdog-supabase-url-${ENVIRONMENT}"
+    local KEY_SECRET_NAME="memdog-supabase-key-${ENVIRONMENT}"
+    local JWT_SECRET_NAME="memdog-supabase-jwt-secret-${ENVIRONMENT}"
+    local PG_SECRET_NAME="memdog-supabase-pg-password-${ENVIRONMENT}"
 
     # Prefer env vars; then try Secret Manager (so destroy+deploy reuses existing secrets)
     if [ -z "${SUPABASE_PG_PASSWORD:-}" ] && gcloud secrets describe "$PG_SECRET_NAME" --project="$PROJECT_ID" &>/dev/null; then
@@ -909,7 +909,7 @@ print(jwt.encode({'role': 'service_role', 'iss': 'supabase', 'iat': 1700000000, 
     kubectl apply -f "$K8S_DIR/studio-service.yaml"
 
     # ── Run seed job ────────────────────────────────────────────────────────
-    print_info "Seeding mem-dog tables..."
+    print_info "Seeding memdog tables..."
     kubectl apply -f "$K8S_DIR/seed-configmap.yaml"
     kubectl delete job supabase-seed -n supabase --ignore-not-found
     kubectl apply -f "$K8S_DIR/seed-job.yaml"
@@ -926,7 +926,7 @@ print(jwt.encode({'role': 'service_role', 'iss': 'supabase', 'iat': 1700000000, 
 
     # ── Store Supabase URL and keys in Secret Manager ────────────────────────
     local SUPABASE_URL="http://supabase-kong.supabase.svc.cluster.local:8000"
-    local SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    local SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
 
     _upsert_secret() {
         local name="$1" value="$2"
@@ -951,13 +951,13 @@ print(jwt.encode({'role': 'service_role', 'iss': 'supabase', 'iat': 1700000000, 
     print_success "Secrets stored: $URL_SECRET_NAME, $KEY_SECRET_NAME, $JWT_SECRET_NAME, $PG_SECRET_NAME"
 
     # ── Also create K8s secrets in app namespaces for wiring ────────────────
-    if kubectl get namespace mem-dog &>/dev/null; then
-        kubectl -n mem-dog create secret generic api-supabase-secrets \
+    if kubectl get namespace memdog &>/dev/null; then
+        kubectl -n memdog create secret generic api-supabase-secrets \
             --from-literal=SUPABASE_URL="$SUPABASE_URL" \
             --from-literal=SUPABASE_KEY="$SERVICE_ROLE_KEY" \
             --from-literal=STORAGE_BACKEND="supabase" \
             --dry-run=client -o yaml | kubectl apply -f -
-        print_success "Created api-supabase-secrets in mem-dog namespace"
+        print_success "Created api-supabase-secrets in memdog namespace"
     fi
 
     if kubectl get namespace webhook-gateway &>/dev/null; then
@@ -984,9 +984,9 @@ print(jwt.encode({'role': 'service_role', 'iss': 'supabase', 'iat': 1700000000, 
     echo "Next steps — activate Supabase for the API:"
     echo ""
     echo "  GKE API (in-cluster):"
-    echo "    kubectl patch configmap api-config -n mem-dog -p '{\"data\":{\"STORAGE_BACKEND\":\"supabase\"}}'"
-    echo "    kubectl set env deployment/api -n mem-dog --from=secret/api-supabase-secrets"
-    echo "    kubectl rollout restart deployment/api -n mem-dog"
+    echo "    kubectl patch configmap api-config -n memdog -p '{\"data\":{\"STORAGE_BACKEND\":\"supabase\"}}'"
+    echo "    kubectl set env deployment/api -n memdog --from=secret/api-supabase-secrets"
+    echo "    kubectl rollout restart deployment/api -n memdog"
     echo ""
     echo "  Cloud Run API:"
     echo "    USE_SUPABASE_STORAGE=true $0 deploy-api -p $PROJECT_ID -e $ENVIRONMENT"
@@ -998,7 +998,7 @@ print(jwt.encode({'role': 'service_role', 'iss': 'supabase', 'iat': 1700000000, 
     echo "  Verify:   kubectl get pods -n supabase"
     echo "  Studio:   kubectl port-forward svc/supabase-studio -n supabase 3000:3000"
     echo "  Re-seed:  $0 seed-supabase-gke -p $PROJECT_ID -e $ENVIRONMENT"
-    echo "  Revert:   kubectl patch configmap api-config -n mem-dog -p '{\"data\":{\"STORAGE_BACKEND\":\"gcs\"}}'"
+    echo "  Revert:   kubectl patch configmap api-config -n memdog -p '{\"data\":{\"STORAGE_BACKEND\":\"gcs\"}}'"
     echo ""
 }
 
@@ -1014,7 +1014,7 @@ seed_supabase_gke() {
         exit 1
     fi
 
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
     K8S_DIR="$ROOT_DIR/k8s/supabase"
 
@@ -1056,7 +1056,7 @@ destroy_supabase_data_gke() {
         exit 1
     fi
 
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
 
     print_info "Connecting to GKE cluster $GKE_CLUSTER..."
@@ -1115,7 +1115,7 @@ destroy_supabase_gke() {
         exit 1
     fi
 
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
 
     print_info "Connecting to GKE cluster $GKE_CLUSTER..."
@@ -1136,10 +1136,10 @@ destroy_supabase_gke() {
         print_warning "Namespace supabase not found (already deleted?)"
     fi
 
-    # Clean up api-supabase-secrets in mem-dog namespace
-    if kubectl get secret api-supabase-secrets -n mem-dog &>/dev/null 2>&1; then
-        kubectl delete secret api-supabase-secrets -n mem-dog
-        print_success "Deleted api-supabase-secrets from mem-dog namespace"
+    # Clean up api-supabase-secrets in memdog namespace
+    if kubectl get secret api-supabase-secrets -n memdog &>/dev/null 2>&1; then
+        kubectl delete secret api-supabase-secrets -n memdog
+        print_success "Deleted api-supabase-secrets from memdog namespace"
     fi
 
     # Clean up ocg-supabase-secrets in webhook-gateway namespace
@@ -1150,8 +1150,8 @@ destroy_supabase_gke() {
 
     # Optionally delete Secret Manager secrets
     if [ -n "${DELETE_SECRETS:-}" ]; then
-        local URL_SECRET="mem-dog-supabase-url-${ENVIRONMENT}"
-        local KEY_SECRET="mem-dog-supabase-key-${ENVIRONMENT}"
+        local URL_SECRET="memdog-supabase-url-${ENVIRONMENT}"
+        local KEY_SECRET="memdog-supabase-key-${ENVIRONMENT}"
 
         for secret_name in "$URL_SECRET" "$KEY_SECRET"; do
             if gcloud secrets describe "$secret_name" --project="$PROJECT_ID" &>/dev/null; then
@@ -1194,11 +1194,11 @@ setup_env() {
     
     # Create Artifact Registry
     print_info "Creating Artifact Registry..."
-    if ! gcloud artifacts repositories describe mem-dog --location="$REGION" --project="$PROJECT_ID" &>/dev/null; then
-        gcloud artifacts repositories create mem-dog \
+    if ! gcloud artifacts repositories describe memdog --location="$REGION" --project="$PROJECT_ID" &>/dev/null; then
+        gcloud artifacts repositories create memdog \
             --repository-format=docker \
             --location="$REGION" \
-            --description="Docker repository for mem-dog services" \
+            --description="Docker repository for memdog services" \
             --project="$PROJECT_ID"
         print_success "Artifact Registry created"
     else
@@ -1206,13 +1206,13 @@ setup_env() {
     fi
     
     # Create Cloud Run Service Account
-    CLOUD_RUN_SA="mem-dog-cloud-run-${ENVIRONMENT}"
+    CLOUD_RUN_SA="memdog-cloud-run-${ENVIRONMENT}"
     SA_EMAIL="${CLOUD_RUN_SA}@${PROJECT_ID}.iam.gserviceaccount.com"
     
     print_info "Creating Cloud Run Service Account..."
     if ! gcloud iam service-accounts describe "$SA_EMAIL" --project="$PROJECT_ID" &>/dev/null; then
         gcloud iam service-accounts create "$CLOUD_RUN_SA" \
-            --display-name="Service Account for mem-dog Cloud Run services ($ENVIRONMENT)" \
+            --display-name="Service Account for memdog Cloud Run services ($ENVIRONMENT)" \
             --description="Used by API and UI Cloud Run services to access GCS in $ENVIRONMENT" \
             --project="$PROJECT_ID"
         print_success "Service Account created: $SA_EMAIL"
@@ -1225,7 +1225,7 @@ setup_env() {
     # "index" is the reverse-index bucket added for multitenancy (user/data/memory search).
     CORE_BUCKETS=("raw" "meta" "memories" "users" "index")
     for bucket_suffix in "${CORE_BUCKETS[@]}"; do
-        BUCKET_NAME="${PROJECT_ID}-mem-dog-${bucket_suffix}-${ENVIRONMENT}"
+        BUCKET_NAME="${PROJECT_ID}-memdog-${bucket_suffix}-${ENVIRONMENT}"
         if ! gcloud storage buckets describe "gs://$BUCKET_NAME" &>/dev/null; then
             gcloud storage buckets create "gs://$BUCKET_NAME" \
                 --location="$REGION" \
@@ -1246,7 +1246,7 @@ setup_env() {
     # Optional: channels bucket for per-channel metadata (when set, API uses it; else uses meta bucket prefix)
     OPTIONAL_BUCKETS=("channels")
     for bucket_suffix in "${AI_BUCKETS[@]}"; do
-        BUCKET_NAME="${PROJECT_ID}-mem-dog-${bucket_suffix}-${ENVIRONMENT}"
+        BUCKET_NAME="${PROJECT_ID}-memdog-${bucket_suffix}-${ENVIRONMENT}"
         if ! gcloud storage buckets describe "gs://$BUCKET_NAME" &>/dev/null; then
             gcloud storage buckets create "gs://$BUCKET_NAME" \
                 --location="$REGION" \
@@ -1261,7 +1261,7 @@ setup_env() {
         fi
     done
     for bucket_suffix in "${OPTIONAL_BUCKETS[@]}"; do
-        BUCKET_NAME="${PROJECT_ID}-mem-dog-${bucket_suffix}-${ENVIRONMENT}"
+        BUCKET_NAME="${PROJECT_ID}-memdog-${bucket_suffix}-${ENVIRONMENT}"
         if ! gcloud storage buckets describe "gs://$BUCKET_NAME" &>/dev/null; then
             gcloud storage buckets create "gs://$BUCKET_NAME" \
                 --location="$REGION" \
@@ -1278,7 +1278,7 @@ setup_env() {
     
     # Create System Config Bucket
     print_info "Creating System Config Bucket..."
-    SYSCONFIG_BUCKET="${PROJECT_ID}-mem-dog-sysconfig-${ENVIRONMENT}"
+    SYSCONFIG_BUCKET="${PROJECT_ID}-memdog-sysconfig-${ENVIRONMENT}"
     if ! gcloud storage buckets describe "gs://$SYSCONFIG_BUCKET" &>/dev/null; then
         gcloud storage buckets create "gs://$SYSCONFIG_BUCKET" \
             --location="$REGION" \
@@ -1296,7 +1296,7 @@ setup_env() {
     print_info "Configuring IAM for all buckets..."
     ALL_BUCKETS=("${CORE_BUCKETS[@]}" "${AI_BUCKETS[@]}" "${OPTIONAL_BUCKETS[@]}")
     for bucket_suffix in "${ALL_BUCKETS[@]}"; do
-        BUCKET_NAME="${PROJECT_ID}-mem-dog-${bucket_suffix}-${ENVIRONMENT}"
+        BUCKET_NAME="${PROJECT_ID}-memdog-${bucket_suffix}-${ENVIRONMENT}"
         gcloud storage buckets add-iam-policy-binding "gs://$BUCKET_NAME" \
             --member="serviceAccount:$SA_EMAIL" \
             --role="roles/storage.objectAdmin" \
@@ -1310,25 +1310,25 @@ setup_env() {
     
     # Generate and upload platform-config.json
     print_info "Generating platform-config.json..."
-    MEMORIES_BUCKET_NAME="${PROJECT_ID}-mem-dog-memories-${ENVIRONMENT}"
+    MEMORIES_BUCKET_NAME="${PROJECT_ID}-memdog-memories-${ENVIRONMENT}"
     CONFIG_JSON=$(cat <<EOCFG
 {
   "version": "1",
   "environment": "$ENVIRONMENT",
   "gcp_project_id": "$PROJECT_ID",
   "buckets": {
-    "raw": "${PROJECT_ID}-mem-dog-raw-${ENVIRONMENT}",
-    "meta": "${PROJECT_ID}-mem-dog-meta-${ENVIRONMENT}",
+    "raw": "${PROJECT_ID}-memdog-raw-${ENVIRONMENT}",
+    "meta": "${PROJECT_ID}-memdog-meta-${ENVIRONMENT}",
     "memories": "${MEMORIES_BUCKET_NAME}",
-    "users": "${PROJECT_ID}-mem-dog-users-${ENVIRONMENT}",
-    "prompts": "${PROJECT_ID}-mem-dog-prompts-${ENVIRONMENT}",
-    "embeddings": "${PROJECT_ID}-mem-dog-embeddings-${ENVIRONMENT}",
-    "viewpoints": "${PROJECT_ID}-mem-dog-viewpoints-${ENVIRONMENT}",
-    "ai_config": "${PROJECT_ID}-mem-dog-aiconfig-${ENVIRONMENT}",
-    "skills": "${PROJECT_ID}-mem-dog-skills-${ENVIRONMENT}",
-    "stats": "${PROJECT_ID}-mem-dog-stats-${ENVIRONMENT}",
-    "index": "${PROJECT_ID}-mem-dog-index-${ENVIRONMENT}",
-    "channels": "${PROJECT_ID}-mem-dog-channels-${ENVIRONMENT}"
+    "users": "${PROJECT_ID}-memdog-users-${ENVIRONMENT}",
+    "prompts": "${PROJECT_ID}-memdog-prompts-${ENVIRONMENT}",
+    "embeddings": "${PROJECT_ID}-memdog-embeddings-${ENVIRONMENT}",
+    "viewpoints": "${PROJECT_ID}-memdog-viewpoints-${ENVIRONMENT}",
+    "ai_config": "${PROJECT_ID}-memdog-aiconfig-${ENVIRONMENT}",
+    "skills": "${PROJECT_ID}-memdog-skills-${ENVIRONMENT}",
+    "stats": "${PROJECT_ID}-memdog-stats-${ENVIRONMENT}",
+    "index": "${PROJECT_ID}-memdog-index-${ENVIRONMENT}",
+    "channels": "${PROJECT_ID}-memdog-channels-${ENVIRONMENT}"
   },
   "ai": {
     "system_gemini_api_key": "",
@@ -1339,7 +1339,7 @@ setup_env() {
   },
   "telemetry": {
     "otel_enabled": true,
-    "otel_service_name": "mem-dog-api",
+    "otel_service_name": "memdog-api",
     "otel_exporter_otlp_endpoint": "",
     "otel_exporter_otlp_protocol": "grpc"
   },
@@ -1372,16 +1372,16 @@ EOCFG
     echo ""
     echo "Core Buckets created:"
     for bucket_suffix in "${CORE_BUCKETS[@]}"; do
-        echo "  - ${PROJECT_ID}-mem-dog-${bucket_suffix}-${ENVIRONMENT}"
+        echo "  - ${PROJECT_ID}-memdog-${bucket_suffix}-${ENVIRONMENT}"
     done
     echo ""
     echo "AI Layer Buckets created:"
     for bucket_suffix in "${AI_BUCKETS[@]}"; do
-        echo "  - ${PROJECT_ID}-mem-dog-${bucket_suffix}-${ENVIRONMENT}"
+        echo "  - ${PROJECT_ID}-memdog-${bucket_suffix}-${ENVIRONMENT}"
     done
     echo "Optional Buckets created:"
     for bucket_suffix in "${OPTIONAL_BUCKETS[@]}"; do
-        echo "  - ${PROJECT_ID}-mem-dog-${bucket_suffix}-${ENVIRONMENT}"
+        echo "  - ${PROJECT_ID}-memdog-${bucket_suffix}-${ENVIRONMENT}"
     done
 }
 
@@ -1392,10 +1392,10 @@ EOCFG
 deploy_api() {
     print_header "Deploying API"
     
-    SERVICE_NAME="mem-dog-api"
-    SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
-    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/api:${ENVIRONMENT}-latest"
-    SYSCONFIG_BUCKET="${PROJECT_ID}-mem-dog-sysconfig-${ENVIRONMENT}"
+    SERVICE_NAME="memdog-api"
+    SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/api:${ENVIRONMENT}-latest"
+    SYSCONFIG_BUCKET="${PROJECT_ID}-memdog-sysconfig-${ENVIRONMENT}"
     
     # Build (explicitly for linux/amd64 to ensure Cloud Run compatibility)
     print_info "Building API Docker image for linux/amd64..."
@@ -1421,7 +1421,7 @@ deploy_api() {
     #                 Leave blank to fall back to writing _idx/ entries inside META_BUCKET.
     _SYSTEM_USER="${SYSTEM_USER_ID:-${DEFAULT_USER:-demo}}"
     _APP_VERSION="${APP_VERSION:-0.1.0}"
-    _INDEX_BUCKET="${INDEX_BUCKET:-${PROJECT_ID}-mem-dog-index-${ENVIRONMENT}}"
+    _INDEX_BUCKET="${INDEX_BUCKET:-${PROJECT_ID}-memdog-index-${ENVIRONMENT}}"
     ENV_VARS="$ENV_VARS,SYSTEM_USER_ID=$_SYSTEM_USER,APP_VERSION=$_APP_VERSION,INDEX_BUCKET=$_INDEX_BUCKET"
     print_success "Multitenancy vars — SYSTEM_USER_ID=$_SYSTEM_USER, APP_VERSION=$_APP_VERSION, INDEX_BUCKET=$_INDEX_BUCKET"
 
@@ -1444,7 +1444,7 @@ deploy_api() {
     # ── AI Chat multi-tier model servers ────────────────────────────────────
     # Model servers are added manually (no auto-detection). Only wire tier URLs when
     # explicitly set via MODEL_SERVER_URL_SMALL, MODEL_SERVER_URL_MEDIUM, etc.
-    MODELS_BUCKET="${PROJECT_ID}-mem-dog-models-${ENVIRONMENT}"
+    MODELS_BUCKET="${PROJECT_ID}-memdog-models-${ENVIRONMENT}"
 
     if gcloud storage buckets describe "gs://$MODELS_BUCKET" --project="$PROJECT_ID" &>/dev/null; then
         ENV_VARS="$ENV_VARS,DEPLOYMENT_MODE=cloud,GCS_MODELS_BUCKET=$MODELS_BUCKET"
@@ -1455,7 +1455,7 @@ deploy_api() {
             TIER_UPPER=$(echo "$TIER" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
             VARNAME_URL="MODEL_SERVER_URL_${TIER_UPPER}"
             VARNAME_SVC="MODEL_SERVER_SERVICE_${TIER_UPPER}"
-            TIER_SVC="mem-dog-model-server-${TIER}-${ENVIRONMENT}"
+            TIER_SVC="memdog-model-server-${TIER}-${ENVIRONMENT}"
             # Only use explicitly provided URLs (no auto-detection from Cloud Run).
             URL_VAL="${!VARNAME_URL:-}"
             if [ -n "$URL_VAL" ]; then
@@ -1472,7 +1472,7 @@ deploy_api() {
         fi
 
         # Ensure the API SA can manage tier Cloud Run services (for activation).
-        SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+        SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
         print_info "Granting roles/run.developer to API SA for model activation..."
         gcloud projects add-iam-policy-binding "$PROJECT_ID" \
             --member="serviceAccount:$SA_EMAIL" \
@@ -1516,7 +1516,7 @@ deploy_api() {
     fi
 
     # Auto-wire Download Topic if it exists.
-    DOWNLOAD_TOPIC="mem-dog-downloads-${ENVIRONMENT}"
+    DOWNLOAD_TOPIC="memdog-downloads-${ENVIRONMENT}"
     if gcloud pubsub topics describe "$DOWNLOAD_TOPIC" --project="$PROJECT_ID" &>/dev/null; then
         ENV_VARS="$ENV_VARS,DOWNLOAD_TOPIC=$DOWNLOAD_TOPIC"
         print_success "DOWNLOAD_TOPIC wired: $DOWNLOAD_TOPIC"
@@ -1529,7 +1529,7 @@ deploy_api() {
     fi
 
     # ── Wire webhook API Gateway URL and key (when webhook is deployed) ───────
-    GATEWAY_NAME="mem-dog-webhook-gw-${ENVIRONMENT}"
+    GATEWAY_NAME="memdog-webhook-gw-${ENVIRONMENT}"
     if [ -n "${MEM_DOG_WEBHOOK_GATEWAY_URL:-}" ]; then
         WEBHOOK_GW_URL="$MEM_DOG_WEBHOOK_GATEWAY_URL"
         print_success "Using MEM_DOG_WEBHOOK_GATEWAY_URL from environment"
@@ -1553,8 +1553,8 @@ deploy_api() {
     fi
 
     # ── Wire Postgres storage (only if USE_POSTGRES_STORAGE=true) ─────────────
-    local INSTANCE_NAME="mem-dog-pg-${ENVIRONMENT}"
-    local SECRET_NAME="mem-dog-postgres-url-${ENVIRONMENT}"
+    local INSTANCE_NAME="memdog-pg-${ENVIRONMENT}"
+    local SECRET_NAME="memdog-postgres-url-${ENVIRONMENT}"
     local CLOUD_SQL_FLAGS=""
     local SECRET_FLAGS=""
 
@@ -1573,8 +1573,8 @@ deploy_api() {
     fi
 
     # ── Wire Redis storage (only if USE_REDIS_STORAGE=true) ─────────────────
-    local REDIS_SECRET_NAME="mem-dog-redis-url-${ENVIRONMENT}"
-    local REDIS_VPC_SECRET_NAME="mem-dog-redis-vpc-${ENVIRONMENT}"
+    local REDIS_SECRET_NAME="memdog-redis-url-${ENVIRONMENT}"
+    local REDIS_VPC_SECRET_NAME="memdog-redis-vpc-${ENVIRONMENT}"
     local VPC_FLAGS=""
     if [ "$USE_REDIS_STORAGE" = "true" ]; then
         if gcloud secrets describe "$REDIS_SECRET_NAME" \
@@ -1599,8 +1599,8 @@ deploy_api() {
     fi
 
     # ── Wire Supabase (only if USE_SUPABASE_STORAGE=true) ─────────────────────
-    local SUPABASE_URL_SECRET="mem-dog-supabase-url-${ENVIRONMENT}"
-    local SUPABASE_KEY_SECRET="mem-dog-supabase-key-${ENVIRONMENT}"
+    local SUPABASE_URL_SECRET="memdog-supabase-url-${ENVIRONMENT}"
+    local SUPABASE_KEY_SECRET="memdog-supabase-key-${ENVIRONMENT}"
     if [ "$USE_SUPABASE_STORAGE" = "true" ]; then
         if gcloud secrets describe "$SUPABASE_URL_SECRET" --project="$PROJECT_ID" &>/dev/null && \
            gcloud secrets describe "$SUPABASE_KEY_SECRET" --project="$PROJECT_ID" &>/dev/null; then
@@ -1659,10 +1659,10 @@ deploy_api() {
 deploy_ui() {
     print_header "Deploying UI"
     
-    SERVICE_NAME="mem-dog-ui-${ENVIRONMENT}"
-    API_SERVICE_NAME="mem-dog-api"
-    SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
-    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/ui:${ENVIRONMENT}-latest"
+    SERVICE_NAME="memdog-ui-${ENVIRONMENT}"
+    API_SERVICE_NAME="memdog-api"
+    SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/ui:${ENVIRONMENT}-latest"
     
     # Get API URL (override → GKE Gateway → Cloud Run project-number → gcloud)
     if [ -n "${MEM_DOG_API_URL:-}" ]; then
@@ -1682,7 +1682,7 @@ deploy_ui() {
             print_info "Getting Cloud Run API URL..."
             PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format 'value(projectNumber)' 2>/dev/null || echo "")
             if [ -n "$PROJECT_NUMBER" ]; then
-                API_URL="https://mem-dog-api-${PROJECT_NUMBER}.${REGION}.run.app"
+                API_URL="https://memdog-api-${PROJECT_NUMBER}.${REGION}.run.app"
                 print_success "Using project-number API URL: $API_URL"
             else
                 API_URL=$(gcloud run services describe "$API_SERVICE_NAME" \
@@ -1703,17 +1703,17 @@ deploy_ui() {
     # Resolve API key (for GKE deployments with api-auth-secret)
     UI_API_KEY="${NEXT_PUBLIC_API_KEY:-${MEM_DOG_API_KEY:-}}"
     if [ -z "$UI_API_KEY" ]; then
-        UI_API_KEY=$(kubectl get secret api-auth-secret -n mem-dog \
+        UI_API_KEY=$(kubectl get secret api-auth-secret -n memdog \
             -o jsonpath='{.data.API_KEY}' 2>/dev/null | base64 -d 2>/dev/null || echo "")
         if [ -n "$UI_API_KEY" ]; then
-            print_success "API key read from api-auth-secret in mem-dog namespace"
+            print_success "API key read from api-auth-secret in memdog namespace"
         fi
     fi
 
     # Get webhook gateway URL for Testing tab (optional)
     WEBHOOK_GATEWAY_URL="${MEM_DOG_WEBHOOK_GATEWAY_URL:-}"
     if [ -z "$WEBHOOK_GATEWAY_URL" ]; then
-        GATEWAY_NAME="mem-dog-webhook-gw-${ENVIRONMENT}"
+        GATEWAY_NAME="memdog-webhook-gw-${ENVIRONMENT}"
         if gcloud api-gateway gateways describe "$GATEWAY_NAME" \
             --location="$REGION" --project="$PROJECT_ID" &>/dev/null; then
             GW_HOST=$(gcloud api-gateway gateways describe "$GATEWAY_NAME" \
@@ -1808,7 +1808,7 @@ deploy_ui() {
 deploy_api_docs() {
     deploy_api
     print_header "API Deployment Complete!"
-    API_URL=$(gcloud run services describe "mem-dog-api" \
+    API_URL=$(gcloud run services describe "memdog-api" \
         --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)')
     echo "Environment: $ENVIRONMENT"
     echo "Project:     $PROJECT_ID"
@@ -1828,9 +1828,9 @@ deploy_all() {
     
     print_header "Deployment Complete!"
     
-    API_URL=$(gcloud run services describe "mem-dog-api" \
+    API_URL=$(gcloud run services describe "memdog-api" \
         --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)')
-    UI_URL=$(gcloud run services describe "mem-dog-ui-${ENVIRONMENT}" \
+    UI_URL=$(gcloud run services describe "memdog-ui-${ENVIRONMENT}" \
         --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)')
     
     echo "Environment: $ENVIRONMENT"
@@ -1849,8 +1849,8 @@ deploy_all() {
 setup_webhook() {
     print_header "Setting Up Webhook Infrastructure: $ENVIRONMENT"
 
-    TOPIC_NAME="mem-dog-webhook-${ENVIRONMENT}"
-    WEBHOOK_SA="mem-dog-webhook-${ENVIRONMENT}"
+    TOPIC_NAME="memdog-webhook-${ENVIRONMENT}"
+    WEBHOOK_SA="memdog-webhook-${ENVIRONMENT}"
     WEBHOOK_SA_EMAIL="${WEBHOOK_SA}@${PROJECT_ID}.iam.gserviceaccount.com"
 
     # Enable webhook APIs
@@ -1922,7 +1922,7 @@ setup_webhook() {
     print_success "Granted cloudtrace.agent on project"
 
     # Create webhook staging bucket (sub-agents download + persist content here)
-    STAGING_BUCKET_NAME="${PROJECT_ID}-mem-dog-webhook-staging-${ENVIRONMENT}"
+    STAGING_BUCKET_NAME="${PROJECT_ID}-memdog-webhook-staging-${ENVIRONMENT}"
     print_info "Creating webhook staging bucket: $STAGING_BUCKET_NAME"
     if ! gcloud storage buckets describe "gs://$STAGING_BUCKET_NAME" --project="$PROJECT_ID" &>/dev/null; then
         gcloud storage buckets create "gs://$STAGING_BUCKET_NAME" \
@@ -1968,9 +1968,9 @@ setup_webhook() {
 deploy_model_servers_ollama() {
     print_header "Deploying AI Chat Model Servers (Ollama): $ENVIRONMENT"
 
-    SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
     OLLAMA_IMAGE="ollama/ollama:latest"
-    MODELS_BUCKET="${PROJECT_ID}-mem-dog-models-${ENVIRONMENT}"
+    MODELS_BUCKET="${PROJECT_ID}-memdog-models-${ENVIRONMENT}"
 
     if ! gcloud iam service-accounts describe "$SA_EMAIL" --project="$PROJECT_ID" &>/dev/null; then
         print_error "Service account $SA_EMAIL not found. Run setup-env first."
@@ -1997,7 +1997,7 @@ deploy_model_servers_ollama() {
     TIERS_TO_DEPLOY="${DEPLOY_MODEL_TIERS:-small medium large very-large}"
 
     for TIER in $TIERS_TO_DEPLOY; do
-        TIER_SVC="mem-dog-model-server-${TIER}-${ENVIRONMENT}"
+        TIER_SVC="memdog-model-server-${TIER}-${ENVIRONMENT}"
         if get_cloudrun_tier_resources "$TIER"; then
             MEM="${CLOUDRUN_MEM:-6Gi}"
             CPU="${CLOUDRUN_CPU:-2}"
@@ -2059,10 +2059,10 @@ deploy_model_servers() {
 deploy_model_server_ollama() {
     print_header "Deploying Model Server (Ollama) to Cloud Run: $ENVIRONMENT"
 
-    MODEL_SERVER_NAME="mem-dog-model-server-${ENVIRONMENT}"
-    WEBHOOK_SA_EMAIL="mem-dog-webhook-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    MODEL_SERVER_NAME="memdog-model-server-${ENVIRONMENT}"
+    WEBHOOK_SA_EMAIL="memdog-webhook-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
     OLLAMA_IMAGE="ollama/ollama:latest"
-    MODELS_BUCKET="${PROJECT_ID}-mem-dog-models-${ENVIRONMENT}"
+    MODELS_BUCKET="${PROJECT_ID}-memdog-models-${ENVIRONMENT}"
 
     if ! gcloud iam service-accounts describe "$WEBHOOK_SA_EMAIL" --project="$PROJECT_ID" &>/dev/null; then
         print_error "Webhook service account not found. Run setup-webhook first."
@@ -2116,9 +2116,9 @@ deploy_model_server() {
 deploy_agent() {
     print_header "Deploying ADK Agent to Cloud Run: $ENVIRONMENT"
 
-    SERVICE_NAME="mem-dog-webhook-agent-${ENVIRONMENT}"
-    WEBHOOK_SA_EMAIL="mem-dog-webhook-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
-    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/webhook-agent:${ENVIRONMENT}-latest"
+    SERVICE_NAME="memdog-webhook-agent-${ENVIRONMENT}"
+    WEBHOOK_SA_EMAIL="memdog-webhook-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/webhook-agent:${ENVIRONMENT}-latest"
 
     # Verify service account exists (created by setup-webhook)
     if ! gcloud iam service-accounts describe "$WEBHOOK_SA_EMAIL" --project="$PROJECT_ID" &>/dev/null; then
@@ -2128,7 +2128,7 @@ deploy_agent() {
 
     # MODEL_SERVER_URL optional: agents use Gemini by default; set when using open models
     if [ -z "${MODEL_SERVER_URL:-}" ]; then
-        MODEL_SERVER_URL=$(gcloud run services describe "mem-dog-model-server-${ENVIRONMENT}" \
+        MODEL_SERVER_URL=$(gcloud run services describe "memdog-model-server-${ENVIRONMENT}" \
             --region "$REGION" --project "$PROJECT_ID" \
             --format 'value(status.url)' 2>/dev/null || echo "")
     fi
@@ -2155,13 +2155,13 @@ deploy_agent() {
         print_success "Gemini API key secret found — wiring GOOGLE_API_KEY (gemini/ provider)"
     fi
 
-    # Get mem-dog API URL
+    # Get memdog API URL
     if [ -n "${MEM_DOG_API_URL:-}" ]; then
         API_URL="$MEM_DOG_API_URL"
         print_success "Using MEM_DOG_API_URL from environment: $API_URL"
     else
-        print_info "Getting mem-dog API URL from Cloud Run..."
-        API_URL=$(gcloud run services describe "mem-dog-api" \
+        print_info "Getting memdog API URL from Cloud Run..."
+        API_URL=$(gcloud run services describe "memdog-api" \
             --region "$REGION" --project "$PROJECT_ID" \
             --format 'value(status.url)' 2>/dev/null || echo "")
         if [ -z "$API_URL" ]; then
@@ -2177,11 +2177,11 @@ deploy_agent() {
         print_success "Mem-dog API: $API_URL"
     fi
 
-    WEBHOOK_STAGING_BUCKET_NAME="${PROJECT_ID}-mem-dog-webhook-staging-${ENVIRONMENT}"
+    WEBHOOK_STAGING_BUCKET_NAME="${PROJECT_ID}-memdog-webhook-staging-${ENVIRONMENT}"
 
     # Resolve webhook pipeline (gateway) URL so the agent can reference it if needed.
     # Prefer MEM_DOG_WEBHOOK_GATEWAY_URL; otherwise use the gateway defaultHostname if deploy-webhook was run.
-    GATEWAY_NAME="mem-dog-webhook-gw-${ENVIRONMENT}"
+    GATEWAY_NAME="memdog-webhook-gw-${ENVIRONMENT}"
     if [ -n "${MEM_DOG_WEBHOOK_GATEWAY_URL:-}" ]; then
         WEBHOOK_GATEWAY_URL="$MEM_DOG_WEBHOOK_GATEWAY_URL"
         print_success "Using MEM_DOG_WEBHOOK_GATEWAY_URL for agent: $WEBHOOK_GATEWAY_URL"
@@ -2308,7 +2308,7 @@ $EXTRA_ENV"
     # Propagate the service URL to the processor Cloud Function (if deployed).
     # Cloud Functions 2nd gen run on Cloud Run, so update the env var directly
     # on the underlying Cloud Run service — no need to redeploy from source.
-    PROCESSOR_NAME="mem-dog-webhook-processor-${ENVIRONMENT}"
+    PROCESSOR_NAME="memdog-webhook-processor-${ENVIRONMENT}"
     if gcloud functions describe "$PROCESSOR_NAME" \
         --gen2 --region="$REGION" --project="$PROJECT_ID" &>/dev/null; then
         print_info "Updating processor function with AGENT_SERVICE_URL..."
@@ -2344,12 +2344,12 @@ $EXTRA_ENV"
 deploy_webhook() {
     print_header "Deploying Webhook Pipeline: $ENVIRONMENT"
 
-    TOPIC_NAME="mem-dog-webhook-${ENVIRONMENT}"
-    WEBHOOK_SA_EMAIL="mem-dog-webhook-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
-    RECEIVER_NAME="mem-dog-webhook-receiver-${ENVIRONMENT}"
-    PROCESSOR_NAME="mem-dog-webhook-processor-${ENVIRONMENT}"
-    GATEWAY_NAME="mem-dog-webhook-gw-${ENVIRONMENT}"
-    API_CONFIG_NAME="mem-dog-webhook-api-${ENVIRONMENT}"
+    TOPIC_NAME="memdog-webhook-${ENVIRONMENT}"
+    WEBHOOK_SA_EMAIL="memdog-webhook-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    RECEIVER_NAME="memdog-webhook-receiver-${ENVIRONMENT}"
+    PROCESSOR_NAME="memdog-webhook-processor-${ENVIRONMENT}"
+    GATEWAY_NAME="memdog-webhook-gw-${ENVIRONMENT}"
+    API_CONFIG_NAME="memdog-webhook-api-${ENVIRONMENT}"
 
     # Verify service account exists
     if ! gcloud iam service-accounts describe "$WEBHOOK_SA_EMAIL" --project="$PROJECT_ID" &>/dev/null; then
@@ -2363,13 +2363,13 @@ deploy_webhook() {
         exit 1
     fi
 
-    # Get mem-dog API URL (supports MEM_DOG_API_URL env var override)
+    # Get memdog API URL (supports MEM_DOG_API_URL env var override)
     if [ -n "$MEM_DOG_API_URL" ]; then
         API_URL="$MEM_DOG_API_URL"
         print_success "Using MEM_DOG_API_URL from environment: $API_URL"
     else
-        print_info "Getting mem-dog API URL from Cloud Run..."
-        API_URL=$(gcloud run services describe "mem-dog-api" \
+        print_info "Getting memdog API URL from Cloud Run..."
+        API_URL=$(gcloud run services describe "memdog-api" \
             --region "$REGION" --project "$PROJECT_ID" \
             --format 'value(status.url)' 2>/dev/null || echo "")
         if [ -z "$API_URL" ]; then
@@ -2416,7 +2416,7 @@ deploy_webhook() {
     # Resolve AGENT_SERVICE_URL — required by the processor to call Cloud Run A.
     # Accept an explicit override from the shell environment, then fall back to
     # auto-detecting the URL of the already-deployed agent Cloud Run service.
-    AGENT_SVC_NAME="mem-dog-webhook-agent-${ENVIRONMENT}"
+    AGENT_SVC_NAME="memdog-webhook-agent-${ENVIRONMENT}"
     if [ -z "${AGENT_SERVICE_URL:-}" ]; then
         AGENT_SERVICE_URL=$(gcloud run services describe "$AGENT_SVC_NAME" \
             --region "$REGION" --project "$PROJECT_ID" \
@@ -2545,25 +2545,25 @@ print_url_dependencies() {
     API_URL=""
     if [ -n "${MEM_DOG_API_URL:-}" ]; then
         API_URL="$MEM_DOG_API_URL"
-        echo "  API_URL (mem-dog-api)              = $API_URL  [from MEM_DOG_API_URL]"
+        echo "  API_URL (memdog-api)              = $API_URL  [from MEM_DOG_API_URL]"
     else
         PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format 'value(projectNumber)' 2>/dev/null || echo "")
         if [ -n "$PROJECT_NUMBER" ]; then
             # Canonical Cloud Run URL (project-number based); often more stable than hash-based status.url
-            API_URL="https://mem-dog-api-${PROJECT_NUMBER}.${REGION}.run.app"
-            echo "  API_URL (mem-dog-api)              = $API_URL  [project-number URL]"
+            API_URL="https://memdog-api-${PROJECT_NUMBER}.${REGION}.run.app"
+            echo "  API_URL (memdog-api)              = $API_URL  [project-number URL]"
         else
-            API_URL=$(gcloud run services describe "mem-dog-api" --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)' 2>/dev/null || echo "")
+            API_URL=$(gcloud run services describe "memdog-api" --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)' 2>/dev/null || echo "")
             if [ -n "$API_URL" ]; then
-                echo "  API_URL (mem-dog-api)              = $API_URL  [from gcloud status.url]"
+                echo "  API_URL (memdog-api)              = $API_URL  [from gcloud status.url]"
             else
-                echo "  API_URL (mem-dog-api)              = (not deployed)"
+                echo "  API_URL (memdog-api)              = (not deployed)"
             fi
         fi
     fi
 
     # UI (NEXT_PUBLIC_API_URL is what the UI uses to call the API)
-    UI_SVC="mem-dog-ui-${ENVIRONMENT}"
+    UI_SVC="memdog-ui-${ENVIRONMENT}"
     if [ -n "$API_URL" ]; then
         echo "  NEXT_PUBLIC_API_URL (UI → API)     = $API_URL"
     else
@@ -2577,14 +2577,14 @@ print_url_dependencies() {
     fi
 
     # Download Function (API uses Pub/Sub topic when set)
-    DOWNLOAD_TOPIC="mem-dog-downloads-${ENVIRONMENT}"
+    DOWNLOAD_TOPIC="memdog-downloads-${ENVIRONMENT}"
     if gcloud pubsub topics describe "$DOWNLOAD_TOPIC" --project="$PROJECT_ID" &>/dev/null; then
         echo "  DOWNLOAD_TOPIC                     = $DOWNLOAD_TOPIC"
     fi
 
     # Model tiers (AI Chat)
     for TIER in small medium large very-large; do
-        TIER_SVC="mem-dog-model-server-${TIER}-${ENVIRONMENT}"
+        TIER_SVC="memdog-model-server-${TIER}-${ENVIRONMENT}"
         T_URL=$(gcloud run services describe "$TIER_SVC" --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)' 2>/dev/null || echo "")
         if [ -n "$T_URL" ]; then
             TIER_UPPER=$(echo "$TIER" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
@@ -2593,14 +2593,14 @@ print_url_dependencies() {
     done
 
     # System config
-    SYSCONFIG_BUCKET="${PROJECT_ID}-mem-dog-sysconfig-${ENVIRONMENT}"
+    SYSCONFIG_BUCKET="${PROJECT_ID}-memdog-sysconfig-${ENVIRONMENT}"
     echo "  SYSTEM_CONFIG_BUCKET               = $SYSCONFIG_BUCKET"
 
     # Current API service env vars (if deployed and jq available)
-    if command -v jq &>/dev/null && gcloud run services describe "mem-dog-api" --region "$REGION" --project "$PROJECT_ID" &>/dev/null; then
+    if command -v jq &>/dev/null && gcloud run services describe "memdog-api" --region "$REGION" --project "$PROJECT_ID" &>/dev/null; then
         echo ""
-        echo "Current API service environment variables (mem-dog-api):"
-        gcloud run services describe "mem-dog-api" --region "$REGION" --project "$PROJECT_ID" --format=json 2>/dev/null | \
+        echo "Current API service environment variables (memdog-api):"
+        gcloud run services describe "memdog-api" --region "$REGION" --project "$PROJECT_ID" --format=json 2>/dev/null | \
             jq -r '.spec.template.spec.containers[0].env[]? |
                 if .value != null then
                     "  \(.name)=\(.value)"
@@ -2620,9 +2620,9 @@ print_url_dependencies() {
 deploy_webhook_gateway() {
     print_header "Deploying Webhook Gateway to Cloud Run: $ENVIRONMENT"
 
-    SERVICE_NAME="mem-dog-webhook-gateway-${ENVIRONMENT}"
-    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/webhook-gateway:${ENVIRONMENT}-latest"
-    SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    SERVICE_NAME="memdog-webhook-gateway-${ENVIRONMENT}"
+    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/webhook-gateway:${ENVIRONMENT}-latest"
+    SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
 
     # Verify service account exists (created by setup-env)
     if ! gcloud iam service-accounts describe "$SA_EMAIL" --project="$PROJECT_ID" &>/dev/null; then
@@ -2630,13 +2630,13 @@ deploy_webhook_gateway() {
         exit 1
     fi
 
-    # ── Resolve mem-dog API URL ────────────────────────────────────────────
+    # ── Resolve memdog API URL ────────────────────────────────────────────
     if [ -n "${MEM_DOG_API_URL:-}" ]; then
         WGW_API_URL="$MEM_DOG_API_URL"
         print_success "Using MEM_DOG_API_URL from environment: $WGW_API_URL"
     else
-        print_info "Getting mem-dog API URL from Cloud Run..."
-        WGW_API_URL=$(gcloud run services describe "mem-dog-api" \
+        print_info "Getting memdog API URL from Cloud Run..."
+        WGW_API_URL=$(gcloud run services describe "memdog-api" \
             --region "$REGION" --project "$PROJECT_ID" \
             --format 'value(status.url)' 2>/dev/null || echo "")
         if [ -z "$WGW_API_URL" ]; then
@@ -2657,7 +2657,7 @@ deploy_webhook_gateway() {
         WGW_WEBHOOK_URL="$MEM_DOG_WEBHOOK_GATEWAY_URL"
         print_success "Using MEM_DOG_WEBHOOK_GATEWAY_URL from environment: $WGW_WEBHOOK_URL"
     else
-        GATEWAY_NAME="mem-dog-webhook-gw-${ENVIRONMENT}"
+        GATEWAY_NAME="memdog-webhook-gw-${ENVIRONMENT}"
         GATEWAY_HOST=$(gcloud api-gateway gateways describe "$GATEWAY_NAME" \
             --location="$REGION" --project="$PROJECT_ID" \
             --format='value(defaultHostname)' 2>/dev/null || echo "")
@@ -2672,7 +2672,7 @@ deploy_webhook_gateway() {
 
     # ── Resolve webhook API key ────────────────────────────────────────────
     WGW_WEBHOOK_KEY="${MEM_DOG_WEBHOOK_API_KEY:-}"
-    WEBHOOK_KEY_SECRET_NAME="mem-dog-webhook-api-key-${ENVIRONMENT}"
+    WEBHOOK_KEY_SECRET_NAME="memdog-webhook-api-key-${ENVIRONMENT}"
     WEBHOOK_KEY_SECRET_FLAGS=""
     if [ -z "$WGW_WEBHOOK_KEY" ] && gcloud secrets describe "$WEBHOOK_KEY_SECRET_NAME" --project="$PROJECT_ID" &>/dev/null; then
         gcloud secrets add-iam-policy-binding "$WEBHOOK_KEY_SECRET_NAME" \
@@ -2820,8 +2820,8 @@ deploy_webhook_gateway() {
 deploy_webhook_gateway_gke() {
     print_header "Deploying Webhook Gateway to GKE: $ENVIRONMENT"
 
-    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/webhook-gateway:${ENVIRONMENT}-latest"
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/webhook-gateway:${ENVIRONMENT}-latest"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
 
     # ── Verify GKE cluster ─────────────────────────────────────────────────
@@ -2846,19 +2846,19 @@ deploy_webhook_gateway_gke() {
     fi
     print_success "kubectl found"
 
-    # ── Resolve mem-dog API URL ────────────────────────────────────────────
+    # ── Resolve memdog API URL ────────────────────────────────────────────
     # Priority: env var > in-cluster K8s service > Cloud Run
     if [ -z "${MEM_DOG_API_URL:-}" ]; then
         # Check if the API service exists in the same cluster
-        if kubectl get service api -n mem-dog &>/dev/null; then
-            MEM_DOG_API_URL="http://api.mem-dog.svc.cluster.local:8080"
+        if kubectl get service api -n memdog &>/dev/null; then
+            MEM_DOG_API_URL="http://api.memdog.svc.cluster.local:8080"
             print_success "MEM_DOG_API_URL (in-cluster): $MEM_DOG_API_URL"
         else
-            MEM_DOG_API_URL=$(gcloud run services describe "mem-dog-api" \
+            MEM_DOG_API_URL=$(gcloud run services describe "memdog-api" \
                 --region "$REGION" --project "$PROJECT_ID" \
                 --format 'value(status.url)' 2>/dev/null || echo "")
             if [ -z "$MEM_DOG_API_URL" ]; then
-                print_error "MEM_DOG_API_URL not set and mem-dog API not found (in-cluster or Cloud Run)."
+                print_error "MEM_DOG_API_URL not set and memdog API not found (in-cluster or Cloud Run)."
                 echo "  Set MEM_DOG_API_URL explicitly or deploy the API first."
                 exit 1
             fi
@@ -2881,7 +2881,7 @@ deploy_webhook_gateway_gke() {
         MEM_DOG_WEBHOOK_GATEWAY_URL="${MEM_DOG_API_URL}/api/v1/ingest"
         print_success "WEBHOOK_GATEWAY_URL (fallback API ingest): $MEM_DOG_WEBHOOK_GATEWAY_URL"
     else
-        GATEWAY_NAME="mem-dog-webhook-gw-${ENVIRONMENT}"
+        GATEWAY_NAME="memdog-webhook-gw-${ENVIRONMENT}"
         GATEWAY_HOST=$(gcloud api-gateway gateways describe "$GATEWAY_NAME" \
             --location="$REGION" --project="$PROJECT_ID" \
             --format='value(defaultHostname)' 2>/dev/null || echo "")
@@ -2960,19 +2960,19 @@ deploy_webhook_gateway_gke() {
 
     # Auto-discover WEBHOOK_API_KEY from the API service if not resolved above
     if [ -z "$RESOLVED_WEBHOOK_API_KEY" ]; then
-        RESOLVED_WEBHOOK_API_KEY=$(gcloud run services describe "mem-dog-api" \
+        RESOLVED_WEBHOOK_API_KEY=$(gcloud run services describe "memdog-api" \
             --region "$REGION" --project "$PROJECT_ID" \
             --format 'value(spec.template.spec.containers[0].env.filter(name=WEBHOOK_GATEWAY_API_KEY).value)' 2>/dev/null || echo "")
         if [ -n "$RESOLVED_WEBHOOK_API_KEY" ]; then
-            print_info "WEBHOOK_API_KEY auto-discovered from mem-dog-api service" >&2
+            print_info "WEBHOOK_API_KEY auto-discovered from memdog-api service" >&2
         fi
     fi
 
-    # Resolve MEM_DOG_API_KEY for the gateway to authenticate with the mem-dog API
+    # Resolve MEM_DOG_API_KEY for the gateway to authenticate with the memdog API
     # (needed for telemetry writes and memory publish)
     local RESOLVED_MEM_DOG_API_KEY="${MEM_DOG_API_KEY:-}"
     if [ -z "$RESOLVED_MEM_DOG_API_KEY" ]; then
-        RESOLVED_MEM_DOG_API_KEY=$(kubectl get secret api-auth-secret -n mem-dog \
+        RESOLVED_MEM_DOG_API_KEY=$(kubectl get secret api-auth-secret -n memdog \
             -o jsonpath='{.data.API_KEY}' 2>/dev/null | base64 -d 2>/dev/null || echo "")
         [ -n "$RESOLVED_MEM_DOG_API_KEY" ] && print_success "MEM_DOG_API_KEY read from api-auth-secret"
     fi
@@ -3015,8 +3015,8 @@ deploy_webhook_gateway_gke() {
     [ -n "${ZOOM_SUBSCRIPTION_ID:-}" ] && SECRET_CMD+=("--from-literal=ZOOM_SUBSCRIPTION_ID=${ZOOM_SUBSCRIPTION_ID}")
 
     # GKE pipeline URLs (auto-discovered from in-cluster services)
-    if kubectl get service api -n mem-dog &>/dev/null; then
-        SECRET_CMD+=("--from-literal=MEM_DOG_API_GKE_URL=http://api.mem-dog.svc.cluster.local:8080")
+    if kubectl get service api -n memdog &>/dev/null; then
+        SECRET_CMD+=("--from-literal=MEM_DOG_API_GKE_URL=http://api.memdog.svc.cluster.local:8080")
     fi
     if kubectl get service webhook-receiver -n webhook-pipeline &>/dev/null; then
         SECRET_CMD+=("--from-literal=WEBHOOK_GKE_RECEIVER_URL=http://webhook-receiver.webhook-pipeline.svc.cluster.local:8080")
@@ -3125,8 +3125,8 @@ deploy_webhook_gateway_gke() {
 deploy_openclaw_node_gke() {
     print_header "Deploying OpenClaw Node.js to GKE: $ENVIRONMENT"
 
-    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/openclaw-node:${ENVIRONMENT}-latest"
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/openclaw-node:${ENVIRONMENT}-latest"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
 
     # ── Verify GKE cluster ─────────────────────────────────────────────────
@@ -3190,7 +3190,7 @@ deploy_openclaw_node_gke() {
     # Create/update configmap with current values
     kubectl -n webhook-gateway create configmap openclaw-node-config \
         --from-literal=GEMINI_MODEL="${GEMINI_MODEL}" \
-        --from-literal=MEM_DOG_API_URL="http://api.mem-dog.svc.cluster.local:8080" \
+        --from-literal=MEM_DOG_API_URL="http://api.memdog.svc.cluster.local:8080" \
         --from-literal=WEBHOOK_BRIDGE_URL="http://webhook-gateway.webhook-gateway.svc.cluster.local:8080/webhooks/openclaw" \
         --from-literal=LOG_LEVEL="${LOG_LEVEL:-info}" \
         --dry-run=client -o yaml | kubectl apply -f -
@@ -3234,11 +3234,11 @@ deploy_openclaw_node_gke() {
 # =============================================================================
 
 deploy_api_gke() {
-    print_header "Deploying mem-dog API to GKE: $ENVIRONMENT"
+    print_header "Deploying memdog API to GKE: $ENVIRONMENT"
 
     local K8S_DIR="k8s"
-    local IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/api:${ENVIRONMENT}-gke-latest"
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    local IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/api:${ENVIRONMENT}-gke-latest"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
 
     # ── Verify GKE cluster ──────────────────────────────────────────────────
@@ -3260,25 +3260,25 @@ deploy_api_gke() {
     print_success "API image pushed: $IMAGE_TAG"
 
     # ── Ensure namespace ────────────────────────────────────────────────────
-    kubectl create namespace mem-dog --dry-run=client -o yaml | kubectl apply -f -
+    kubectl create namespace memdog --dry-run=client -o yaml | kubectl apply -f -
 
     # ── Workload Identity setup ─────────────────────────────────────────────
-    local GKE_API_GSA="mem-dog-api-gke-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    local GKE_API_GSA="memdog-api-gke-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
     local GKE_API_KSA="api-sa"
-    local GKE_API_KSA_NS="mem-dog"
+    local GKE_API_KSA_NS="memdog"
 
     print_info "Setting up Workload Identity..."
-    gcloud iam service-accounts create "mem-dog-api-gke-${ENVIRONMENT}" \
+    gcloud iam service-accounts create "memdog-api-gke-${ENVIRONMENT}" \
         --project="$PROJECT_ID" \
-        --display-name="mem-dog API GKE ($ENVIRONMENT)" 2>/dev/null || true
+        --display-name="memdog API GKE ($ENVIRONMENT)" 2>/dev/null || true
 
     # Grant storage access for GCS buckets
     local GCS_BUCKETS=(
-        "${PROJECT_ID}-mem-dog-raw-${ENVIRONMENT}"
-        "${PROJECT_ID}-mem-dog-meta-${ENVIRONMENT}"
-        "${PROJECT_ID}-mem-dog-memories-${ENVIRONMENT}"
-        "${PROJECT_ID}-mem-dog-users-${ENVIRONMENT}"
-        "${PROJECT_ID}-mem-dog-config-${ENVIRONMENT}"
+        "${PROJECT_ID}-memdog-raw-${ENVIRONMENT}"
+        "${PROJECT_ID}-memdog-meta-${ENVIRONMENT}"
+        "${PROJECT_ID}-memdog-memories-${ENVIRONMENT}"
+        "${PROJECT_ID}-memdog-users-${ENVIRONMENT}"
+        "${PROJECT_ID}-memdog-config-${ENVIRONMENT}"
     )
     for BUCKET in "${GCS_BUCKETS[@]}"; do
         gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
@@ -3319,7 +3319,7 @@ deploy_api_gke() {
     fi
 
     # ── Create/update API secrets ────────────────────────────────────────────
-    kubectl -n mem-dog create secret generic api-supabase-secrets \
+    kubectl -n memdog create secret generic api-supabase-secrets \
         --from-literal=SUPABASE_KEY="$SUPABASE_SERVICE_KEY" \
         --from-literal=SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_KEY" \
         --from-literal=SUPABASE_JWT_SECRET="${SUPABASE_JWT:-}" \
@@ -3327,11 +3327,11 @@ deploy_api_gke() {
     print_success "api-supabase-secrets applied"
 
     # ── Update ConfigMap for Supabase + GCS ──────────────────────────────────
-    local RAW_BUCKET_NAME="${PROJECT_ID}-mem-dog-raw-${ENVIRONMENT}"
-    local META_BUCKET_NAME="${PROJECT_ID}-mem-dog-meta-${ENVIRONMENT}"
-    local MEMORIES_BUCKET_NAME="${PROJECT_ID}-mem-dog-memories-${ENVIRONMENT}"
-    local USER_BUCKET_NAME="${PROJECT_ID}-mem-dog-users-${ENVIRONMENT}"
-    local CONFIG_BUCKET="${PROJECT_ID}-mem-dog-config-${ENVIRONMENT}"
+    local RAW_BUCKET_NAME="${PROJECT_ID}-memdog-raw-${ENVIRONMENT}"
+    local META_BUCKET_NAME="${PROJECT_ID}-memdog-meta-${ENVIRONMENT}"
+    local MEMORIES_BUCKET_NAME="${PROJECT_ID}-memdog-memories-${ENVIRONMENT}"
+    local USER_BUCKET_NAME="${PROJECT_ID}-memdog-users-${ENVIRONMENT}"
+    local CONFIG_BUCKET="${PROJECT_ID}-memdog-config-${ENVIRONMENT}"
 
     local CONFIGMAP_EXTRA=()
     if kubectl get service webhook-receiver -n webhook-pipeline &>/dev/null; then
@@ -3342,9 +3342,9 @@ deploy_api_gke() {
         print_success "Webhook receiver found — wiring WEBHOOK_GATEWAY_URL for API → pipeline forwarding"
     else
         # Preserve existing API webhook config so re-deploy does not clear it
-        if kubectl get configmap api-config -n mem-dog &>/dev/null; then
-            existing_url=$(kubectl get configmap api-config -n mem-dog -o jsonpath='{.data.WEBHOOK_GATEWAY_URL}' 2>/dev/null || true)
-            existing_key=$(kubectl get configmap api-config -n mem-dog -o jsonpath='{.data.WEBHOOK_API_KEY}' 2>/dev/null || true)
+        if kubectl get configmap api-config -n memdog &>/dev/null; then
+            existing_url=$(kubectl get configmap api-config -n memdog -o jsonpath='{.data.WEBHOOK_GATEWAY_URL}' 2>/dev/null || true)
+            existing_key=$(kubectl get configmap api-config -n memdog -o jsonpath='{.data.WEBHOOK_API_KEY}' 2>/dev/null || true)
             [ -n "$existing_url" ] && CONFIGMAP_EXTRA+=(--from-literal=WEBHOOK_GATEWAY_URL="$existing_url")
             [ -n "$existing_key" ] && CONFIGMAP_EXTRA+=(--from-literal=WEBHOOK_API_KEY="$existing_key")
             [ ${#CONFIGMAP_EXTRA[@]} -gt 0 ] && print_info "Preserved existing API WEBHOOK_GATEWAY_URL/WEBHOOK_API_KEY from configmap"
@@ -3352,7 +3352,7 @@ deploy_api_gke() {
         [ ${#CONFIGMAP_EXTRA[@]} -eq 0 ] && print_info "Webhook receiver not found (run deploy-webhook-pipeline-gke first for API→receiver forwarding)"
     fi
 
-    kubectl -n mem-dog create configmap api-config \
+    kubectl -n memdog create configmap api-config \
         --from-literal=STORAGE_BACKEND="supabase" \
         --from-literal=SUPABASE_URL="http://supabase-kong.supabase.svc.cluster.local:8000" \
         --from-literal=GCP_PROJECT_ID="$PROJECT_ID" \
@@ -3372,9 +3372,9 @@ deploy_api_gke() {
 
     # ── Preserve API keys from existing API deployment (models come from ai.env) ──
     local _API_ENV_PATCH=()
-    if kubectl get deployment api -n mem-dog &>/dev/null; then
+    if kubectl get deployment api -n memdog &>/dev/null; then
         for _var in SYSTEM_GEMINI_API_KEY GEMINI_API_KEY SUPABASE_API_GATEWAY_KEY NANGO_API_URL NANGO_SECRET_KEY NANGO_SERVER_URL NANGO_PUBLIC_KEY GEMINI_MODEL ZOOM_WEBHOOK_SECRET; do
-            _val=$(kubectl get deployment api -n mem-dog \
+            _val=$(kubectl get deployment api -n memdog \
                 -o jsonpath="{.spec.template.spec.containers[0].env[?(@.name==\"${_var}\")].value}" 2>/dev/null || echo "")
             [ -n "$_val" ] && _API_ENV_PATCH+=("${_var}=${_val}")
         done
@@ -3383,32 +3383,32 @@ deploy_api_gke() {
 
     # ── Apply remaining manifests ────────────────────────────────────────────
     kubectl apply -f "$K8S_DIR/api-pvc.yaml"
-    sed "s|image: mem-dog-api|image: ${IMAGE_TAG}|" "$K8S_DIR/api-deployment.yaml" \
+    sed "s|image: memdog-api|image: ${IMAGE_TAG}|" "$K8S_DIR/api-deployment.yaml" \
         | kubectl apply -f -
     kubectl apply -f "$K8S_DIR/api-service.yaml"
     print_success "API deployment and service applied"
 
     # ── Re-apply preserved env vars ───────────────────────────────────────
     if [ ${#_API_ENV_PATCH[@]} -gt 0 ]; then
-        kubectl set env deployment/api -n mem-dog "${_API_ENV_PATCH[@]}"
+        kubectl set env deployment/api -n memdog "${_API_ENV_PATCH[@]}"
         print_success "Preserved API env vars: ${_API_ENV_PATCH[*]}"
     fi
 
     # ── Force pod restart to pick up new image (tag is reused) ────────────
-    kubectl rollout restart deployment/api -n mem-dog
+    kubectl rollout restart deployment/api -n memdog
 
     # ── Wait for rollout ─────────────────────────────────────────────────────
     print_info "Waiting for rollout to complete..."
-    kubectl rollout status deployment/api -n mem-dog --timeout=120s
+    kubectl rollout status deployment/api -n memdog --timeout=120s
     print_success "Rollout complete"
 
-    print_header "mem-dog API Deployed to GKE"
+    print_header "memdog API Deployed to GKE"
     echo "Image:     $IMAGE_TAG"
-    echo "Namespace: mem-dog"
-    echo "Service:   api.mem-dog.svc.cluster.local:8080"
+    echo "Namespace: memdog"
+    echo "Service:   api.memdog.svc.cluster.local:8080"
     echo ""
     echo "Quick test:"
-    echo "  kubectl port-forward svc/api -n mem-dog 9091:8080 &"
+    echo "  kubectl port-forward svc/api -n memdog 9091:8080 &"
     echo "  curl http://localhost:9091/health"
     echo "  curl -X POST http://localhost:9091/api/v1/users -H 'Content-Type: application/json' -d '{\"username\":\"test\",\"email\":\"t@t.com\"}'"
 }
@@ -3420,7 +3420,7 @@ deploy_api_gke() {
 restart_gke() {
     print_header "Restarting all GKE workloads"
 
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
 
     print_info "Connecting to GKE cluster $GKE_CLUSTER..."
@@ -3434,7 +3434,7 @@ restart_gke() {
     fi
     print_success "Connected to GKE cluster: $GKE_CLUSTER"
 
-    local NAMESPACES=(mem-dog webhook-gateway webhook-pipeline supabase)
+    local NAMESPACES=(memdog webhook-gateway webhook-pipeline supabase)
     for NS in "${NAMESPACES[@]}"; do
         if ! kubectl get namespace "$NS" &>/dev/null; then
             print_info "Namespace $NS does not exist — skipping"
@@ -3475,10 +3475,10 @@ deploy_webhook_pipeline_gke() {
     print_header "Deploying Webhook Pipeline to GKE (NATS): $ENVIRONMENT"
 
     local K8S_DIR="k8s/webhook-pipeline"
-    local RECEIVER_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/webhook-receiver:${ENVIRONMENT}-gke-latest"
-    local AGENT_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/webhook-agent:${ENVIRONMENT}-gke-latest"
-    local PULL_WORKER_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/webhook-pull-worker:${ENVIRONMENT}-gke-latest"
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    local RECEIVER_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/webhook-receiver:${ENVIRONMENT}-gke-latest"
+    local AGENT_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/webhook-agent:${ENVIRONMENT}-gke-latest"
+    local PULL_WORKER_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/webhook-pull-worker:${ENVIRONMENT}-gke-latest"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
 
     local PIPELINE_NS="webhook-pipeline"
@@ -3513,13 +3513,13 @@ deploy_webhook_pipeline_gke() {
     print_success "Pull-worker image pushed"
 
     # ── Workload Identity setup ─────────────────────────────────────────────
-    local WH_GSA="mem-dog-webhook-gke-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    local WH_GSA="memdog-webhook-gke-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
     local WH_KSA="webhook-pipeline-sa"
 
     print_info "Setting up Workload Identity for webhook pipeline..."
-    gcloud iam service-accounts create "mem-dog-webhook-gke-${ENVIRONMENT}" \
+    gcloud iam service-accounts create "memdog-webhook-gke-${ENVIRONMENT}" \
         --project="$PROJECT_ID" \
-        --display-name="mem-dog Webhook Pipeline GKE ($ENVIRONMENT)" 2>/dev/null || true
+        --display-name="memdog Webhook Pipeline GKE ($ENVIRONMENT)" 2>/dev/null || true
 
     # Grant Storage and Vertex AI access (no Pub/Sub needed — using in-cluster NATS)
     for ROLE in roles/storage.objectAdmin roles/aiplatform.user; do
@@ -3545,9 +3545,9 @@ deploy_webhook_pipeline_gke() {
     if [ -z "$GOOGLE_API_KEY" ]; then
         GOOGLE_API_KEY="${GEMINI_API_KEY:-${GOOGLE_API_KEY:-}}"
     fi
-    # Fallback: read from api-auth-secret in mem-dog namespace
+    # Fallback: read from api-auth-secret in memdog namespace
     if [ -z "$GOOGLE_API_KEY" ]; then
-        GOOGLE_API_KEY=$(kubectl get secret api-auth-secret -n mem-dog \
+        GOOGLE_API_KEY=$(kubectl get secret api-auth-secret -n memdog \
             -o jsonpath='{.data.SYSTEM_GEMINI_API_KEY}' 2>/dev/null | base64 -d 2>/dev/null || echo "")
         [ -n "$GOOGLE_API_KEY" ] && print_success "Gemini API key read from api-auth-secret"
     fi
@@ -3558,7 +3558,7 @@ deploy_webhook_pipeline_gke() {
         [ -n "$GOOGLE_API_KEY" ] && print_info "Preserved existing GOOGLE_API_KEY from webhook-pipeline-secrets"
     fi
 
-    local MEM_DOG_API_GKE_URL="http://api.mem-dog.svc.cluster.local:8080"
+    local MEM_DOG_API_GKE_URL="http://api.memdog.svc.cluster.local:8080"
 
     # ── Deploy NATS server ──────────────────────────────────────────────────
     print_info "Deploying in-cluster NATS server..."
@@ -3612,10 +3612,10 @@ deploy_webhook_pipeline_gke() {
         --dry-run=client -o yaml | kubectl apply -f -
     print_success "ConfigMap applied (NATS_URL=$NATS_URL, ADK_MODEL=$PIPELINE_ADK_MODEL, prefer_gemini=$PIPELINE_PREFER_GEMINI)"
 
-    # Resolve API key for the webhook agent to authenticate with mem-dog API
+    # Resolve API key for the webhook agent to authenticate with memdog API
     local WH_API_KEY="${MEM_DOG_API_KEY:-}"
     if [ -z "$WH_API_KEY" ]; then
-        WH_API_KEY=$(kubectl get secret api-auth-secret -n mem-dog \
+        WH_API_KEY=$(kubectl get secret api-auth-secret -n memdog \
             -o jsonpath='{.data.API_KEY}' 2>/dev/null | base64 -d 2>/dev/null || echo "")
         [ -n "$WH_API_KEY" ] && print_success "API key read from api-auth-secret"
     fi
@@ -3708,8 +3708,8 @@ deploy_webhook_pipeline_gke() {
 deploy_mcp_server_gke() {
     print_header "Deploying MCP Server to GKE: $ENVIRONMENT"
 
-    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/mcp-server:${ENVIRONMENT}-gke-latest"
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/memdog/mcp-server:${ENVIRONMENT}-gke-latest"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
 
     # ── Verify GKE cluster ─────────────────────────────────────────────────
@@ -3751,11 +3751,11 @@ deploy_mcp_server_gke() {
     print_info "Applying K8s manifests..."
 
     # Ensure namespace exists
-    kubectl create namespace mem-dog --dry-run=client -o yaml | kubectl apply -f -
+    kubectl create namespace memdog --dry-run=client -o yaml | kubectl apply -f -
 
     # ConfigMap
-    kubectl -n mem-dog create configmap mcp-server-config \
-        --from-literal=MEM_DOG_API_URL="http://api.mem-dog.svc.cluster.local:8080" \
+    kubectl -n memdog create configmap mcp-server-config \
+        --from-literal=MEM_DOG_API_URL="http://api.memdog.svc.cluster.local:8080" \
         --from-literal=LOG_LEVEL="${LOG_LEVEL:-INFO}" \
         --from-literal=PORT="8080" \
         --dry-run=client -o yaml | kubectl apply -f -
@@ -3763,7 +3763,7 @@ deploy_mcp_server_gke() {
 
     # Deployment
     kubectl apply -f "$ROOT_DIR/k8s/mcp-server-deployment.yaml"
-    kubectl -n mem-dog set image deployment/mcp-server mcp-server="$IMAGE_TAG"
+    kubectl -n memdog set image deployment/mcp-server mcp-server="$IMAGE_TAG"
     print_success "Deployment applied"
 
     # Service
@@ -3776,7 +3776,7 @@ deploy_mcp_server_gke() {
 
     # ── Wait for rollout ───────────────────────────────────────────────────
     print_info "Waiting for rollout..."
-    kubectl -n mem-dog rollout status deployment/mcp-server --timeout=120s || true
+    kubectl -n memdog rollout status deployment/mcp-server --timeout=120s || true
 
     print_success "MCP Server deployed to GKE!"
     echo ""
@@ -3791,7 +3791,7 @@ deploy_mcp_server_gke() {
 setup_autoscaling() {
     print_header "Setting up KEDA autoscaling (scale-to-zero): $ENVIRONMENT"
 
-    GKE_CLUSTER="${GKE_CLUSTER:-mem-dog-${ENVIRONMENT}}"
+    GKE_CLUSTER="${GKE_CLUSTER:-memdog-${ENVIRONMENT}}"
     GKE_ZONE="${GKE_ZONE:-${REGION}-a}"
 
     print_info "Connecting to GKE cluster $GKE_CLUSTER..."
@@ -3839,7 +3839,7 @@ setup_autoscaling() {
     echo "  Pipeline/API/MCP: 15 min idle → 0 replicas"
     echo ""
     echo "Manual wake-up:"
-    echo "  kubectl scale deployment -n mem-dog api mcp-server --replicas=1"
+    echo "  kubectl scale deployment -n memdog api mcp-server --replicas=1"
     echo "  kubectl scale deployment -n webhook-pipeline webhook-agent ollama ollama-chat --replicas=1"
     echo ""
     echo "Remove autoscaling:"
@@ -3861,11 +3861,11 @@ show_status() {
     print_url_dependencies
     
     # API Status (use same API_URL as in URL dependencies: override or project-number or gcloud)
-    echo "API Service (mem-dog-api):"
-    if gcloud run services describe "mem-dog-api" \
+    echo "API Service (memdog-api):"
+    if gcloud run services describe "memdog-api" \
         --region "$REGION" --project "$PROJECT_ID" &>/dev/null; then
         if [ -z "$API_URL" ]; then
-            API_URL=$(gcloud run services describe "mem-dog-api" \
+            API_URL=$(gcloud run services describe "memdog-api" \
                 --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)')
         fi
         print_success "Deployed at: $API_URL"
@@ -3875,10 +3875,10 @@ show_status() {
     echo ""
     
     # UI Status
-    echo "UI Service (mem-dog-ui-${ENVIRONMENT}):"
-    if gcloud run services describe "mem-dog-ui-${ENVIRONMENT}" \
+    echo "UI Service (memdog-ui-${ENVIRONMENT}):"
+    if gcloud run services describe "memdog-ui-${ENVIRONMENT}" \
         --region "$REGION" --project "$PROJECT_ID" &>/dev/null; then
-        UI_URL=$(gcloud run services describe "mem-dog-ui-${ENVIRONMENT}" \
+        UI_URL=$(gcloud run services describe "memdog-ui-${ENVIRONMENT}" \
             --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)')
         print_success "Deployed at: $UI_URL"
     else
@@ -3894,8 +3894,8 @@ show_status() {
     echo ""
 
     # Cloud SQL / PostgreSQL
-    local INSTANCE_NAME="mem-dog-pg-${ENVIRONMENT}"
-    local SECRET_NAME="mem-dog-postgres-url-${ENVIRONMENT}"
+    local INSTANCE_NAME="memdog-pg-${ENVIRONMENT}"
+    local SECRET_NAME="memdog-postgres-url-${ENVIRONMENT}"
     echo "Cloud SQL (PostgreSQL 16 + pgvector):"
     if gcloud sql instances describe "$INSTANCE_NAME" --project="$PROJECT_ID" &>/dev/null; then
         local SQL_STATE
@@ -3916,8 +3916,8 @@ show_status() {
     echo ""
 
     # Redis
-    local REDIS_INSTANCE="mem-dog-redis-${ENVIRONMENT}"
-    local REDIS_SECRET_NAME="mem-dog-redis-url-${ENVIRONMENT}"
+    local REDIS_INSTANCE="memdog-redis-${ENVIRONMENT}"
+    local REDIS_SECRET_NAME="memdog-redis-url-${ENVIRONMENT}"
     echo "Redis store:"
     if gcloud redis instances describe "$REDIS_INSTANCE" --region="$REGION" --project="$PROJECT_ID" &>/dev/null; then
         local REDIS_HOST
@@ -3932,8 +3932,8 @@ show_status() {
     echo ""
 
     # Supabase
-    local SUPABASE_URL_SECRET="mem-dog-supabase-url-${ENVIRONMENT}"
-    local SUPABASE_KEY_SECRET="mem-dog-supabase-key-${ENVIRONMENT}"
+    local SUPABASE_URL_SECRET="memdog-supabase-url-${ENVIRONMENT}"
+    local SUPABASE_KEY_SECRET="memdog-supabase-key-${ENVIRONMENT}"
     echo "Supabase store secrets:"
     if gcloud secrets describe "$SUPABASE_URL_SECRET" --project="$PROJECT_ID" &>/dev/null && \
        gcloud secrets describe "$SUPABASE_KEY_SECRET" --project="$PROJECT_ID" &>/dev/null; then
@@ -3945,7 +3945,7 @@ show_status() {
 
     # System Config Bucket
     echo "System Config Bucket:"
-    SYSCONFIG_BUCKET="${PROJECT_ID}-mem-dog-sysconfig-${ENVIRONMENT}"
+    SYSCONFIG_BUCKET="${PROJECT_ID}-memdog-sysconfig-${ENVIRONMENT}"
     if gcloud storage buckets describe "gs://$SYSCONFIG_BUCKET" &>/dev/null; then
         print_success "$SYSCONFIG_BUCKET"
         if gcloud storage cat "gs://$SYSCONFIG_BUCKET/platform-config.json" &>/dev/null; then
@@ -3961,7 +3961,7 @@ show_status() {
     # Buckets (Core)
     echo "Core GCS Buckets:"
     for bucket_suffix in raw meta memories users; do
-        BUCKET_NAME="${PROJECT_ID}-mem-dog-${bucket_suffix}-${ENVIRONMENT}"
+        BUCKET_NAME="${PROJECT_ID}-memdog-${bucket_suffix}-${ENVIRONMENT}"
         if gcloud storage buckets describe "gs://$BUCKET_NAME" &>/dev/null; then
             print_success "$BUCKET_NAME"
         else
@@ -3973,7 +3973,7 @@ show_status() {
     # Buckets (AI Layer)
     echo "AI Layer GCS Buckets:"
     for bucket_suffix in prompts embeddings viewpoints aiconfig skills; do
-        BUCKET_NAME="${PROJECT_ID}-mem-dog-${bucket_suffix}-${ENVIRONMENT}"
+        BUCKET_NAME="${PROJECT_ID}-memdog-${bucket_suffix}-${ENVIRONMENT}"
         if gcloud storage buckets describe "gs://$BUCKET_NAME" &>/dev/null; then
             print_success "$BUCKET_NAME"
         else
@@ -3984,14 +3984,14 @@ show_status() {
 
     # AI Chat Model Servers (small / medium / large / very-large tiers)
     echo "AI Chat Model Servers:"
-    MODELS_BUCKET="${PROJECT_ID}-mem-dog-models-${ENVIRONMENT}"
+    MODELS_BUCKET="${PROJECT_ID}-memdog-models-${ENVIRONMENT}"
     if gcloud storage buckets describe "gs://$MODELS_BUCKET" --project="$PROJECT_ID" &>/dev/null; then
         print_success "Models bucket: $MODELS_BUCKET"
     else
         print_warning "Models bucket: $MODELS_BUCKET (not found — run deploy-model-servers)"
     fi
     for TIER in small medium large very-large; do
-        TIER_SVC="mem-dog-model-server-${TIER}-${ENVIRONMENT}"
+        TIER_SVC="memdog-model-server-${TIER}-${ENVIRONMENT}"
         if gcloud run services describe "$TIER_SVC" \
             --region "$REGION" --project "$PROJECT_ID" &>/dev/null; then
             T_URL=$(gcloud run services describe "$TIER_SVC" \
@@ -4006,21 +4006,21 @@ show_status() {
     # Webhook Pipeline
     echo "Webhook Pipeline:"
 
-    TOPIC_NAME="mem-dog-webhook-${ENVIRONMENT}"
+    TOPIC_NAME="memdog-webhook-${ENVIRONMENT}"
     if gcloud pubsub topics describe "$TOPIC_NAME" --project="$PROJECT_ID" &>/dev/null; then
         print_success "Pub/Sub topic: $TOPIC_NAME"
     else
         print_warning "Pub/Sub topic: $TOPIC_NAME (not found)"
     fi
 
-    WEBHOOK_SA_EMAIL="mem-dog-webhook-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    WEBHOOK_SA_EMAIL="memdog-webhook-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
     if gcloud iam service-accounts describe "$WEBHOOK_SA_EMAIL" --project="$PROJECT_ID" &>/dev/null; then
         print_success "Service account: $WEBHOOK_SA_EMAIL"
     else
         print_warning "Service account: $WEBHOOK_SA_EMAIL (not found)"
     fi
 
-    RECEIVER_NAME="mem-dog-webhook-receiver-${ENVIRONMENT}"
+    RECEIVER_NAME="memdog-webhook-receiver-${ENVIRONMENT}"
     if gcloud functions describe "$RECEIVER_NAME" --gen2 --region="$REGION" --project="$PROJECT_ID" &>/dev/null; then
         RECEIVER_URL=$(gcloud functions describe "$RECEIVER_NAME" \
             --gen2 --region="$REGION" --project="$PROJECT_ID" \
@@ -4030,14 +4030,14 @@ show_status() {
         print_warning "Receiver function: $RECEIVER_NAME (not deployed)"
     fi
 
-    PROCESSOR_NAME="mem-dog-webhook-processor-${ENVIRONMENT}"
+    PROCESSOR_NAME="memdog-webhook-processor-${ENVIRONMENT}"
     if gcloud functions describe "$PROCESSOR_NAME" --gen2 --region="$REGION" --project="$PROJECT_ID" &>/dev/null; then
         print_success "Processor function: $PROCESSOR_NAME (deployed)"
     else
         print_warning "Processor function: $PROCESSOR_NAME (not deployed)"
     fi
 
-    MODEL_SERVER_NAME="mem-dog-model-server-${ENVIRONMENT}"
+    MODEL_SERVER_NAME="memdog-model-server-${ENVIRONMENT}"
     if gcloud run services describe "$MODEL_SERVER_NAME" \
         --region "$REGION" --project "$PROJECT_ID" &>/dev/null; then
         MS_URL=$(gcloud run services describe "$MODEL_SERVER_NAME" \
@@ -4047,7 +4047,7 @@ show_status() {
         print_warning "Model server: $MODEL_SERVER_NAME (not deployed)"
     fi
 
-    AGENT_SERVICE_NAME="mem-dog-webhook-agent-${ENVIRONMENT}"
+    AGENT_SERVICE_NAME="memdog-webhook-agent-${ENVIRONMENT}"
     if gcloud run services describe "$AGENT_SERVICE_NAME" \
         --region "$REGION" --project "$PROJECT_ID" &>/dev/null; then
         AS_URL=$(gcloud run services describe "$AGENT_SERVICE_NAME" \
@@ -4057,7 +4057,7 @@ show_status() {
         print_warning "ADK agent: $AGENT_SERVICE_NAME (not deployed)"
     fi
 
-    GATEWAY_NAME="mem-dog-webhook-gw-${ENVIRONMENT}"
+    GATEWAY_NAME="memdog-webhook-gw-${ENVIRONMENT}"
     if gcloud api-gateway gateways describe "$GATEWAY_NAME" \
         --location="$REGION" --project="$PROJECT_ID" &>/dev/null; then
         GATEWAY_URL=$(gcloud api-gateway gateways describe "$GATEWAY_NAME" \
@@ -4071,7 +4071,7 @@ show_status() {
 
     # Webhook Gateway (Cloud Run)
     echo "Webhook Gateway (Cloud Run):"
-    WGW_SERVICE_NAME="mem-dog-webhook-gateway-${ENVIRONMENT}"
+    WGW_SERVICE_NAME="memdog-webhook-gateway-${ENVIRONMENT}"
     if gcloud run services describe "$WGW_SERVICE_NAME" \
         --region "$REGION" --project "$PROJECT_ID" &>/dev/null; then
         WGW_URL=$(gcloud run services describe "$WGW_SERVICE_NAME" \
@@ -4113,7 +4113,7 @@ show_status() {
 # =============================================================================
 
 GCP_VM_OPTIONS_JSON="${SCRIPT_DIR}/gcp-vm-options.json"
-MEM_DOG_VM_MODEL_FILE="${SCRIPT_DIR}/.mem-dog-vm-model"
+MEM_DOG_VM_MODEL_FILE="${SCRIPT_DIR}/.memdog-vm-model"
 
 # List VM types from config. Requires jq.
 list_vm_options() {
@@ -4222,7 +4222,7 @@ list_cloudrun_options() {
 # API reads from here so list_machines returns tier machines. Call after deploy-model-servers.
 # Usage: write_tier_machines_to_ai_config  (uses TIER_URLS array: "tier=url" entries)
 write_tier_machines_to_ai_config() {
-    local AI_CONFIG_BUCKET="${PROJECT_ID}-mem-dog-aiconfig-${ENVIRONMENT}"
+    local AI_CONFIG_BUCKET="${PROJECT_ID}-memdog-aiconfig-${ENVIRONMENT}"
     if ! gcloud storage buckets describe "gs://$AI_CONFIG_BUCKET" --project="$PROJECT_ID" &>/dev/null; then
         print_warning "AI config bucket $AI_CONFIG_BUCKET not found; skipping tier_machines.json"
         return
@@ -4352,7 +4352,7 @@ deploy_vm_instance() {
     
     print_header "Deploying VM Instance: $VM_TYPE ($DESCRIPTION)"
     
-    VM_NAME="mem-dog-vm-${VM_TYPE}-${ENVIRONMENT}"
+    VM_NAME="memdog-vm-${VM_TYPE}-${ENVIRONMENT}"
     ZONE="${REGION}-a"
     
     # Check if VM already exists
@@ -4362,7 +4362,7 @@ deploy_vm_instance() {
             --zone="$ZONE" --project="$PROJECT_ID" \
             --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
         print_info "External IP: $EXTERNAL_IP"
-        print_info "To register in mem-dog API, run:"
+        print_info "To register in memdog API, run:"
         echo ""
         echo "curl -X POST \"\$API_URL/api/v1/models/vm-instances\" \\"
         echo "  -H \"Content-Type: application/json\" \\"
@@ -4371,9 +4371,9 @@ deploy_vm_instance() {
     fi
     
     # Create firewall rule if it doesn't exist
-    if ! gcloud compute firewall-rules describe mem-dog-model-server --project="$PROJECT_ID" &>/dev/null; then
+    if ! gcloud compute firewall-rules describe memdog-model-server --project="$PROJECT_ID" &>/dev/null; then
         print_info "Creating firewall rule for model server..."
-        gcloud compute firewall-rules create mem-dog-model-server \
+        gcloud compute firewall-rules create memdog-model-server \
             --project="$PROJECT_ID" \
             --allow tcp:8000 \
             --source-ranges=0.0.0.0/0 \
@@ -4440,7 +4440,7 @@ deploy_vm_instance() {
     echo "   # Download model (e.g. ${OLLAMA_MODEL_TAG:-gemma3:27b})"
     echo "   ollama pull ${OLLAMA_MODEL_TAG:-gemma3:27b}"
     echo ""
-    echo "4. Register VM in mem-dog API:"
+    echo "4. Register VM in memdog API:"
     echo "   curl -X POST \"\$API_URL/api/v1/models/vm-instances\" \\"
     echo "     -H \"Content-Type: application/json\" \\"
     echo "     -d '{\"machine_type\": \"$VM_TYPE\", \"base_url\": \"http://$EXTERNAL_IP:8000\", \"name\": \"${DESCRIPTION}\"}'"

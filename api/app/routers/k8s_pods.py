@@ -2,7 +2,7 @@
 
 CREATE / LIST / SCALE / DELETE Ollama model deployments on Kubernetes.
 All managed deployments are prefixed with ``mdl-`` and labelled with
-``mem-dog/managed-model=true`` to prevent interference with infrastructure pods.
+``memdog/managed-model=true`` to prevent interference with infrastructure pods.
 
 GET    /api/v1/models/k8s-pods                              — list all
 POST   /api/v1/models/k8s-pods                              — create

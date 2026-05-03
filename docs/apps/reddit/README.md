@@ -1,6 +1,6 @@
 # Reddit
 
-Connect Reddit to mem-dog to ingest subreddit posts, comments, and discussions.
+Connect Reddit to memdog to ingest subreddit posts, comments, and discussions.
 
 **Category:** Social Media
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Reddit to mem-dog to ingest subreddit posts, comments, and discussions.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Reddit
@@ -18,7 +18,7 @@ Connect Reddit to mem-dog to ingest subreddit posts, comments, and discussions.
 1. In the UI, go to **Settings > Apps**
 2. Find **Reddit** under the "Social Media" category
 3. Click **Connect**
-4. Authorize mem-dog via Reddit's OAuth consent screen
+4. Authorize memdog via Reddit's OAuth consent screen
 5. The Reddit card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -61,7 +61,7 @@ Reddit event → Webhook Gateway → normalizes → NATS queue
 - Upvote/downvote metadata
 - Cross-posts and links
 
-## Ingest into mem-dog
+## Ingest into memdog
 
 Data from Reddit flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

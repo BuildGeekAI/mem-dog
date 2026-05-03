@@ -1,6 +1,6 @@
 # Instagram
 
-Connect Instagram to mem-dog to ingest posts, stories, comments, and mentions.
+Connect Instagram to memdog to ingest posts, stories, comments, and mentions.
 
 **Category:** Social Media
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Instagram to mem-dog to ingest posts, stories, comments, and mentions.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Instagram
@@ -18,7 +18,7 @@ Connect Instagram to mem-dog to ingest posts, stories, comments, and mentions.
 1. In the UI, go to **Settings > Apps**
 2. Find **Instagram** under the "Social Media" category
 3. Click **Connect**
-4. Authorize mem-dog via Instagram's OAuth consent screen
+4. Authorize memdog via Instagram's OAuth consent screen
 5. The Instagram card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -57,7 +57,7 @@ Instagram event → Webhook Gateway → normalizes → NATS queue
 - Direct messages (Business accounts)
 - Media metadata
 
-## Ingest into mem-dog
+## Ingest into memdog
 
 Data from Instagram flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

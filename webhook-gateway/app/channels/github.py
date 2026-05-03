@@ -1,7 +1,7 @@
 """GitHub webhook channel adapter.
 
 Normalizes GitHub webhook payloads for push, pull request, issue,
-and comment events into mem-dog's NormalizedMessage format.
+and comment events into memdog's NormalizedMessage format.
 
 Reference: https://docs.github.com/en/webhooks/webhook-events-and-payloads
 """

@@ -1,6 +1,6 @@
 # Asana
 
-Connect Asana to mem-dog to sync projects, tasks, and team workflows.
+Connect Asana to memdog to sync projects, tasks, and team workflows.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Asana to mem-dog to sync projects, tasks, and team workflows.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Asana
@@ -18,7 +18,7 @@ Connect Asana to mem-dog to sync projects, tasks, and team workflows.
 1. In the UI, go to **Settings > Apps**
 2. Find **Asana** under the "Productivity" category
 3. Click **Connect**
-4. Authorize mem-dog via Asana's OAuth consent screen
+4. Authorize memdog via Asana's OAuth consent screen
 5. The Asana card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -50,9 +50,9 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/asana/api/1.0/webhooks
 - Comments and attachments
 - Custom fields and tags
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Asana and store in mem-dog:
+Pull data from Asana and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -3,9 +3,9 @@ apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
   name: api-scaler
-  namespace: mem-dog
+  namespace: memdog
   labels:
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
 spec:
   scaleTargetRef:
     name: api

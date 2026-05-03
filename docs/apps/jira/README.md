@@ -1,6 +1,6 @@
 # Jira
 
-Connect Jira to mem-dog to sync issues, projects, and workflow data into your knowledge base.
+Connect Jira to memdog to sync issues, projects, and workflow data into your knowledge base.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Jira to mem-dog to sync issues, projects, and workflow data into your kn
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Jira
@@ -18,7 +18,7 @@ Connect Jira to mem-dog to sync issues, projects, and workflow data into your kn
 1. In the UI, go to **Settings > Apps**
 2. Find **Jira** under the "Productivity" category
 3. Click **Connect**
-4. Authorize mem-dog to access your Atlassian account
+4. Authorize memdog to access your Atlassian account
 5. Select the Jira site you want to connect
 6. The Jira card should now show **Active**
 
@@ -42,11 +42,11 @@ curl https://<your-api>/api/v1/integrations/proxy/jira/rest/api/3/project \
 
 ### 4. Optional: Webhook for Real-Time Updates
 
-Set up a Jira webhook to push events to mem-dog:
+Set up a Jira webhook to push events to memdog:
 
 1. In Jira, go to **Settings > System > WebHooks**
 2. Click **Create a WebHook**
-3. Set the URL to your mem-dog webhook endpoint:
+3. Set the URL to your memdog webhook endpoint:
 
 ```bash
 # First create a webhook endpoint
@@ -62,7 +62,7 @@ curl -X POST https://<your-api>/api/v1/webhooks \
 
 ### 5. Ingest Issues
 
-Store Jira data in mem-dog for AI-powered search:
+Store Jira data in memdog for AI-powered search:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

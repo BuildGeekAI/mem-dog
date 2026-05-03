@@ -7,7 +7,7 @@ Ingest Google Business Profile reviews.
 ```mermaid
 graph LR
     SRC[Google Business] -- "API polling" --> GW[Webhook Gateway<br/>/webhooks/google-business]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

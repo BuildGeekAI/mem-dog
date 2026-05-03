@@ -2,10 +2,10 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: api-data
-  namespace: mem-dog
+  namespace: memdog
   labels:
     app.kubernetes.io/name: api
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
 spec:
   accessModes:
     - ReadWriteOnce

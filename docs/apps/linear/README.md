@@ -1,6 +1,6 @@
 # Linear
 
-Connect Linear to mem-dog to sync issues, projects, and engineering workflows.
+Connect Linear to memdog to sync issues, projects, and engineering workflows.
 
 **Category:** Dev Tools
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect Linear to mem-dog to sync issues, projects, and engineering workflows.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Linear
@@ -45,9 +45,9 @@ For webhooks, configure in **Settings > API > Webhooks** in Linear.
 - Comments and reactions
 - Team and workflow states
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Linear and store in mem-dog:
+Pull data from Linear and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

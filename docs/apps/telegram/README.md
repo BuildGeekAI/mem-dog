@@ -1,6 +1,6 @@
 # Telegram
 
-Connect Telegram to mem-dog to ingest bot messages, group chats, and media.
+Connect Telegram to memdog to ingest bot messages, group chats, and media.
 
 **Category:** Messaging
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Telegram to mem-dog to ingest bot messages, group chats, and media.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Telegram
@@ -18,7 +18,7 @@ Connect Telegram to mem-dog to ingest bot messages, group chats, and media.
 1. In the UI, go to **Settings > Apps**
 2. Find **Telegram** under the "Messaging" category
 3. Click **Connect**
-4. Authorize mem-dog via Telegram's OAuth consent screen
+4. Authorize memdog via Telegram's OAuth consent screen
 5. The Telegram card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -36,7 +36,7 @@ Returns your `inbound_url` (`https://<webhook-gateway>/webhooks/whk_<ulid>`).
 
 ### 4. Configure Telegram Events
 
-Set up a Telegram Bot via @BotFather, then configure the webhook URL to point to your mem-dog endpoint.
+Set up a Telegram Bot via @BotFather, then configure the webhook URL to point to your memdog endpoint.
 
 1. Message @BotFather on Telegram and create a new bot
 2. Copy the bot token
@@ -62,7 +62,7 @@ Telegram event → Webhook Gateway → normalizes → NATS queue
 - Inline queries and callback data
 - Channel posts
 
-## Ingest into mem-dog
+## Ingest into memdog
 
 Data from Telegram flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

@@ -25,7 +25,7 @@ export interface DataDeviceInfo {
   device_type?: string;         // desktop, mobile, tablet
   os?: string;                  // Windows, macOS, Linux, iOS, Android
   browser?: string;             // Chrome, Safari, Firefox, Edge
-  app_version?: string;         // mem-dog UI / client app version
+  app_version?: string;         // memdog UI / client app version
   user_agent?: string;          // Raw User-Agent string
   ip_address?: string;          // Client IP (if available)
   // Extended — collected via browser APIs
@@ -41,7 +41,7 @@ export interface DataDeviceInfo {
 
 /** Records one service that handled an event in the processing chain. */
 export interface ServiceParticipant {
-  service_name: string;          // e.g. "mem-dog-api", "webhook-processor"
+  service_name: string;          // e.g. "memdog-api", "webhook-processor"
   service_type: string;          // e.g. "fastapi", "gcp_cloud_function"
   service_version?: string | null;
   action: string;                // e.g. "create_data", "route_payload"

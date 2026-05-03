@@ -1,6 +1,6 @@
 # LinkedIn
 
-Connect LinkedIn to mem-dog to access profile data, posts, and company pages.
+Connect LinkedIn to memdog to access profile data, posts, and company pages.
 
 **Category:** Social Media
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect LinkedIn to mem-dog to access profile data, posts, and company pages.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect LinkedIn
@@ -18,7 +18,7 @@ Connect LinkedIn to mem-dog to access profile data, posts, and company pages.
 1. In the UI, go to **Settings > Apps**
 2. Find **LinkedIn** under the "Social Media" category
 3. Click **Connect**
-4. Authorize mem-dog via LinkedIn's OAuth consent screen
+4. Authorize memdog via LinkedIn's OAuth consent screen
 5. The LinkedIn card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -40,9 +40,9 @@ curl https://<your-api>/api/v1/integrations/proxy/linkedin/v2/me \
 - Posts and articles
 - Comments and reactions
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from LinkedIn and store in mem-dog:
+Pull data from LinkedIn and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -60,13 +60,13 @@ echo ""
 
 # Get API URL
 echo -e "${BLUE}ℹ️  Getting API URL...${NC}"
-API_URL=$(gcloud run services describe "mem-dog-api" \
+API_URL=$(gcloud run services describe "memdog-api" \
     --region "$REGION" \
     --project "$PROJECT_ID" \
     --format 'value(status.url)' 2>/dev/null || echo "")
 
 if [ -z "$API_URL" ]; then
-    echo -e "${RED}❌ API service 'mem-dog-api' not found.${NC}"
+    echo -e "${RED}❌ API service 'memdog-api' not found.${NC}"
     exit 1
 fi
 echo -e "${GREEN}✅ API URL: $API_URL${NC}"

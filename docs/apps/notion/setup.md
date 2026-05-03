@@ -1,13 +1,13 @@
 # Notion Integration — Setup Guide
 
-Ingest Notion page and database change events into mem-dog.
+Ingest Notion page and database change events into memdog.
 
 ## Architecture
 
 ```mermaid
 graph LR
     NOTION[Notion] -- "webhook POST" --> GW[Webhook Gateway<br/>/webhooks/notion]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

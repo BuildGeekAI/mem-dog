@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate OpenClaw + mem-dog integration presentation as .pptx.
+"""Generate OpenClaw + memdog integration presentation as .pptx.
 
 Design principle: one idea per slide, large text, plenty of whitespace.
 """
@@ -201,14 +201,14 @@ add_text(slide, Inches(1), Inches(5.2), Inches(11.333), Inches(0.6),
 # SLIDE 4 — Bridge Skill
 # ═══════════════════════════════════════════════════════════════════════════
 slide = new_slide()
-slide_title(slide, "Skill 1: mem-dog-bridge")
+slide_title(slide, "Skill 1: memdog-bridge")
 
 add_text(slide, Inches(1), Inches(1.8), Inches(5), Inches(0.5),
          "PASSIVE  \u2014  fires on every message, always", size=16, color=ACCENT)
 
 add_text(slide, Inches(1), Inches(2.5), Inches(5), Inches(2.5),
          "Every incoming message is automatically forwarded to the "
-         "mem-dog webhook pipeline. Non-negotiable.\n\n"
+         "memdog webhook pipeline. Non-negotiable.\n\n"
          "The pipeline runs 6-layer classification, routes to one of "
          "42 specialized agents, generates a viewpoint + embedding, "
          "extracts entities, and dual-writes to the knowledge graph.",
@@ -244,13 +244,13 @@ add_text(slide, Inches(1), Inches(1.8), Inches(11), Inches(0.5),
          size=16, color=ORANGE)
 
 skills = [
-    ("mem-dog-ingest", "Store Data", ORANGE,
+    ("memdog-ingest", "Store Data", ORANGE,
      "User says \"remember my flight is at 3pm\"\nor uses /save command.",
      "POST /api/v1/data"),
-    ("mem-dog-query", "RAG Chat", GREEN,
+    ("memdog-query", "RAG Chat", GREEN,
      "User asks a question. DigiMe retrieves\ncontext and answers with [1][2] citations.",
      "POST /api/v1/ai/query"),
-    ("mem-dog-semantic-search", "Vector Search", ACCENT2,
+    ("memdog-semantic-search", "Vector Search", ACCENT2,
      "Raw similarity search without LLM synthesis.\nReturns ranked results with scores.",
      "POST /api/v1/ai/query/semantic"),
 ]
@@ -366,7 +366,7 @@ add_text(slide, Inches(7.4), Inches(2.9), Inches(4.7), Inches(0.5),
 
 config_lines = [
     ("GEMINI_MODEL", "gemini-3.1-pro-preview"),
-    ("MEM_DOG_API_URL", "http://api.mem-dog.svc:8080"),
+    ("MEM_DOG_API_URL", "http://api.memdog.svc:8080"),
     ("BRIDGE_URL", "http://webhook-gateway.svc:8080\n/webhooks/openclaw"),
     ("SOUL.md", "Always record via bridge,\nnever use local files"),
     ("IDENTITY.md", "DigiMe persona definition"),
@@ -425,7 +425,7 @@ add_text(slide, Inches(1.5), Inches(6.4), Inches(10), Inches(0.6),
          size=30, color=GREEN, bold=True, align=PP_ALIGN.CENTER)
 
 # ═══════════════════════════════════════════════════════════════════════════
-output_path = "/Users/paragagarwal/repos/mem-dog/docs/openclaw-integration.pptx"
+output_path = "/Users/paragagarwal/repos/memdog/docs/openclaw-integration.pptx"
 prs.save(output_path)
 print(f"Saved: {output_path}")
 print(f"Slides: {len(prs.slides)}")

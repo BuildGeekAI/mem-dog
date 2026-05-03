@@ -55,7 +55,7 @@ if [ -z "$PROJECT_ID" ]; then
     exit 1
 fi
 
-MODELS_BUCKET="${PROJECT_ID}-mem-dog-models-${ENVIRONMENT}"
+MODELS_BUCKET="${PROJECT_ID}-memdog-models-${ENVIRONMENT}"
 BUCKET_URI="gs://${MODELS_BUCKET}"
 
 print_info "Checking if bucket exists: ${BUCKET_URI}"

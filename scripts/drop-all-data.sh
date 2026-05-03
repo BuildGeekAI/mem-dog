@@ -61,7 +61,7 @@ resolve_bucket() {
   if [[ -n "$value" ]]; then
     echo "$value"
   elif [[ -n "$GCP_PROJECT" ]]; then
-    echo "${GCP_PROJECT}-mem-dog-${store_name}-${ENVIRONMENT}"
+    echo "${GCP_PROJECT}-memdog-${store_name}-${ENVIRONMENT}"
   else
     echo ""
   fi
@@ -85,7 +85,7 @@ if [[ -z "$RAW_BUCKET" && -z "$META_BUCKET" && "$DO_SUPABASE" == "false" ]]; the
   exit 1
 fi
 
-echo "=== mem-dog drop-all-data ==="
+echo "=== memdog drop-all-data ==="
 echo "Environment    : ${ENVIRONMENT}"
 echo "Project        : ${GCP_PROJECT:-<from gcloud config>}"
 echo "Dry run        : ${DRY_RUN}"

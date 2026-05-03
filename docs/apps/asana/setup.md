@@ -1,13 +1,13 @@
 # Asana Integration — Setup Guide
 
-Ingest Asana task, project, and comment events into mem-dog.
+Ingest Asana task, project, and comment events into memdog.
 
 ## Architecture
 
 ```mermaid
 graph LR
     ASANA[Asana] -- "webhook POST" --> GW[Webhook Gateway<br/>/webhooks/asana]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

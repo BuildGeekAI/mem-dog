@@ -4,7 +4,7 @@ description: "Per-user webhook endpoints with HMAC verification, event logging, 
 icon: "webhook"
 ---
 
-Webhooks let external services push data into mem-dog. Each user gets unique endpoints with HMAC secret verification and full event logging.
+Webhooks let external services push data into memdog. Each user gets unique endpoints with HMAC secret verification and full event logging.
 
 ## Endpoint Format
 
@@ -33,7 +33,7 @@ curl -X POST /api/v1/webhooks \
   "name": "GitHub Events",
   "channel": "github",
   "secret": "whsec_...",
-  "url": "https://api.mem-dog.dev/api/v1/webhooks/whk_01JQRS.../ingest",
+  "url": "https://api.memdog.dev/api/v1/webhooks/whk_01JQRS.../ingest",
   "enabled": true
 }
 ```
@@ -44,7 +44,7 @@ curl -X POST /api/v1/webhooks \
 Every webhook includes an HMAC secret (`whsec_...`) for payload verification. Senders must include the signature in the `X-Webhook-Signature` header.
 
 <Info>
-  mem-dog verifies the HMAC-SHA256 signature before processing any payload. Requests with invalid or missing signatures are rejected with `401 Unauthorized`.
+  memdog verifies the HMAC-SHA256 signature before processing any payload. Requests with invalid or missing signatures are rejected with `401 Unauthorized`.
 </Info>
 
 ## Channel Adapters

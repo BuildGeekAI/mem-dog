@@ -1,4 +1,4 @@
-"""Publish inbound channel messages as memory records in the mem-dog API.
+"""Publish inbound channel messages as memory records in the memdog API.
 
 Every message processed by the gateway is stored as a data item linked to
 a per-channel conversation memory.  This happens regardless of whether an
@@ -31,7 +31,7 @@ _ensured_memories: set[str] = set()
 
 
 def _api_headers() -> dict[str, str]:
-    """Return auth headers for mem-dog API calls."""
+    """Return auth headers for memdog API calls."""
     h: dict[str, str] = {}
     if config.MEM_DOG_API_KEY:
         h["x-api-key"] = config.MEM_DOG_API_KEY
@@ -120,7 +120,7 @@ async def publish_to_memory(
     trace_id: str | None = None,
     llm_classification: dict[str, Any] | None = None,
 ) -> str | None:
-    """Store the message as a data item in the mem-dog API.
+    """Store the message as a data item in the memdog API.
 
     Returns the ``data_id`` on success, ``None`` on failure.
     """

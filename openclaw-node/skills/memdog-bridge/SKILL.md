@@ -1,10 +1,10 @@
-# mem-dog-bridge
+# memdog-bridge
 
-Forward channel messages from OpenClaw into the mem-dog webhook pipeline for processing, identity resolution, classification, and storage.
+Forward channel messages from OpenClaw into the memdog webhook pipeline for processing, identity resolution, classification, and storage.
 
 ## When to use
 
-Use this skill to bridge incoming channel messages into the mem-dog ecosystem. This is typically triggered automatically when a message arrives on any OpenClaw-managed channel (Signal, WhatsApp, Matrix, IRC, etc.) and needs to be processed by the full mem-dog pipeline.
+Use this skill to bridge incoming channel messages into the memdog ecosystem. This is typically triggered automatically when a message arrives on any OpenClaw-managed channel (Signal, WhatsApp, Matrix, IRC, etc.) and needs to be processed by the full memdog pipeline.
 
 ## How to use
 

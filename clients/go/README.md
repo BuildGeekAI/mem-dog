@@ -1,11 +1,11 @@
-# mem-dog Go SDK
+# memdog Go SDK
 
-Go client for the [mem-dog](https://github.com/mem-dog/mem-dog) API. Zero external dependencies (stdlib only).
+Go client for the [memdog](https://github.com/memdog/memdog) API. Zero external dependencies (stdlib only).
 
 ## Install
 
 ```bash
-go get github.com/mem-dog/mem-dog-client-go
+go get github.com/memdog/memdog-client-go
 ```
 
 ## Two Client Layers

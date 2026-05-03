@@ -1,13 +1,13 @@
 # Linear Integration — Setup Guide
 
-Ingest Linear issue, comment, project, and cycle events into mem-dog.
+Ingest Linear issue, comment, project, and cycle events into memdog.
 
 ## Architecture
 
 ```mermaid
 graph LR
     LINEAR[Linear] -- "webhook POST" --> GW[Webhook Gateway<br/>/webhooks/linear]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

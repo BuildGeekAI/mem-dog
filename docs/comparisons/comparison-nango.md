@@ -1,15 +1,15 @@
-# mem-dog + Nango: How They Work Together
+# memdog + Nango: How They Work Together
 
 **Last updated:** March 2026
 
-mem-dog uses Nango as its integration backend. Nango handles OAuth flows, token refresh, credential encryption, and the provider catalog. mem-dog adds the intelligence layer on top — 40 AI agents, 5 search modes, knowledge graph, per-user webhook endpoints, and temporal reasoning.
+memdog uses Nango as its integration backend. Nango handles OAuth flows, token refresh, credential encryption, and the provider catalog. memdog adds the intelligence layer on top — 40 AI agents, 5 search modes, knowledge graph, per-user webhook endpoints, and temporal reasoning.
 
 ---
 
 ## Architecture
 
 ```
-mem-dog (private AI system)
+memdog (private AI system)
   │
   ├── Webhook Gateway (per-user webhooks, channel normalization)
   ├── API (70+ endpoints, storage, search, AI config)
@@ -36,7 +36,7 @@ mem-dog (private AI system)
 | **Connection management** | Per-user connections tagged with `end_user_id` |
 | **Connect UI** | Embeddable auth widget (port 3009) |
 
-## What mem-dog Adds on Top
+## What memdog Adds on Top
 
 | Capability | Details |
 |-----------|---------|
@@ -53,17 +53,17 @@ mem-dog (private AI system)
 
 ## Why Nango (Instead of Custom)
 
-mem-dog originally had a custom integration platform (3,945-line provider seed, Fernet encryption, manual OAuth flows, proactive token refresh task). Replacing it with Nango:
+memdog originally had a custom integration platform (3,945-line provider seed, Fernet encryption, manual OAuth flows, proactive token refresh task). Replacing it with Nango:
 
 - **Deleted ~4,360 lines** of custom OAuth/credential code
 - **Automatic token refresh** — eliminates retry logic and background tasks
 - **Community-maintained providers** — no more manual seed file updates
 - **Battle-tested OAuth** — handles edge cases (PKCE, state management, error recovery)
-- **Single responsibility** — Nango does integrations, mem-dog does AI
+- **Single responsibility** — Nango does integrations, memdog does AI
 
 ## Deployment
 
-Nango runs self-hosted in the `nango` GKE namespace alongside mem-dog's other services:
+Nango runs self-hosted in the `nango` GKE namespace alongside memdog's other services:
 
 ```bash
 kubectl apply -f k8s/nango/  # namespace, postgres, nango-server, config, secrets
@@ -73,4 +73,4 @@ The API and webhook gateway communicate with Nango via in-cluster DNS: `nango-se
 
 ## Compared to Standalone Nango
 
-If you only need API integrations (OAuth, sync, proxy), standalone Nango is the right choice. mem-dog is for when you need integrations **plus** AI enrichment, knowledge graph, semantic search, and memory — a complete private AI system.
+If you only need API integrations (OAuth, sync, proxy), standalone Nango is the right choice. memdog is for when you need integrations **plus** AI enrichment, knowledge graph, semantic search, and memory — a complete private AI system.

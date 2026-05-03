@@ -1068,12 +1068,12 @@ async def _graphiti_search(
 
         results = await graphiti.search(**kwargs)
 
-        # Normalize Graphiti edges to mem-dog search result format
+        # Normalize Graphiti edges to memdog search result format
         normalized: list[dict] = []
         for edge in results:
             fact = getattr(edge, "fact", "") or str(edge)
             edge_uuid = getattr(edge, "uuid", "") or ""
-            # Try to map back to mem-dog data_id via episode name
+            # Try to map back to memdog data_id via episode name
             episode_name = getattr(edge, "episode_name", None) or getattr(edge, "name", None) or ""
 
             normalized.append({

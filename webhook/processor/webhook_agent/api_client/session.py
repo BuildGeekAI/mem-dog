@@ -1,4 +1,4 @@
-"""Shared HTTP session for all mem-dog API clients.
+"""Shared HTTP session for all memdog API clients.
 
 All five API client modules import :data:`_session` from here instead of
 calling ``requests`` directly, so retry and backoff logic lives in exactly
@@ -8,7 +8,7 @@ Retry policy
 ------------
 * **3 connect retries** — covers ``ssl.SSLEOFError`` and other transient
   SSL / TCP handshake failures that are the most common failure mode when
-  talking to the mem-dog API.
+  talking to the memdog API.
 * **2 read retries** — covers unexpected connection resets after the
   handshake succeeds.
 * **Exponential backoff** — sleeps 0 s, 0.5 s, 1 s between attempts

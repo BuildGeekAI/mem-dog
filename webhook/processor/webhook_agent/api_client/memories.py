@@ -1,6 +1,6 @@
 """Memory API client.
 
-Handles creating and retrieving mem-dog memories.  Absorbed the
+Handles creating and retrieving memdog memories.  Absorbed the
 ``_ensure_memory`` / ``_ensure_agent_memories`` helpers that previously
 lived in ``agent.py`` so they are reusable across the whole agent package.
 """

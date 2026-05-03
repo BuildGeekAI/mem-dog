@@ -1,13 +1,13 @@
 # Gmail Integration — Full Setup Guide
 
-Automatically ingest emails into mem-dog via Gmail Push Notifications (Google Pub/Sub). New emails are fetched in real-time, enriched by the AI pipeline, and made searchable.
+Automatically ingest emails into memdog via Gmail Push Notifications (Google Pub/Sub). New emails are fetched in real-time, enriched by the AI pipeline, and made searchable.
 
 ## Architecture
 
 ```mermaid
 graph LR
     GMAIL[Gmail] -- "new email" --> PUBSUB[Google Pub/Sub]
-    PUBSUB -- "push notification" --> API[mem-dog API<br/>/api/v1/gmail/push]
+    PUBSUB -- "push notification" --> API[memdog API<br/>/api/v1/gmail/push]
     API -- "fetch email" --> NANGO[Nango Proxy<br/>OAuth token refresh]
     NANGO -- "Gmail API" --> GMAIL
     API -- "ingest" --> PG[(Postgres<br/>pgvector)]
@@ -17,14 +17,14 @@ graph LR
 **Flow:**
 1. New email arrives in Gmail
 2. Gmail publishes a notification to a GCP Pub/Sub topic
-3. Pub/Sub pushes to the mem-dog API (`POST /api/v1/gmail/push`)
+3. Pub/Sub pushes to the memdog API (`POST /api/v1/gmail/push`)
 4. API fetches the full email content via Nango proxy (auto token refresh)
 5. Email is ingested, tagged `gmail, email, push-notification`
 6. AI pipeline enriches with embeddings and entity extraction
 
 ## Prerequisites
 
-- mem-dog stack running on GKE
+- memdog stack running on GKE
 - GCP project with Pub/Sub API enabled
 - A Google OAuth Client ID (can reuse the one from Supabase auth)
 - HTTPS endpoint for Pub/Sub push (ngrok for dev, TLS for production)
@@ -75,7 +75,7 @@ ngrok http http://<gateway-ip>
 # Use the https URL for the push subscription
 ```
 
-## Step 3 — Configure Google OAuth in mem-dog
+## Step 3 — Configure Google OAuth in memdog
 
 ### Option A — Reuse existing Google OAuth credentials
 
@@ -88,8 +88,8 @@ GOOGLE_CLIENT_ID=$(kubectl get secret supabase-auth-oauth -n supabase \
 GOOGLE_CLIENT_SECRET=$(kubectl get secret supabase-auth-oauth -n supabase \
   -o jsonpath='{.data.GOOGLE_CLIENT_SECRET}' | base64 -d)
 
-# Set on google-mail provider in mem-dog
-API_KEY=$(kubectl get secret api-auth-secret -n mem-dog \
+# Set on google-mail provider in memdog
+API_KEY=$(kubectl get secret api-auth-secret -n memdog \
   -o jsonpath='{.data.API_KEY}' | base64 -d)
 
 curl -X PUT "http://<gateway-ip>/gke-api/api/v1/integrations/providers/google-mail/oauth-credentials" \
@@ -103,7 +103,7 @@ curl -X PUT "http://<gateway-ip>/gke-api/api/v1/integrations/providers/google-ma
 1. Go to [GCP Console → APIs & Credentials](https://console.cloud.google.com/apis/credentials)
 2. Create **OAuth 2.0 Client ID** (Web application)
 3. Add redirect URI: `https://<YOUR_HTTPS_ENDPOINT>/oauth/callback`
-4. In mem-dog UI → **Settings → Apps → Google Mail** → gear icon → enter Client ID and Secret
+4. In memdog UI → **Settings → Apps → Google Mail** → gear icon → enter Client ID and Secret
 
 ### OAuth Consent Screen
 
@@ -115,7 +115,7 @@ For testing, add your email as a test user:
 
 ## Step 4 — Connect Gmail
 
-1. In mem-dog UI → **Settings → Apps → Google Mail**
+1. In memdog UI → **Settings → Apps → Google Mail**
 2. Click **Connect**
 3. Authorize with your Google account
 4. Gmail connection is now active in Nango
@@ -125,7 +125,7 @@ For testing, add your email as a test user:
 Call the watch endpoint to start receiving push notifications:
 
 ```bash
-API_KEY=$(kubectl get secret api-auth-secret -n mem-dog \
+API_KEY=$(kubectl get secret api-auth-secret -n memdog \
   -o jsonpath='{.data.API_KEY}' | base64 -d)
 
 # Find your connection_id
@@ -176,7 +176,7 @@ gcloud scheduler jobs create http gmail-watch-renewal \
 
 1. Send an email to the connected Gmail address
 2. Wait ~5-10 seconds
-3. Check mem-dog:
+3. Check memdog:
    - **Data** tab — search for the email subject
    - **Playground → MCP** → `search` tool with the email content
    - **Timeline** — should show new entry
@@ -185,7 +185,7 @@ gcloud scheduler jobs create http gmail-watch-renewal \
 
 ```bash
 # Check API logs for ingestion
-kubectl logs -n mem-dog deployment/api --since=2m | grep -i "gmail\|Ingest"
+kubectl logs -n memdog deployment/api --since=2m | grep -i "gmail\|Ingest"
 
 # Expected output:
 # Gmail push notification for you@gmail.com, historyId=...
@@ -239,7 +239,7 @@ The email body is extracted as plain text (HTML tags stripped). Structured email
 |-------|-----------|
 | **Gmail OAuth** | Only the account owner can authorize access (Google consent screen + password) |
 | **Nango tokens** | OAuth tokens encrypted with AES-256-GCM, auto-refreshed |
-| **Watch scoping** | Each watch is tied to a specific mem-dog `user_id` |
+| **Watch scoping** | Each watch is tied to a specific memdog `user_id` |
 | **Data isolation** | Ingested emails stored under the watch owner's user_id |
 | **API keys** | Per-user `md_*` keys scope all queries to the authenticated user |
 

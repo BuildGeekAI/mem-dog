@@ -2,7 +2,7 @@
 set -e
 
 # =============================================================================
-# Seed Demo User Script for mem-dog
+# Seed Demo User Script for memdog
 # =============================================================================
 # Creates the default "demo" user in the users bucket with all required files:
 #   - users/{user_id}/profile.json
@@ -101,7 +101,7 @@ if [ -z "$PROJECT_ID" ]; then
     exit 1
 fi
 
-USERS_BUCKET="${PROJECT_ID}-mem-dog-users-${ENVIRONMENT}"
+USERS_BUCKET="${PROJECT_ID}-memdog-users-${ENVIRONMENT}"
 
 # Check bucket exists
 if ! gcloud storage buckets describe "gs://${USERS_BUCKET}" &>/dev/null; then
@@ -201,7 +201,7 @@ gcloud storage cat "gs://${USERS_BUCKET}/users/${USER_ID}/profile.json" 2>/dev/n
 echo ""
 
 # Test via API if available
-API_SERVICE="mem-dog-api"
+API_SERVICE="memdog-api"
 API_URL=$(gcloud run services describe "${API_SERVICE}" \
     --region us-central1 \
     --project "${PROJECT_ID}" \

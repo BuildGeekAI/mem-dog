@@ -1,6 +1,6 @@
 # Basecamp
 
-Connect Basecamp to mem-dog to sync projects, to-dos, and team discussions.
+Connect Basecamp to memdog to sync projects, to-dos, and team discussions.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Basecamp to mem-dog to sync projects, to-dos, and team discussions.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Basecamp
@@ -18,7 +18,7 @@ Connect Basecamp to mem-dog to sync projects, to-dos, and team discussions.
 1. In the UI, go to **Settings > Apps**
 2. Find **Basecamp** under the "Productivity" category
 3. Click **Connect**
-4. Authorize mem-dog via Basecamp's OAuth consent screen
+4. Authorize memdog via Basecamp's OAuth consent screen
 5. The Basecamp card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -42,9 +42,9 @@ curl https://<your-api>/api/v1/integrations/proxy/basecamp/<account-id>/projects
 - Campfire chat messages
 - Schedule entries
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Basecamp and store in mem-dog:
+Pull data from Basecamp and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

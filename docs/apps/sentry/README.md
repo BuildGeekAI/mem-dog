@@ -1,6 +1,6 @@
 # Sentry
 
-Connect Sentry to mem-dog to ingest error events, alerts, and issue data.
+Connect Sentry to memdog to ingest error events, alerts, and issue data.
 
 **Category:** Dev Tools
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect Sentry to mem-dog to ingest error events, alerts, and issue data.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Sentry
@@ -57,7 +57,7 @@ Sentry event → Webhook Gateway → normalizes → NATS queue
 - Release and deploy data
 - Performance transaction data
 
-## Ingest into mem-dog
+## Ingest into memdog
 
 Data from Sentry flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

@@ -2,12 +2,12 @@
 # =============================================================================
 # Mem-Dog Store API Test Script
 # =============================================================================
-# Runs insert/select/delete tests against the mem-dog store API for a given
+# Runs insert/select/delete tests against the memdog store API for a given
 # backend (supabase, redis, postgres, gcs). Mirrors the store_kv table
 # test in create_supabase_store_kv.
 #
 # Prerequisites:
-#   - A running mem-dog API with the chosen store backend configured
+#   - A running memdog API with the chosen store backend configured
 #   - curl
 #
 # Usage:
@@ -23,7 +23,7 @@
 #
 # Examples:
 #   ./scripts/test-store-api.sh
-#   ./scripts/test-store-api.sh --url https://mem-dog-api-xxx.run.app --auth
+#   ./scripts/test-store-api.sh --url https://memdog-api-xxx.run.app --auth
 #   ./scripts/test-store-api.sh --url http://localhost:8080 --backend redis
 # =============================================================================
 
@@ -255,6 +255,6 @@ else
     "Supabase 401: check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY" \
     "PGRST205 (table not in schema cache): apply migrations in Supabase (api/supabase/*.sql) and reload schema in Supabase dashboard" \
     "Verify the store backend is healthy (e.g. Supabase: check PostgREST and tables)" \
-    "Check API logs: gcloud run services logs read mem-dog-api --region us-central1 --limit 50"
+    "Check API logs: gcloud run services logs read memdog-api --region us-central1 --limit 50"
   exit 1
 fi

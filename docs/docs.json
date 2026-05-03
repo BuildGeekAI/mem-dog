@@ -18,7 +18,7 @@
   "topbarLinks": [
     {
       "name": "GitHub",
-      "url": "https://github.com/BuildGeekAI/mem-dog"
+      "url": "https://github.com/BuildGeekAI/memdog"
     }
   ],
   "topbarCtaButton": {
@@ -43,7 +43,7 @@
     {
       "name": "GitHub",
       "icon": "github",
-      "url": "https://github.com/BuildGeekAI/mem-dog"
+      "url": "https://github.com/BuildGeekAI/memdog"
     }
   ],
   "navigation": [
@@ -196,13 +196,13 @@
     }
   ],
   "footerSocials": {
-    "github": "https://github.com/BuildGeekAI/mem-dog"
+    "github": "https://github.com/BuildGeekAI/memdog"
   },
   "feedback": {
     "thumbsRating": true
   },
   "search": {
-    "prompt": "Search mem-dog docs..."
+    "prompt": "Search memdog docs..."
   },
   "analytics": {},
   "openapi": "openapi.json"

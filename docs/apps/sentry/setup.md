@@ -1,13 +1,13 @@
 # Sentry Integration — Setup Guide
 
-Ingest Sentry error and issue events into mem-dog for AI analysis of application errors.
+Ingest Sentry error and issue events into memdog for AI analysis of application errors.
 
 ## Architecture
 
 ```mermaid
 graph LR
     SENTRY[Sentry] -- "webhook POST" --> GW[Webhook Gateway<br/>/webhooks/sentry]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

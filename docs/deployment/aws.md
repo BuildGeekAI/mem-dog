@@ -1,4 +1,4 @@
-# Deploying mem-dog on AWS (EKS)
+# Deploying memdog on AWS (EKS)
 
 Production deployment on Amazon Elastic Kubernetes Service with optional Fargate for the UI.
 
@@ -10,7 +10,7 @@ graph TD
 
     subgraph EKS ["EKS Cluster"]
         ALB[ALB Ingress Controller]
-        subgraph ns_memdog ["namespace: mem-dog"]
+        subgraph ns_memdog ["namespace: memdog"]
             API[API · FastAPI]
             MCP[MCP Server · SSE]
         end
@@ -83,7 +83,7 @@ ECR_BASE=$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
 aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_BASE
 
 for repo in api mcp-server webhook-gateway webhook-receiver webhook-agent ui; do
-  aws ecr create-repository --repository-name mem-dog/$repo --region $REGION 2>/dev/null
+  aws ecr create-repository --repository-name memdog/$repo --region $REGION 2>/dev/null
 done
 ```
 
@@ -93,7 +93,7 @@ done
 
 ```bash
 eksctl create cluster \
-  --name mem-dog \
+  --name memdog \
   --region $REGION \
   --nodegroup-name workers \
   --node-type t3.xlarge \
@@ -125,7 +125,7 @@ aws iam create-policy \
 
 # Service account
 eksctl create iamserviceaccount \
-  --cluster=mem-dog \
+  --cluster=memdog \
   --namespace=kube-system \
   --name=aws-load-balancer-controller \
   --attach-policy-arn=arn:aws:iam::$ACCOUNT_ID:policy/AWSLoadBalancerControllerIAMPolicy \
@@ -135,7 +135,7 @@ eksctl create iamserviceaccount \
 helm repo add eks https://aws.github.io/eks-charts
 helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   -n kube-system \
-  --set clusterName=mem-dog \
+  --set clusterName=memdog \
   --set serviceAccount.create=false \
   --set serviceAccount.name=aws-load-balancer-controller
 ```
@@ -146,28 +146,28 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
 
 ```bash
 # API
-docker build --platform linux/amd64 -t $ECR_BASE/mem-dog/api:latest api/
-docker push $ECR_BASE/mem-dog/api:latest
+docker build --platform linux/amd64 -t $ECR_BASE/memdog/api:latest api/
+docker push $ECR_BASE/memdog/api:latest
 
 # MCP Server
-docker build --platform linux/amd64 -t $ECR_BASE/mem-dog/mcp-server:latest -f mcp-server/Dockerfile .
-docker push $ECR_BASE/mem-dog/mcp-server:latest
+docker build --platform linux/amd64 -t $ECR_BASE/memdog/mcp-server:latest -f mcp-server/Dockerfile .
+docker push $ECR_BASE/memdog/mcp-server:latest
 
 # Webhook Gateway
-docker build --platform linux/amd64 -t $ECR_BASE/mem-dog/webhook-gateway:latest webhook-gateway/
-docker push $ECR_BASE/mem-dog/webhook-gateway:latest
+docker build --platform linux/amd64 -t $ECR_BASE/memdog/webhook-gateway:latest webhook-gateway/
+docker push $ECR_BASE/memdog/webhook-gateway:latest
 
 # Webhook Receiver
-docker build --platform linux/amd64 -t $ECR_BASE/mem-dog/webhook-receiver:latest -f webhook/receiver/Dockerfile webhook/receiver/
-docker push $ECR_BASE/mem-dog/webhook-receiver:latest
+docker build --platform linux/amd64 -t $ECR_BASE/memdog/webhook-receiver:latest -f webhook/receiver/Dockerfile webhook/receiver/
+docker push $ECR_BASE/memdog/webhook-receiver:latest
 
 # Webhook Agent
-docker build --platform linux/amd64 -t $ECR_BASE/mem-dog/webhook-agent:latest -f webhook/processor/Dockerfile webhook/processor/
-docker push $ECR_BASE/mem-dog/webhook-agent:latest
+docker build --platform linux/amd64 -t $ECR_BASE/memdog/webhook-agent:latest -f webhook/processor/Dockerfile webhook/processor/
+docker push $ECR_BASE/memdog/webhook-agent:latest
 
 # UI
-docker build --platform linux/amd64 -t $ECR_BASE/mem-dog/ui:latest ui/
-docker push $ECR_BASE/mem-dog/ui:latest
+docker build --platform linux/amd64 -t $ECR_BASE/memdog/ui:latest ui/
+docker push $ECR_BASE/memdog/ui:latest
 ```
 
 ---
@@ -180,36 +180,36 @@ docker push $ECR_BASE/mem-dog/ui:latest
 PG_PASSWORD=$(openssl rand -base64 24)
 
 # Get VPC and subnets from EKS
-VPC_ID=$(aws eks describe-cluster --name mem-dog --query "cluster.resourcesVpcConfig.vpcId" --output text)
-SUBNET_IDS=$(aws eks describe-cluster --name mem-dog --query "cluster.resourcesVpcConfig.subnetIds" --output text)
+VPC_ID=$(aws eks describe-cluster --name memdog --query "cluster.resourcesVpcConfig.vpcId" --output text)
+SUBNET_IDS=$(aws eks describe-cluster --name memdog --query "cluster.resourcesVpcConfig.subnetIds" --output text)
 
 # Create subnet group
 aws rds create-db-subnet-group \
-  --db-subnet-group-name mem-dog-db \
-  --db-subnet-group-description "mem-dog RDS subnets" \
+  --db-subnet-group-name memdog-db \
+  --db-subnet-group-description "memdog RDS subnets" \
   --subnet-ids $SUBNET_IDS
 
 # Get EKS security group
-EKS_SG=$(aws eks describe-cluster --name mem-dog --query "cluster.resourcesVpcConfig.clusterSecurityGroupId" --output text)
+EKS_SG=$(aws eks describe-cluster --name memdog --query "cluster.resourcesVpcConfig.clusterSecurityGroupId" --output text)
 
 # Create RDS instance
 aws rds create-db-instance \
-  --db-instance-identifier mem-dog-pg \
+  --db-instance-identifier memdog-pg \
   --db-instance-class db.t3.medium \
   --engine postgres \
   --engine-version 16 \
   --master-username memdog \
   --master-user-password "$PG_PASSWORD" \
   --allocated-storage 20 \
-  --db-subnet-group-name mem-dog-db \
+  --db-subnet-group-name memdog-db \
   --vpc-security-group-ids $EKS_SG \
   --no-publicly-accessible
 
 # Wait for it to be available
-aws rds wait db-instance-available --db-instance-identifier mem-dog-pg
+aws rds wait db-instance-available --db-instance-identifier memdog-pg
 
 # Get endpoint
-RDS_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier mem-dog-pg \
+RDS_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier memdog-pg \
   --query "DBInstances[0].Endpoint.Address" --output text)
 
 POSTGRES_URL="postgresql://memdog:$PG_PASSWORD@$RDS_ENDPOINT:5432/memdog"
@@ -359,7 +359,7 @@ EOF
 ### Create namespaces and config
 
 ```bash
-kubectl create namespace mem-dog
+kubectl create namespace memdog
 kubectl create namespace webhook-pipeline
 kubectl create namespace webhook-gateway
 ```
@@ -367,7 +367,7 @@ kubectl create namespace webhook-gateway
 ### API
 
 ```bash
-kubectl -n mem-dog create configmap api-config \
+kubectl -n memdog create configmap api-config \
   --from-literal=STORAGE_BACKEND=local \
   --from-literal=POSTGRES_URL="$POSTGRES_URL" \
   --from-literal=NEO4J_URI="bolt://neo4j.data.svc.cluster.local:7687" \
@@ -375,21 +375,21 @@ kubectl -n mem-dog create configmap api-config \
   --from-literal=NEO4J_PASSWORD=memdog_neo4j \
   --from-literal=ENVIRONMENT=dev
 
-sed "s|image: mem-dog-api|image: $ECR_BASE/mem-dog/api:latest|" \
+sed "s|image: memdog-api|image: $ECR_BASE/memdog/api:latest|" \
   k8s/api-deployment.yaml | kubectl apply -f -
 kubectl apply -f k8s/api-service.yaml 2>/dev/null || \
-  kubectl expose deployment api -n mem-dog --port=8080 --type=ClusterIP
+  kubectl expose deployment api -n memdog --port=8080 --type=ClusterIP
 ```
 
 ### MCP Server
 
 ```bash
-kubectl -n mem-dog create configmap mcp-server-config \
-  --from-literal=MEM_DOG_API_URL="http://api.mem-dog.svc.cluster.local:8080" \
+kubectl -n memdog create configmap mcp-server-config \
+  --from-literal=MEM_DOG_API_URL="http://api.memdog.svc.cluster.local:8080" \
   --from-literal=LOG_LEVEL=INFO \
   --from-literal=PORT=8080
 
-sed "s|image: mcp-server:latest|image: $ECR_BASE/mem-dog/mcp-server:latest|" \
+sed "s|image: mcp-server:latest|image: $ECR_BASE/memdog/mcp-server:latest|" \
   k8s/mcp-server-deployment.yaml | kubectl apply -f -
 kubectl apply -f k8s/mcp-server-service.yaml
 ```
@@ -398,14 +398,14 @@ kubectl apply -f k8s/mcp-server-service.yaml
 
 ```bash
 kubectl -n webhook-gateway create configmap webhook-gateway-config \
-  --from-literal=MEM_DOG_API_URL="http://api.mem-dog.svc.cluster.local:8080" \
+  --from-literal=MEM_DOG_API_URL="http://api.memdog.svc.cluster.local:8080" \
   --from-literal=LLM_PROVIDER=gemini \
   --from-literal=LOG_LEVEL=INFO
 
 kubectl -n webhook-gateway create secret generic webhook-gateway-secrets \
   --from-literal=GEMINI_API_KEY="<your-key>"
 
-sed "s|image: webhook-gateway:latest|image: $ECR_BASE/mem-dog/webhook-gateway:latest|" \
+sed "s|image: webhook-gateway:latest|image: $ECR_BASE/memdog/webhook-gateway:latest|" \
   k8s/webhook-gateway/deployment.yaml | kubectl apply -f -
 kubectl apply -f k8s/webhook-gateway/service.yaml
 ```
@@ -417,8 +417,8 @@ kubectl apply -f - <<EOF
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: mem-dog-ingress
-  namespace: mem-dog
+  name: memdog-ingress
+  namespace: memdog
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -452,7 +452,7 @@ metadata:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/group.name: mem-dog
+    alb.ingress.kubernetes.io/group.name: memdog
 spec:
   rules:
     - http:
@@ -467,7 +467,7 @@ spec:
 EOF
 
 # Get ALB URL (takes 2-3 min to provision)
-kubectl get ingress -n mem-dog mem-dog-ingress
+kubectl get ingress -n memdog memdog-ingress
 ```
 
 ---
@@ -477,7 +477,7 @@ kubectl get ingress -n mem-dog mem-dog-ingress
 ### Option A — EKS (in-cluster)
 
 ```bash
-sed "s|image: mem-dog-ui|image: $ECR_BASE/mem-dog/ui:latest|" \
+sed "s|image: memdog-ui|image: $ECR_BASE/memdog/ui:latest|" \
   k8s/ui-deployment.yaml | kubectl apply -f -
 ```
 
@@ -485,10 +485,10 @@ sed "s|image: mem-dog-ui|image: $ECR_BASE/mem-dog/ui:latest|" \
 
 ```bash
 aws apprunner create-service \
-  --service-name mem-dog-ui \
+  --service-name memdog-ui \
   --source-configuration '{
     "ImageRepository": {
-      "ImageIdentifier": "'$ECR_BASE'/mem-dog/ui:latest",
+      "ImageIdentifier": "'$ECR_BASE'/memdog/ui:latest",
       "ImageRepositoryType": "ECR",
       "ImageConfiguration": {
         "Port": "8080",
@@ -509,13 +509,13 @@ aws apprunner create-service \
 ## Step 7 — Verify
 
 ```bash
-ALB_URL=$(kubectl get ingress -n mem-dog mem-dog-ingress \
+ALB_URL=$(kubectl get ingress -n memdog memdog-ingress \
   -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 
 curl http://$ALB_URL/api/health
 curl http://$ALB_URL/mcp/health
 
-kubectl get pods -n mem-dog
+kubectl get pods -n memdog
 kubectl get pods -n webhook-pipeline
 kubectl get pods -n webhook-gateway
 kubectl get pods -n data
@@ -526,7 +526,7 @@ kubectl get pods -n data
 ```json
 {
   "mcpServers": {
-    "mem-dog": {
+    "memdog": {
       "url": "http://<ALB_URL>/mcp/sse",
       "headers": { "x-api-key": "md_your_key" }
     }
@@ -541,7 +541,7 @@ kubectl get pods -n data
 Use S3 instead of local filesystem for binary data:
 
 ```bash
-BUCKET=mem-dog-raw-data-$ACCOUNT_ID
+BUCKET=memdog-raw-data-$ACCOUNT_ID
 
 aws s3 mb s3://$BUCKET --region $REGION
 
@@ -549,7 +549,7 @@ aws s3 mb s3://$BUCKET --region $REGION
 # Attach to EKS node role or use IRSA (IAM Roles for Service Accounts)
 
 # Set on API configmap:
-kubectl -n mem-dog set env deployment/api \
+kubectl -n memdog set env deployment/api \
   STORAGE_BACKEND=gcs \
   RAW_BUCKET=$BUCKET
 ```
@@ -561,7 +561,7 @@ kubectl -n mem-dog set env deployment/api \
 ```bash
 # Request ACM certificate
 aws acm request-certificate \
-  --domain-name mem-dog.yourdomain.com \
+  --domain-name memdog.yourdomain.com \
   --validation-method DNS
 
 # Add to ingress annotation:

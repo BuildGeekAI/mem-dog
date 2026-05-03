@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# pg-admin.sh — PostgreSQL admin helper for mem-dog.
+# pg-admin.sh — PostgreSQL admin helper for memdog.
 #
-# Connects to the mem-dog PostgreSQL database and runs common inspection
+# Connects to the memdog PostgreSQL database and runs common inspection
 # queries.  Works with:
 #   - Local docker-compose (POSTGRES_URL from env or default)
 #   - Cloud SQL via the Cloud SQL Auth Proxy
@@ -69,7 +69,7 @@ run_sql() {
 case "$COMMAND" in
   status)
     require_psql
-    echo "=== mem-dog Postgres status ==="
+    echo "=== memdog Postgres status ==="
     echo "URL: ${PSQL_URL%%@*}@…"
     echo ""
     run_sql "

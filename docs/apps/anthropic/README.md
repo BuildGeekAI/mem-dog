@@ -1,6 +1,6 @@
 # Anthropic
 
-Connect Anthropic to mem-dog to use Claude models for enrichment and analysis.
+Connect Anthropic to memdog to use Claude models for enrichment and analysis.
 
 **Category:** Data & AI
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect Anthropic to mem-dog to use Claude models for enrichment and analysis.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Anthropic
@@ -40,9 +40,9 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/anthropic/v1/messages 
 
 - API usage data
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Anthropic and store in mem-dog:
+Pull data from Anthropic and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

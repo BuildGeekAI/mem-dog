@@ -331,7 +331,7 @@ class TestHealthAndRoot:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["service"] == "mem-dog-api"
+        assert data["service"] == "memdog-api"
         assert "version" in data
 
     def test_health_endpoint(self, test_client):

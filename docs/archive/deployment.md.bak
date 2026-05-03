@@ -4,7 +4,7 @@
 
 | Component | Target | Namespace | Command |
 |-----------|--------|-----------|---------|
-| **API** | GKE | `mem-dog` | `deploy-api-gke` |
+| **API** | GKE | `memdog` | `deploy-api-gke` |
 | **UI** | Cloud Run | — | `deploy-ui` |
 | **Webhook Pipeline** | GKE | `webhook-pipeline` | `deploy-webhook-pipeline-gke` |
 | **Webhook Gateway** | GKE | `webhook-gateway` | `deploy-webhook-gateway-gke` |
@@ -34,7 +34,7 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 
 ## GKE Namespaces
 
-### `mem-dog` — API + UI
+### `memdog` — API + UI
 
 - `api` Deployment (1 replica, mounts `api-data` PVC at `/data`)
 - `api` Service (ClusterIP :8080)

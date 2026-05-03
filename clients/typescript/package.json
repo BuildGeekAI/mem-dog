@@ -1,7 +1,7 @@
 {
-  "name": "@mem-dog/client",
+  "name": "@memdog/client",
   "version": "0.2.0",
-  "description": "TypeScript SDK for the mem-dog private AI system",
+  "description": "TypeScript SDK for the memdog private AI system",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -28,11 +28,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mem-dog/mem-dog",
+    "url": "https://github.com/memdog/memdog",
     "directory": "clients/typescript"
   },
   "keywords": [
-    "mem-dog",
+    "memdog",
     "memory",
     "ai",
     "sdk",

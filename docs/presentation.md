@@ -104,12 +104,12 @@ Mem-Dog is not a library, not a plugin, not a single-purpose tool. It's the full
 
 | Component | Stack | Port | Deployment |
 |-----------|-------|------|------------|
-| **API** | Python 3.12, FastAPI, 33 routers, 80+ endpoints | 8080 | GKE (`mem-dog` namespace) |
+| **API** | Python 3.12, FastAPI, 33 routers, 80+ endpoints | 8080 | GKE (`memdog` namespace) |
 | **UI** | Next.js 14, React 18, TypeScript | 3000 | Cloud Run |
 | **Webhook Pipeline** | Python 3.12, NATS JetStream, ADK, 42 agents | 8080 | GKE (`webhook-pipeline`) |
 | **Webhook Gateway** | Python 3.12, FastAPI, LiteLLM, 33 adapters | 8080 | GKE (`webhook-gateway`) |
 | **DigiMe Agent** | Node.js, OpenClaw runtime, 4 skills | 18789 | GKE (`webhook-gateway`) |
-| **MCP Server** | Python, SSE transport, 8 tools | 8091 | GKE (`mem-dog`) |
+| **MCP Server** | Python, SSE transport, 8 tools | 8091 | GKE (`memdog`) |
 | **Neo4j** | Neo4j 5.26 Community + Graphiti | 7687 | GKE (`neo4j`) |
 | **Supabase** | Postgres 16 + pgvector, GoTrue, Kong | 5432 | GKE (`supabase`) |
 | **Nango** | OAuth, token refresh, 300+ providers | 3003 | GKE (`nango`) |
@@ -143,8 +143,8 @@ Data flows into Mem-Dog from three paths:
 ### Path 3: Conversational Ingestion (DigiMe)
 
 1. User sends a message to DigiMe on WhatsApp, Signal, Telegram, etc.
-2. DigiMe's `mem-dog-bridge` skill forwards every message to the webhook pipeline
-3. DigiMe's `mem-dog-ingest` skill stores explicit data ("Remember my flight is at 3pm")
+2. DigiMe's `memdog-bridge` skill forwards every message to the webhook pipeline
+3. DigiMe's `memdog-ingest` skill stores explicit data ("Remember my flight is at 3pm")
 4. Channel identity resolution scopes all data to the correct user
 
 ### 33 Channel Adapters
@@ -281,7 +281,7 @@ The Infrastructure tab lets you manage Ollama model deployments directly from th
 - **Monitor** — status badges (running/pending/scaled_to_zero), CPU/memory metrics, logs viewer
 - **Managed vs Infrastructure** — pods created via UI are "managed" (full control); pre-existing pods show as "infrastructure" (read-only, visible for monitoring)
 
-All managed pods are prefixed `mdl-` and labelled `mem-dog/managed-model=true`. K8s RBAC restricts the API service account to the `webhook-pipeline` namespace.
+All managed pods are prefixed `mdl-` and labelled `memdog/managed-model=true`. K8s RBAC restricts the API service account to the `webhook-pipeline` namespace.
 
 ---
 
@@ -422,10 +422,10 @@ User (WhatsApp/Telegram/Slack/Signal/Discord/...)
               v
          OpenClaw Runtime (DigiMe)
               │
-              ├── mem-dog-bridge skill    → Forward ALL messages to pipeline
-              ├── mem-dog-query skill     → Lookup memories and data
-              ├── mem-dog-semantic-search  → Vector search across all data
-              └── mem-dog-ingest skill    → Store new data from conversation
+              ├── memdog-bridge skill    → Forward ALL messages to pipeline
+              ├── memdog-query skill     → Lookup memories and data
+              ├── memdog-semantic-search  → Vector search across all data
+              └── memdog-ingest skill    → Store new data from conversation
               │
               v
          "Based on your meetings [1] and Slack messages [2],
@@ -453,10 +453,10 @@ User A cannot see User B's data, and vice versa — enforced at the API level.
 
 | Skill | Purpose | Behavior |
 |-------|---------|----------|
-| **mem-dog-bridge** | Record everything | Forwards EVERY incoming message to the webhook pipeline. Non-negotiable. |
-| **mem-dog-ingest** | Store explicit data | Stores notes, facts, session memories via `POST /api/v1/data` |
-| **mem-dog-query** | Lookup data | Retrieves memories, data items, lists via API |
-| **mem-dog-semantic-search** | Recall by meaning | Vector similarity search via `POST /api/v1/ai/query/semantic` |
+| **memdog-bridge** | Record everything | Forwards EVERY incoming message to the webhook pipeline. Non-negotiable. |
+| **memdog-ingest** | Store explicit data | Stores notes, facts, session memories via `POST /api/v1/data` |
+| **memdog-query** | Lookup data | Retrieves memories, data items, lists via API |
+| **memdog-semantic-search** | Recall by meaning | Vector similarity search via `POST /api/v1/ai/query/semantic` |
 
 ### Supported Platforms (25+)
 
@@ -673,7 +673,7 @@ Organization (team or company)
 ### Zero Trust Boundaries (Local Mode)
 
 ```
-mem-dog privacy stack:
+memdog privacy stack:
 
   User (WhatsApp/Signal/Slack)
     ↓ encrypted channel (Signal E2E, etc.)
@@ -823,7 +823,7 @@ Cloud AI bills grow linearly with usage — every token, every seat, every month
 
 | Namespace | Services |
 |-----------|----------|
-| `mem-dog` | API, MCP Server |
+| `memdog` | API, MCP Server |
 | `webhook-pipeline` | NATS worker, 42 agents, Ollama (3 tiers) |
 | `webhook-gateway` | Webhook Gateway, DigiMe (OpenClaw Node) |
 | `supabase` | Postgres 16 + pgvector, GoTrue, Kong, PostgREST, Realtime, Meta, Studio |
@@ -868,7 +868,7 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 | **Classification Layers** | 6 deterministic + 1 LLM fallback |
 | **Model Tiers** | 5 (small → medium → large → multimodal → omni) |
 | **Docker Services** | 11 (single `docker compose up`) |
-| **K8s Namespaces** | 6 (mem-dog, webhook-pipeline, webhook-gateway, supabase, neo4j, nango) |
+| **K8s Namespaces** | 6 (memdog, webhook-pipeline, webhook-gateway, supabase, neo4j, nango) |
 | **Cost (self-hosted)** | $0/month recurring |
 | **Cost Savings** | 60-80% vs. cloud-only at scale |
 | **Startup Time** | ~30 seconds (`docker compose up`) |

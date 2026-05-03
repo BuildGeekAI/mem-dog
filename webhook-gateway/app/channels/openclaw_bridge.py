@@ -5,7 +5,7 @@ instance.  This covers all 25+ channels supported by OpenClaw (Signal,
 Matrix, IRC, Google Chat, LINE, Feishu, Mattermost, Nextcloud Talk,
 Nostr, Tlon, Twitch, Zalo, BlueBubbles/iMessage, Synology Chat, etc.)
 that have already been normalised by the OpenClaw gateway before being
-forwarded to this mem-dog OC-Gateway endpoint.
+forwarded to this memdog OC-Gateway endpoint.
 
 The OpenClaw gateway POSTs a JSON body with at minimum:
   - ``channel``: the originating channel type (e.g. ``"signal"``)

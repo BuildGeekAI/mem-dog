@@ -1,6 +1,6 @@
 # ClickUp
 
-Connect ClickUp to mem-dog to sync spaces, tasks, and project data.
+Connect ClickUp to memdog to sync spaces, tasks, and project data.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect ClickUp to mem-dog to sync spaces, tasks, and project data.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect ClickUp
@@ -18,7 +18,7 @@ Connect ClickUp to mem-dog to sync spaces, tasks, and project data.
 1. In the UI, go to **Settings > Apps**
 2. Find **ClickUp** under the "Productivity" category
 3. Click **Connect**
-4. Authorize mem-dog via ClickUp's OAuth consent screen
+4. Authorize memdog via ClickUp's OAuth consent screen
 5. The ClickUp card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -50,9 +50,9 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/clickup/api/v2/team/<t
 - Comments and attachments
 - Time tracking entries
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from ClickUp and store in mem-dog:
+Pull data from ClickUp and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -27,10 +27,10 @@ from google.cloud import pubsub_v1
 logger = logging.getLogger("mem_dog.webhook.receiver")
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
-PUBSUB_TOPIC = os.environ.get("WEBHOOK_PUBSUB_TOPIC", "mem-dog-webhook-dev")
+PUBSUB_TOPIC = os.environ.get("WEBHOOK_PUBSUB_TOPIC", "memdog-webhook-dev")
 MAX_PAYLOAD_BYTES = int(os.environ.get("MAX_PAYLOAD_BYTES", 1_048_576))  # 1 MB
 
-# Base URL of the mem-dog API used for telemetry span writes.
+# Base URL of the memdog API used for telemetry span writes.
 _MEM_DOG_API_URL: str = os.environ.get("MEM_DOG_API_URL", "").rstrip("/")
 
 # Canonical default user UUID — must match the UUID used by all other services.

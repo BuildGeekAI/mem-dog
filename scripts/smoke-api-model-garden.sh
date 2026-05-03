@@ -7,8 +7,8 @@
 # Use after deploying API (and optionally model servers) to verify model garden.
 #
 # Usage:
-#   API_URL=https://mem-dog-api-xxx.run.app ./scripts/smoke-api-model-garden.sh
-#   ./scripts/smoke-api-model-garden.sh https://mem-dog-api-xxx.run.app
+#   API_URL=https://memdog-api-xxx.run.app ./scripts/smoke-api-model-garden.sh
+#   ./scripts/smoke-api-model-garden.sh https://memdog-api-xxx.run.app
 #
 # Optional auth (e.g. Cloud Run with --no-allow-unauthenticated):
 #   ID_TOKEN=$(gcloud auth print-identity-token)

@@ -4,4 +4,4 @@ metadata:
   name: webhook-pipeline-sa
   namespace: webhook-pipeline
   labels:
-    app.kubernetes.io/part-of: mem-dog-webhook-pipeline
+    app.kubernetes.io/part-of: memdog-webhook-pipeline

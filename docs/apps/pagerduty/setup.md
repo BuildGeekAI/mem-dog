@@ -1,13 +1,13 @@
 # PagerDuty Integration — Setup Guide
 
-Ingest PagerDuty incident events into mem-dog for AI analysis of operational incidents.
+Ingest PagerDuty incident events into memdog for AI analysis of operational incidents.
 
 ## Architecture
 
 ```mermaid
 graph LR
     PD[PagerDuty] -- "V3 webhook" --> GW[Webhook Gateway<br/>/webhooks/pagerduty]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

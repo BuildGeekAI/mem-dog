@@ -1,6 +1,6 @@
 # GitHub
 
-Connect GitHub to mem-dog to ingest issues, pull requests, commits, and repository events.
+Connect GitHub to memdog to ingest issues, pull requests, commits, and repository events.
 
 **Category:** Dev Tools
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect GitHub to mem-dog to ingest issues, pull requests, commits, and reposito
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect GitHub
@@ -18,7 +18,7 @@ Connect GitHub to mem-dog to ingest issues, pull requests, commits, and reposito
 1. In the UI, go to **Settings > Apps**
 2. Find **GitHub** under the "Dev Tools" category
 3. Click **Connect**
-4. Authorize mem-dog via GitHub OAuth
+4. Authorize memdog via GitHub OAuth
 5. The GitHub card should now show **Active**
 
 ### 3. Create a Webhook Endpoint

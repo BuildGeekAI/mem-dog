@@ -2,7 +2,7 @@
 
 Zoom sends webhook events when recordings are completed. This router
 receives them, downloads transcripts/recordings via Nango proxy, and
-ingests into mem-dog.
+ingests into memdog.
 
 Zoom webhook setup:
 1. In marketplace.zoom.us → your app → Feature → Event Subscriptions

@@ -1,7 +1,7 @@
 """Data API client.
 
 Handles creating, retrieving metadata for, and deleting data items via
-the mem-dog ``/api/v1/data`` endpoint.
+the memdog ``/api/v1/data`` endpoint.
 """
 
 import logging
@@ -35,7 +35,7 @@ class DataClient:
         # Multitenancy — owner user_id for correct bucket path
         owner_user_id: str | None = None,
     ) -> dict[str, Any]:
-        """Create a new data entry in mem-dog.
+        """Create a new data entry in memdog.
 
         Args:
             content: Raw content / payload as a string.

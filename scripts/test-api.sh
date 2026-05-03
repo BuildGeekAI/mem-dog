@@ -2,7 +2,7 @@
 # =============================================================================
 # Mem-Dog End-to-End API Test Script
 # =============================================================================
-# Runs a full suite of curl tests against a live mem-dog API:
+# Runs a full suite of curl tests against a live memdog API:
 #   - Health check
 #   - Data CRUD (JSON, text, file upload)
 #   - Metadata, info (name/description), tags, access control
@@ -12,7 +12,7 @@
 #   - Cleanup of all test data
 #
 # Prerequisites:
-#   - A running mem-dog API (local or Cloud Run)
+#   - A running memdog API (local or Cloud Run)
 #   - curl, python3
 #
 # Usage:
@@ -25,7 +25,7 @@
 #
 # Examples:
 #   ./scripts/test-api.sh
-#   ./scripts/test-api.sh --url https://mem-dog-api-dev-xxxxx.run.app
+#   ./scripts/test-api.sh --url https://memdog-api-dev-xxxxx.run.app
 #   ./scripts/test-api.sh --url http://localhost:8080 --verbose
 # =============================================================================
 

@@ -15,4 +15,4 @@
 | [Integrations](integrations.md) | Provider platform, OAuth2, credentials, API proxy |
 | [GKE Setup (Mac)](gke-setup-mac.md) | Deploying to GKE from a Mac Mini |
 | [Presentation](presentation.md) | 18-slide overview of the full platform |
-| [mem-dog vs mem0](comparison-mem0.md) | Detailed feature-by-feature comparison |
+| [memdog vs mem0](comparison-mem0.md) | Detailed feature-by-feature comparison |

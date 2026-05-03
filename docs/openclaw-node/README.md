@@ -1,6 +1,6 @@
 # OpenClaw Node (DigiMe)
 
-OpenClaw Node runs **DigiMe**, a conversational AI memory assistant that communicates with the mem-dog RAG system. Unlike the automated webhook pipeline, DigiMe is a user-facing agent that helps users manage their digital memory across 25+ messaging channels (WhatsApp, Signal, Telegram, Discord, Slack, and more).
+OpenClaw Node runs **DigiMe**, a conversational AI memory assistant that communicates with the memdog RAG system. Unlike the automated webhook pipeline, DigiMe is a user-facing agent that helps users manage their digital memory across 25+ messaging channels (WhatsApp, Signal, Telegram, Discord, Slack, and more).
 
 ## Architecture
 
@@ -13,19 +13,19 @@ User (WhatsApp, Signal, etc.)
         ▼
      DigiMe Agent (Gemini LLM)
         │
-        ├──→ mem-dog-bridge    → Webhook Gateway → Pipeline (records ALL messages)
-        ├──→ mem-dog-ingest    → API /api/v1/data (stores notes/memories)
-        ├──→ mem-dog-query     → API /api/v1/memories, /api/v1/data (retrieves data)
-        └──→ mem-dog-semantic-search → API /api/v1/ai/query/semantic (vector search)
+        ├──→ memdog-bridge    → Webhook Gateway → Pipeline (records ALL messages)
+        ├──→ memdog-ingest    → API /api/v1/data (stores notes/memories)
+        ├──→ memdog-query     → API /api/v1/memories, /api/v1/data (retrieves data)
+        └──→ memdog-semantic-search → API /api/v1/ai/query/semantic (vector search)
 ```
 
 OpenClaw Node lives in the `webhook-gateway` k8s namespace alongside the webhook gateway. Traffic routes through the Gateway at `/oc/*`.
 
-## Skills (mem-dog Integration)
+## Skills (memdog Integration)
 
-DigiMe uses four skills to communicate with mem-dog:
+DigiMe uses four skills to communicate with memdog:
 
-### mem-dog-bridge
+### memdog-bridge
 Forwards **every** incoming message to the webhook pipeline for recording, classification, and storage.
 
 ```
@@ -42,7 +42,7 @@ POST ${WEBHOOK_BRIDGE_URL}  (default: webhook-gateway:8080/webhooks/openclaw)
 }
 ```
 
-### mem-dog-ingest
+### memdog-ingest
 Stores new data, notes, or memories explicitly.
 
 ```
@@ -60,7 +60,7 @@ Headers: x-api-key: ${MEM_DOG_API_KEY}
 }
 ```
 
-### mem-dog-query
+### memdog-query
 Retrieves stored memories and data items.
 
 ```
@@ -69,7 +69,7 @@ GET ${MEM_DOG_API_URL}/api/v1/data?limit=20&tags=session,whatsapp
 Headers: x-api-key: ${MEM_DOG_API_KEY}
 ```
 
-### mem-dog-semantic-search
+### memdog-semantic-search
 Vector similarity search using natural language.
 
 ```
@@ -87,10 +87,10 @@ Headers: x-api-key: ${MEM_DOG_API_KEY}
 
 For every incoming message, DigiMe follows this workflow:
 
-1. **Record** — Forward the message to `mem-dog-bridge` (non-negotiable, every message)
-2. **Session** — If first message from this sender, create a session memory via `mem-dog-ingest` (format: `{channel}_{sender}_{timestamp}`)
+1. **Record** — Forward the message to `memdog-bridge` (non-negotiable, every message)
+2. **Session** — If first message from this sender, create a session memory via `memdog-ingest` (format: `{channel}_{sender}_{timestamp}`)
 3. **Process** — Handle the user's request
-4. **Recall** — If the user asks about past info, query via `mem-dog-query` or `mem-dog-semantic-search`
+4. **Recall** — If the user asks about past info, query via `memdog-query` or `memdog-semantic-search`
 
 ## Supported Channels
 
@@ -117,7 +117,7 @@ Plus 15+ more via the OpenClaw runtime.
 ### Prerequisites
 
 - GKE cluster `open-jaw` running in `us-central1-a`
-- mem-dog API deployed in `mem-dog` namespace
+- memdog API deployed in `memdog` namespace
 - Webhook gateway deployed in `webhook-gateway` namespace
 - PVC `openclaw-home` created in `webhook-gateway` namespace
 
@@ -127,7 +127,7 @@ Plus 15+ more via the OpenClaw runtime.
 # Generate a gateway token
 OPENCLAW_GATEWAY_TOKEN=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
 
-# Get your mem-dog API key (per-user key with md_ prefix)
+# Get your memdog API key (per-user key with md_ prefix)
 MEM_DOG_API_KEY="md_your_api_key_here"
 
 # Google Gemini API key
@@ -146,7 +146,7 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 
 The deploy script:
 1. Builds the Docker image (`openclaw-node/Dockerfile`) for `linux/amd64`
-2. Pushes to Artifact Registry (`us-central1-docker.pkg.dev/memdog-dev/mem-dog/openclaw-node:dev-latest`)
+2. Pushes to Artifact Registry (`us-central1-docker.pkg.dev/memdog-dev/memdog/openclaw-node:dev-latest`)
 3. Creates k8s secret `openclaw-node-secrets` in `webhook-gateway` namespace
 4. Creates ConfigMap `openclaw-node-config`
 5. Applies deployment, service, and HTTPRoute manifests
@@ -194,9 +194,9 @@ Limits:   2 CPU,   4Gi memory
 |----------|----------|---------|-------------|
 | `GEMINI_API_KEY` | Yes | — | Google Generative AI API key |
 | `OPENCLAW_GATEWAY_TOKEN` | Yes | — | WebSocket auth token for control UI |
-| `MEM_DOG_API_KEY` | Yes | — | mem-dog API key for all skill calls |
+| `MEM_DOG_API_KEY` | Yes | — | memdog API key for all skill calls |
 | `GEMINI_MODEL` | No | `gemini-3.1-pro-preview` | Gemini model to use |
-| `MEM_DOG_API_URL` | No | `http://api.mem-dog.svc.cluster.local:8080` | mem-dog API base URL |
+| `MEM_DOG_API_URL` | No | `http://api.memdog.svc.cluster.local:8080` | memdog API base URL |
 | `WEBHOOK_BRIDGE_URL` | No | `http://webhook-gateway.webhook-gateway.svc.cluster.local:8080/webhooks/openclaw` | Bridge endpoint |
 | `LOG_LEVEL` | No | `info` | Log level |
 | `OPENCLAW_GATEWAY_PORT` | No | `18789` | Gateway listen port |
@@ -207,7 +207,7 @@ Limits:   2 CPU,   4Gi memory
 The OpenClaw config template defines:
 - **Identity**: Name "DigiMe", emoji 🧠, theme "friendly digital memory assistant"
 - **Model**: `google/${GEMINI_MODEL}` via Google Generative AI API
-- **Skills**: Bundled `healthcheck` + custom mem-dog skills from `/data/.openclaw/skills/`
+- **Skills**: Bundled `healthcheck` + custom memdog skills from `/data/.openclaw/skills/`
 - **Auth**: Token-based gateway authentication
 
 ## Docker Build
@@ -229,8 +229,8 @@ The entrypoint script:
 
 DigiMe operates under strict rules defined in `SOUL.md`:
 
-1. **Always record** — Every message forwarded to mem-dog-bridge before responding
-2. **No local files** — All memory operations go through the mem-dog API, never workspace files
+1. **Always record** — Every message forwarded to memdog-bridge before responding
+2. **No local files** — All memory operations go through the memdog API, never workspace files
 3. **Session tracking** — Creates session memories on first contact from each sender
 4. **Identity** — Always identifies as DigiMe, never as AI/OpenClaw/Gemini
 5. **Proactive recall** — Uses semantic search when users ask about past information
@@ -242,10 +242,10 @@ DigiMe operates under strict rules defined in `SOUL.md`:
 | `openclaw-node/Dockerfile` | Container build |
 | `openclaw-node/entrypoint.sh` | Startup: config + nginx + gateway |
 | `openclaw-node/openclaw.json.tmpl` | Runtime config template |
-| `openclaw-node/skills/mem-dog-bridge/` | Forward all messages to pipeline |
-| `openclaw-node/skills/mem-dog-ingest/` | Store data/memories |
-| `openclaw-node/skills/mem-dog-query/` | Retrieve memories/data |
-| `openclaw-node/skills/mem-dog-semantic-search/` | Vector search |
+| `openclaw-node/skills/memdog-bridge/` | Forward all messages to pipeline |
+| `openclaw-node/skills/memdog-ingest/` | Store data/memories |
+| `openclaw-node/skills/memdog-query/` | Retrieve memories/data |
+| `openclaw-node/skills/memdog-semantic-search/` | Vector search |
 | `k8s/openclaw-node/deployment.yaml` | Pod + init container |
 | `k8s/openclaw-node/skills-configmap.yaml` | Skill docs + SOUL.md + IDENTITY.md |
 | `k8s/openclaw-node/configmap.yaml` | Environment config |

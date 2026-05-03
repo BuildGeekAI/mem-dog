@@ -1,7 +1,7 @@
 """Graph API client — entity/relationship persistence.
 
 After the LLM extracts typed entities and relationships from content,
-this client persists them into the mem-dog graph layer via
+this client persists them into the memdog graph layer via
 ``POST /api/v1/graph/entities/batch``.
 
 Failures are logged and swallowed — graph persistence never blocks

@@ -1,6 +1,6 @@
 # QuickBooks
 
-Connect QuickBooks to mem-dog to sync invoices, expenses, and accounting data.
+Connect QuickBooks to memdog to sync invoices, expenses, and accounting data.
 
 **Category:** Finance
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect QuickBooks to mem-dog to sync invoices, expenses, and accounting data.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect QuickBooks
@@ -18,7 +18,7 @@ Connect QuickBooks to mem-dog to sync invoices, expenses, and accounting data.
 1. In the UI, go to **Settings > Apps**
 2. Find **QuickBooks** under the "Finance" category
 3. Click **Connect**
-4. Authorize mem-dog via QuickBooks's OAuth consent screen
+4. Authorize memdog via QuickBooks's OAuth consent screen
 5. The QuickBooks card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ For webhooks, configure in **Apps > Webhooks** in the Intuit Developer portal.
 - Customer and vendor records
 - Account balances and reports
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from QuickBooks and store in mem-dog:
+Pull data from QuickBooks and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

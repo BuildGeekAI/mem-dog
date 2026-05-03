@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# mem-dog pre-flight resource check
+# memdog pre-flight resource check
 #
 # Usage:
 #   ./scripts/preflight-check.sh              # Check local Docker Compose
@@ -84,7 +84,7 @@ profile_includes() {
 # ============================================================================
 
 echo -e "\n${BOLD}${BLUE}========================================${NC}"
-echo -e "${BOLD}${BLUE}  mem-dog Resource Matrix${NC}"
+echo -e "${BOLD}${BLUE}  memdog Resource Matrix${NC}"
 echo -e "${BOLD}${BLUE}========================================${NC}"
 echo -e "\n${BOLD}Profile: ${GREEN}${PROFILE}${NC}  |  Mode: ${GREEN}${MODE}${NC}\n"
 
@@ -188,7 +188,7 @@ if [[ "$MODE" == "local" ]]; then
         echo -e "  ${RED}8 GB RAM — only 'minimal' profile recommended${NC}"
       fi
     else
-      echo -e "  ${RED}Less than 8 GB RAM — mem-dog may not run well${NC}"
+      echo -e "  ${RED}Less than 8 GB RAM — memdog may not run well${NC}"
     fi
   fi
 
@@ -269,7 +269,7 @@ else
   # Show current usage
   echo ""
   echo -e "  ${BOLD}Current Pod Resource Usage:${NC}\n"
-  for ns in mem-dog webhook-pipeline webhook-gateway supabase nango; do
+  for ns in memdog webhook-pipeline webhook-gateway supabase nango; do
     pod_count=$(kubectl get pods -n "$ns" --context "$GKE_CONTEXT" --no-headers 2>/dev/null | grep -c Running || true)
     if (( pod_count > 0 )); then
       echo -e "    ${BOLD}${ns}${NC}: ${pod_count} running pods"

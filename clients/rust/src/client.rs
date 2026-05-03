@@ -5,7 +5,7 @@ use serde_json::Value;
 
 use crate::types::*;
 
-/// Full-coverage async client for the mem-dog API (~80 methods).
+/// Full-coverage async client for the memdog API (~80 methods).
 pub struct MemDogClient {
     http: reqwest::Client,
     base_url: String,

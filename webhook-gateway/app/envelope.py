@@ -46,7 +46,7 @@ def build_envelope(
 
     When ``data_id`` (and optionally ``is_downloaded``) are set, they are
     included in telemetry so the pipeline can skip duplicate write and
-    process only once (mem-dog format).
+    process only once (memdog format).
     """
     trace_id = _generate_trace_id()
     span_id = _generate_span_id()

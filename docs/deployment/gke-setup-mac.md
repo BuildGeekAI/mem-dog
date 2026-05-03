@@ -56,7 +56,7 @@ gcloud services enable \
 ### 4. Create Artifact Registry
 
 ```bash
-gcloud artifacts repositories create mem-dog \
+gcloud artifacts repositories create memdog \
   --repository-format=docker \
   --location=us-central1 \
   --project=memdog-dev
@@ -119,7 +119,7 @@ This command:
 - Generates JWT secret, anon key, and service role key (stored in `supabase-secrets`)
 - Deploys PostgreSQL StatefulSet with pgvector extension
 - Deploys PostgREST, GoTrue, Kong, Realtime, Meta, Studio
-- Seeds the database with mem-dog tables and schema
+- Seeds the database with memdog tables and schema
 
 Verify:
 
@@ -159,7 +159,7 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 This command:
 - Builds the API Docker image (`api/Dockerfile`) for `linux/amd64`
 - Pushes to Artifact Registry
-- Creates the `mem-dog` namespace
+- Creates the `memdog` namespace
 - Sets up Workload Identity (GSA + KSA binding)
 - Creates secrets (API key, Supabase credentials) and configmaps
 - Deploys the API with a PVC for local storage
@@ -168,8 +168,8 @@ This command:
 Verify:
 
 ```bash
-kubectl get pods -n mem-dog
-kubectl logs -n mem-dog deployment/api --tail=20
+kubectl get pods -n memdog
+kubectl logs -n memdog deployment/api --tail=20
 ```
 
 ---
@@ -288,7 +288,7 @@ curl https://<CLOUD_RUN_URL>
 ### Check all pods
 
 ```bash
-kubectl get pods -n mem-dog
+kubectl get pods -n memdog
 kubectl get pods -n webhook-pipeline
 kubectl get pods -n webhook-gateway
 kubectl get pods -n supabase
@@ -340,7 +340,7 @@ Open the Cloud Run URL in a browser. You should see the landing page with login.
 │ /gke-api │   /webhooks     │     /oc/*       │  /auth/v1/*   │
 │    ↓     │   /channels     │       ↓         │      ↓        │
 │   API    │      ↓          │  OpenClaw Node  │   GoTrue      │
-│(mem-dog) │ Webhook Gateway │(webhook-gateway)│  (supabase)   │
+│(memdog) │ Webhook Gateway │(webhook-gateway)│  (supabase)   │
 └──────────┴────────┬────────┴─────────────────┴───────────────┘
                     │
                     ▼
@@ -362,7 +362,7 @@ Open the Cloud Run URL in a browser. You should see the landing page with login.
 
 | Namespace | Components |
 |-----------|-----------|
-| `mem-dog` | API, API PVC |
+| `memdog` | API, API PVC |
 | `webhook-pipeline` | NATS, webhook-receiver, webhook-agent, webhook-pull-worker, ollama, ollama-chat |
 | `webhook-gateway` | Webhook Gateway, OpenClaw Node, `open-jaws` Gateway |
 | `supabase` | PostgreSQL, PostgREST, GoTrue, Kong, Realtime, Meta, Studio |
@@ -388,7 +388,7 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 
 ```bash
 # API
-kubectl logs -n mem-dog deployment/api -f --tail=50
+kubectl logs -n memdog deployment/api -f --tail=50
 
 # Webhook agent
 kubectl logs -n webhook-pipeline deployment/webhook-agent -f --tail=50
@@ -465,6 +465,6 @@ kubectl logs -n webhook-pipeline deployment/ollama-chat -f
 If cross-platform builds fail:
 
 ```bash
-docker buildx create --use --name mem-dog-builder
+docker buildx create --use --name memdog-builder
 docker buildx inspect --bootstrap
 ```

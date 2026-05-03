@@ -1,6 +1,6 @@
 # OpenClaw Node (DigiMe) — Multi-User Setup Guide
 
-OpenClaw Node is the DigiMe AI agent that lives in your messaging channels (Signal, WhatsApp, Matrix, IRC, etc.) and communicates with the mem-dog RAG system. A single instance can serve multiple users with data isolation via channel identity mapping.
+OpenClaw Node is the DigiMe AI agent that lives in your messaging channels (Signal, WhatsApp, Matrix, IRC, etc.) and communicates with the memdog RAG system. A single instance can serve multiple users with data isolation via channel identity mapping.
 
 ## Architecture
 
@@ -18,8 +18,8 @@ graph TD
         GW[Webhook Gateway<br/>Identity Resolution]
     end
 
-    subgraph MemDog ["mem-dog namespace"]
-        API[mem-dog API]
+    subgraph MemDog ["memdog namespace"]
+        API[memdog API]
     end
 
     SIG --> OC
@@ -64,10 +64,10 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 
 ### Step 2 — Register Channel Identities
 
-For each user, map their channel identity to their mem-dog user_id:
+For each user, map their channel identity to their memdog user_id:
 
 ```bash
-API_KEY=$(kubectl get secret api-auth-secret -n mem-dog -o jsonpath='{.data.API_KEY}' | base64 -d)
+API_KEY=$(kubectl get secret api-auth-secret -n memdog -o jsonpath='{.data.API_KEY}' | base64 -d)
 
 # Signal user
 curl -X POST "http://<gateway-ip>/gke-api/api/v1/channel-identities" \
@@ -76,7 +76,7 @@ curl -X POST "http://<gateway-ip>/gke-api/api/v1/channel-identities" \
   -d '{
     "channel_type": "signal",
     "channel_unique_id": "+1234567890",
-    "user_id": "<mem-dog-user-id>"
+    "user_id": "<memdog-user-id>"
   }'
 
 # WhatsApp user
@@ -86,7 +86,7 @@ curl -X POST "http://<gateway-ip>/gke-api/api/v1/channel-identities" \
   -d '{
     "channel_type": "whatsapp",
     "channel_unique_id": "+0987654321",
-    "user_id": "<another-mem-dog-user-id>"
+    "user_id": "<another-memdog-user-id>"
   }'
 ```
 
@@ -120,14 +120,14 @@ kubectl logs -n webhook-gateway -l app=webhook-gateway --since=5m | grep -i "res
 
 ## Skills
 
-OpenClaw uses 4 skills to interact with mem-dog:
+OpenClaw uses 4 skills to interact with memdog:
 
 | Skill | Purpose | API Endpoint |
 |-------|---------|-------------|
-| `mem-dog-bridge` | Forward channel messages to webhook pipeline | `POST /webhooks/openclaw` |
-| `mem-dog-query` | Search and retrieve data | `POST /api/v1/ai/query` |
-| `mem-dog-ingest` | Store new data | `POST /api/v1/data` |
-| `mem-dog-semantic-search` | Semantic search | `POST /api/v1/ai/query/semantic` |
+| `memdog-bridge` | Forward channel messages to webhook pipeline | `POST /webhooks/openclaw` |
+| `memdog-query` | Search and retrieve data | `POST /api/v1/ai/query` |
+| `memdog-ingest` | Store new data | `POST /api/v1/data` |
+| `memdog-semantic-search` | Semantic search | `POST /api/v1/ai/query/semantic` |
 
 All skills pass `x-channel-type` and `x-peer-id` headers for user resolution.
 

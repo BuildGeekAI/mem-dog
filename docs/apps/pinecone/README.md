@@ -1,6 +1,6 @@
 # Pinecone
 
-Connect Pinecone to mem-dog to use as an external vector database for embeddings.
+Connect Pinecone to memdog to use as an external vector database for embeddings.
 
 **Category:** Data & AI
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect Pinecone to mem-dog to use as an external vector database for embeddings
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Pinecone
@@ -40,9 +40,9 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/pinecone/query \
 
 - Index stats and metadata
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Pinecone and store in mem-dog:
+Pull data from Pinecone and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -22,7 +22,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: api-sa
-    namespace: mem-dog
+    namespace: memdog
 roleRef:
   kind: Role
   name: model-manager

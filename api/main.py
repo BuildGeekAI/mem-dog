@@ -321,7 +321,7 @@ async def _shutdown():
 async def _bootstrap():
     """Create the default user and seed analysis templates."""
     logger.info(
-        "mem-dog-api starting — version=%s default_user_id=%s storage=%s",
+        "memdog-api starting — version=%s default_user_id=%s storage=%s",
         config.APP_VERSION if hasattr(config, 'APP_VERSION') else "unknown",
         config.DEFAULT_USER_ID,
         config.STORAGE_BACKEND,
@@ -358,7 +358,7 @@ async def _bootstrap():
 @app.get("/")
 async def root():
     return {
-        "service": "mem-dog-api",
+        "service": "memdog-api",
         "version": API_VERSION,
         "environment": config.ENVIRONMENT,
         "storage_backend": config.STORAGE_BACKEND,

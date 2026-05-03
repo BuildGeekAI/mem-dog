@@ -1,6 +1,6 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mem-dog
+  name: memdog
   labels:
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog

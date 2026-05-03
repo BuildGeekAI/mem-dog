@@ -1,5 +1,5 @@
-"""Agent framework adapters for mem-dog.
+"""Agent framework adapters for memdog.
 
 Each adapter is imported lazily to avoid requiring all frameworks.
-Install extras: ``pip install mem-dog-client[langchain]``, ``[crewai]``, ``[openai]``.
+Install extras: ``pip install memdog-client[langchain]``, ``[crewai]``, ``[openai]``.
 """

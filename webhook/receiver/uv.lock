@@ -612,7 +612,7 @@ wheels = [
 ]
 
 [[package]]
-name = "mem-dog-webhook-receiver"
+name = "memdog-webhook-receiver"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

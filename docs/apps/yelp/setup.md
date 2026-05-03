@@ -7,7 +7,7 @@ Ingest Yelp business reviews.
 ```mermaid
 graph LR
     SRC[Yelp] -- "API polling or manual import" --> GW[Webhook Gateway<br/>/webhooks/yelp]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

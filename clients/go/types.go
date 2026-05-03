@@ -1,4 +1,4 @@
-// Package memdog provides Go clients for the mem-dog API.
+// Package memdog provides Go clients for the memdog API.
 //
 // Two layers: MemDogClient (full API, ~80 methods) and MemDog (simple facade, 7 methods).
 package memdog

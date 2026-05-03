@@ -1,6 +1,6 @@
 # Plaid
 
-Connect Plaid to mem-dog to sync bank account data, transactions, and balances.
+Connect Plaid to memdog to sync bank account data, transactions, and balances.
 
 **Category:** Finance
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Plaid to mem-dog to sync bank account data, transactions, and balances.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Plaid
@@ -18,7 +18,7 @@ Connect Plaid to mem-dog to sync bank account data, transactions, and balances.
 1. In the UI, go to **Settings > Apps**
 2. Find **Plaid** under the "Finance" category
 3. Click **Connect**
-4. Authorize mem-dog via Plaid's OAuth consent screen
+4. Authorize memdog via Plaid's OAuth consent screen
 5. The Plaid card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -39,9 +39,9 @@ Plaid uses webhooks for async updates:
 - Identity verification data
 - Investment holdings
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Plaid and store in mem-dog:
+Pull data from Plaid and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

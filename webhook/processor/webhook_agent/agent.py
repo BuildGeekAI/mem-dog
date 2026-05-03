@@ -174,7 +174,7 @@ root_agent = Agent(
         f"This instance is identified as {AGENT_INSTANCE_ID}."
     ),
     instruction=(
-        "You are a webhook processing agent for the mem-dog private AI system. "
+        "You are a webhook processing agent for the memdog private AI system. "
         f"Your unique instance ID is {AGENT_INSTANCE_ID}. "
         "When you receive a webhook payload:\n"
         "1. Log the payload using the log_webhook_data tool.\n"

@@ -1,6 +1,6 @@
 # Azure Blob Storage
 
-Connect Azure Blob Storage to mem-dog to sync files and container data.
+Connect Azure Blob Storage to memdog to sync files and container data.
 
 **Category:** Cloud & Storage
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Azure Blob Storage to mem-dog to sync files and container data.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Azure Blob Storage
@@ -18,7 +18,7 @@ Connect Azure Blob Storage to mem-dog to sync files and container data.
 1. In the UI, go to **Settings > Apps**
 2. Find **Azure Blob Storage** under the "Cloud & Storage" category
 3. Click **Connect**
-4. Authorize mem-dog via Azure Blob Storage's OAuth consent screen
+4. Authorize memdog via Azure Blob Storage's OAuth consent screen
 5. The Azure Blob Storage card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -37,9 +37,9 @@ For blob event notifications:
 - Event Grid notifications
 - Container access logs
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Azure Blob Storage and store in mem-dog:
+Pull data from Azure Blob Storage and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

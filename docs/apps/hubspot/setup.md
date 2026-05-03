@@ -1,13 +1,13 @@
 # HubSpot Integration — Setup Guide
 
-Ingest HubSpot CRM events (contacts, deals, companies, tickets) into mem-dog.
+Ingest HubSpot CRM events (contacts, deals, companies, tickets) into memdog.
 
 ## Architecture
 
 ```mermaid
 graph LR
     HS[HubSpot] -- "webhook POST" --> GW[Webhook Gateway<br/>/webhooks/hubspot]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

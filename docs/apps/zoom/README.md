@@ -1,6 +1,6 @@
 # Zoom
 
-Connect Zoom to mem-dog to capture meeting recordings, transcripts, and event data.
+Connect Zoom to memdog to capture meeting recordings, transcripts, and event data.
 
 **Category:** Video & Meetings
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Zoom to mem-dog to capture meeting recordings, transcripts, and event da
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 3. Your user profile is auto-created on first login
 
@@ -20,7 +20,7 @@ Connect Zoom to mem-dog to capture meeting recordings, transcripts, and event da
 2. Find **Zoom** under the "Video & Meetings" category
 3. Click **Connect**
 4. You'll be redirected to Zoom's OAuth consent screen
-5. Authorize mem-dog access and you'll be redirected back
+5. Authorize memdog access and you'll be redirected back
 6. The Zoom card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.

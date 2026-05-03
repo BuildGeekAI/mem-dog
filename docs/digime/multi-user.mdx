@@ -8,7 +8,7 @@ A single DigiMe instance can serve multiple users across all connected channels.
 
 ## Identity Resolution
 
-DigiMe maps channel-specific identities to mem-dog user IDs using a `(channel_type, peer_id)` tuple:
+DigiMe maps channel-specific identities to memdog user IDs using a `(channel_type, peer_id)` tuple:
 
 ```
 (whatsapp, +1234567890) → user_id: c987ef72-...
@@ -70,7 +70,7 @@ Every API call DigiMe makes includes the resolved `user_id`. This ensures:
     If found, the corresponding `user_id` is attached to the request context. If not found, the message is rejected.
   </Step>
   <Step title="Execute">
-    The skill executes against the mem-dog API with the resolved user's credentials.
+    The skill executes against the memdog API with the resolved user's credentials.
   </Step>
 </Steps>
 

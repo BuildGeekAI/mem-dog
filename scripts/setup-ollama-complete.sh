@@ -161,14 +161,14 @@ print_header "5. Start OpenAI-compatible wrapper"
 # Ensure wrapper image exists
 if [[ -f ~/ollama-openai-wrapper/wrapper.py ]]; then
     cd ~/ollama-openai-wrapper
-    $DOCKER build -t mem-dog-ollama-wrapper:latest . 2>/dev/null || {
+    $DOCKER build -t memdog-ollama-wrapper:latest . 2>/dev/null || {
         print_warn "Wrapper image not built yet; skipping wrapper"
     }
     
     $DOCKER run -d --rm --name ollama-wrapper \
       --network host \
       -e OLLAMA_BASE_URL=http://127.0.0.1:11434 \
-      mem-dog-ollama-wrapper:latest 2>/dev/null || {
+      memdog-ollama-wrapper:latest 2>/dev/null || {
         print_warn "Wrapper not available; using Ollama directly"
     }
 fi

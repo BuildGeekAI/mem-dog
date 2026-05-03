@@ -1,8 +1,8 @@
-"""LangChain adapter for mem-dog memory.
+"""LangChain adapter for memdog memory.
 
 Provides:
 - ``MemDogChatMessageHistory`` — drop-in ``BaseChatMessageHistory`` for conversation memory.
-- ``MemDogRetriever`` — ``BaseRetriever`` that searches mem-dog via semantic/AI query.
+- ``MemDogRetriever`` — ``BaseRetriever`` that searches memdog via semantic/AI query.
 
 Usage::
 
@@ -29,17 +29,17 @@ try:
 except ImportError as e:
     raise ImportError(
         "LangChain adapter requires langchain-core. "
-        "Install with: pip install mem-dog-client[langchain]"
+        "Install with: pip install memdog-client[langchain]"
     ) from e
 
 from mem_dog_client.simple import MemDog
 
 
 class MemDogChatMessageHistory(BaseChatMessageHistory):
-    """Chat message history backed by mem-dog.
+    """Chat message history backed by memdog.
 
     Each message is stored as a data item tagged with ``chat:true`` and
-    ``role:<role>``, linked to a mem-dog memory (conversation).
+    ``role:<role>``, linked to a memdog memory (conversation).
     """
 
     def __init__(
@@ -82,7 +82,7 @@ class MemDogChatMessageHistory(BaseChatMessageHistory):
         return messages
 
     def add_message(self, message: BaseMessage) -> None:
-        """Store a message in mem-dog."""
+        """Store a message in memdog."""
         role = "human"
         if isinstance(message, AIMessage):
             role = "ai"
@@ -98,12 +98,12 @@ class MemDogChatMessageHistory(BaseChatMessageHistory):
         )
 
     def clear(self) -> None:
-        """Not implemented — mem-dog doesn't support bulk delete via simple API."""
+        """Not implemented — memdog doesn't support bulk delete via simple API."""
         pass
 
 
 class MemDogRetriever(BaseRetriever):
-    """LangChain retriever backed by mem-dog search.
+    """LangChain retriever backed by memdog search.
 
     Uses AI-powered RAG query when ``use_ai=True``, otherwise metadata search.
     """

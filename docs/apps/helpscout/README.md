@@ -1,6 +1,6 @@
 # Help Scout
 
-Connect Help Scout to mem-dog to sync mailbox conversations and customer data.
+Connect Help Scout to memdog to sync mailbox conversations and customer data.
 
 **Category:** Customer Support
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Help Scout to mem-dog to sync mailbox conversations and customer data.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Help Scout
@@ -18,7 +18,7 @@ Connect Help Scout to mem-dog to sync mailbox conversations and customer data.
 1. In the UI, go to **Settings > Apps**
 2. Find **Help Scout** under the "Customer Support" category
 3. Click **Connect**
-4. Authorize mem-dog via Help Scout's OAuth consent screen
+4. Authorize memdog via Help Scout's OAuth consent screen
 5. The Help Scout card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ For webhooks, go to **Manage > Apps > Webhooks** and point to your `inbound_url`
 - Mailbox and folder data
 - Satisfaction ratings
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Help Scout and store in mem-dog:
+Pull data from Help Scout and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -1,6 +1,6 @@
 # Todoist
 
-Connect Todoist to mem-dog to sync projects, tasks, and productivity data.
+Connect Todoist to memdog to sync projects, tasks, and productivity data.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Todoist to mem-dog to sync projects, tasks, and productivity data.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Todoist
@@ -18,7 +18,7 @@ Connect Todoist to mem-dog to sync projects, tasks, and productivity data.
 1. In the UI, go to **Settings > Apps**
 2. Find **Todoist** under the "Productivity" category
 3. Click **Connect**
-4. Authorize mem-dog via Todoist's OAuth consent screen
+4. Authorize memdog via Todoist's OAuth consent screen
 5. The Todoist card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -41,9 +41,9 @@ curl https://<your-api>/api/v1/integrations/proxy/todoist/rest/v2/tasks \
 - Comments and attachments
 - Completed task history
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Todoist and store in mem-dog:
+Pull data from Todoist and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -4,7 +4,7 @@ metadata:
   name: webhook-gateway-config
   namespace: webhook-gateway
   labels:
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
     app.kubernetes.io/component: webhook-gateway
 data:
   LLM_PROVIDER: "gemini"

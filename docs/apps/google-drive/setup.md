@@ -1,12 +1,12 @@
 # Google Drive Integration — Full Setup Guide
 
-Automatically ingest files from Google Drive into mem-dog when they are created or modified. Covers Google Docs, Sheets, Slides, and uploaded files.
+Automatically ingest files from Google Drive into memdog when they are created or modified. Covers Google Docs, Sheets, Slides, and uploaded files.
 
 ## Architecture
 
 ```mermaid
 graph LR
-    DRIVE[Google Drive] -- "changes webhook" --> API[mem-dog API<br/>/api/v1/gdrive/push]
+    DRIVE[Google Drive] -- "changes webhook" --> API[memdog API<br/>/api/v1/gdrive/push]
     API -- "fetch file" --> NANGO[Nango Proxy<br/>OAuth token refresh]
     NANGO -- "Drive API" --> DRIVE
     API -- "ingest" --> PG[(Postgres<br/>pgvector)]
@@ -15,7 +15,7 @@ graph LR
 
 **One connection covers everything:**
 
-| Google App | How mem-dog gets it |
+| Google App | How memdog gets it |
 |-----------|-------------------|
 | Google Docs | Export as plain text |
 | Google Sheets | Export as CSV |
@@ -24,7 +24,7 @@ graph LR
 
 ## Prerequisites
 
-- mem-dog stack running on GKE
+- memdog stack running on GKE
 - Google Cloud project with Drive API enabled
 - Google OAuth Client ID (can reuse the one from Gmail/Supabase auth)
 - HTTPS endpoint (ngrok for dev)
@@ -33,14 +33,14 @@ graph LR
 
 Go to [console.cloud.google.com/apis/library/drive.googleapis.com](https://console.cloud.google.com/apis/library/drive.googleapis.com) and click **Enable**.
 
-## Step 2 — Configure OAuth in mem-dog
+## Step 2 — Configure OAuth in memdog
 
 ### Option A — Reuse existing Google OAuth credentials
 
 If you already have Google OAuth set up (Gmail or Supabase auth):
 
 ```bash
-API_KEY=$(kubectl get secret api-auth-secret -n mem-dog -o jsonpath='{.data.API_KEY}' | base64 -d)
+API_KEY=$(kubectl get secret api-auth-secret -n memdog -o jsonpath='{.data.API_KEY}' | base64 -d)
 GOOGLE_CLIENT_ID=$(kubectl get secret supabase-auth-oauth -n supabase -o jsonpath='{.data.GOOGLE_CLIENT_ID}' | base64 -d)
 GOOGLE_CLIENT_SECRET=$(kubectl get secret supabase-auth-oauth -n supabase -o jsonpath='{.data.GOOGLE_CLIENT_SECRET}' | base64 -d)
 
@@ -68,14 +68,14 @@ GCP Console → APIs & Services → OAuth consent screen → Audience → Add us
 
 ## Step 3 — Connect Google Drive
 
-1. In mem-dog UI → **Settings → Apps → Google Drive**
+1. In memdog UI → **Settings → Apps → Google Drive**
 2. Click **Connect**
 3. Authorize with your Google account (grants Drive read access)
 
 ## Step 4 — Register Drive Watch
 
 ```bash
-API_KEY=$(kubectl get secret api-auth-secret -n mem-dog -o jsonpath='{.data.API_KEY}' | base64 -d)
+API_KEY=$(kubectl get secret api-auth-secret -n memdog -o jsonpath='{.data.API_KEY}' | base64 -d)
 
 # Find your connection_id
 curl -s -H "x-api-key: $API_KEY" \
@@ -117,14 +117,14 @@ gcloud scheduler jobs create http gdrive-watch-renewal \
 
 1. Create or edit a file in Google Drive
 2. Wait ~5-10 seconds
-3. Check mem-dog:
+3. Check memdog:
    - **Data** tab — search for the file name
    - **Playground → MCP** → `search` tool
 
 ### CLI verification
 
 ```bash
-kubectl logs -n mem-dog deployment/api --since=5m | grep -i "drive\|gdrive\|Ingest\|Downloaded"
+kubectl logs -n memdog deployment/api --since=5m | grep -i "drive\|gdrive\|Ingest\|Downloaded"
 ```
 
 Expected output:
@@ -197,7 +197,7 @@ Google Drive can send multiple notifications for one change. The handler process
 
 Ensure the Drive API export is working:
 ```bash
-kubectl logs -n mem-dog deployment/api --since=5m | grep "export\|Downloaded"
+kubectl logs -n memdog deployment/api --since=5m | grep "export\|Downloaded"
 ```
 
 ## Production Checklist

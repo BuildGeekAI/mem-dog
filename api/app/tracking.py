@@ -168,7 +168,7 @@ def write_api_event(
         agent_type = _extract_agent_type(tags)
         event = {
             "stage": "api",
-            "service": "mem-dog-api",
+            "service": "memdog-api",
             "service_type": "gcp_cloud_run_fastapi",
             "status": "stored",
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -184,7 +184,7 @@ def write_api_event(
 
         event_tags = [
             "stage:api",
-            "service:mem-dog-api",
+            "service:memdog-api",
             "status:stored",
             "source:webhook_pipeline",
         ]
@@ -197,8 +197,8 @@ def write_api_event(
             user=TRACKING_USER_ID,
             memory_ids=[TRACKING_TIMELINE_ID],
             tags=event_tags,
-            name="mem-dog-api | stored",
-            description=f"[mem-dog-api] STORED — api stage | data_id={data_id}",
+            name="memdog-api | stored",
+            description=f"[memdog-api] STORED — api stage | data_id={data_id}",
             exclusive_memory_ids=True,
         )
         logger.info(

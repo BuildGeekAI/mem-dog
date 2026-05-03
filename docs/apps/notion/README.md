@@ -1,6 +1,6 @@
 # Notion
 
-Connect Notion to mem-dog to sync pages, databases, and workspace content into your knowledge base.
+Connect Notion to memdog to sync pages, databases, and workspace content into your knowledge base.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Notion to mem-dog to sync pages, databases, and workspace content into y
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Notion
@@ -18,13 +18,13 @@ Connect Notion to mem-dog to sync pages, databases, and workspace content into y
 1. In the UI, go to **Settings > Apps**
 2. Find **Notion** under the "Productivity" category
 3. Click **Connect**
-4. Authorize mem-dog to access your Notion workspace
-5. Select the pages/databases you want to share with mem-dog
+4. Authorize memdog to access your Notion workspace
+5. Select the pages/databases you want to share with memdog
 6. The Notion card should now show **Active**
 
 ### 3. Sync Content
 
-Notion is an outbound integration -- mem-dog pulls data from Notion's API rather than receiving webhooks. Use the integration proxy to query your Notion workspace:
+Notion is an outbound integration -- memdog pulls data from Notion's API rather than receiving webhooks. Use the integration proxy to query your Notion workspace:
 
 ```bash
 # Search all pages
@@ -53,7 +53,7 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/notion/databases/<db-i
 
 ## Tip: Periodic Sync
 
-To keep Notion content up to date in mem-dog, set up a periodic job that queries Notion for recently modified pages and ingests them via the mem-dog data API:
+To keep Notion content up to date in memdog, set up a periodic job that queries Notion for recently modified pages and ingests them via the memdog data API:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -22,7 +22,7 @@ logger = logging.getLogger("mem_dog.k8s_client")
 # ---------------------------------------------------------------------------
 K8S_MODEL_NAMESPACE = os.getenv("K8S_MODEL_NAMESPACE", "webhook-pipeline")
 K8S_MANAGED_PREFIX = "mdl-"
-K8S_MANAGED_LABEL = "mem-dog/managed-model"
+K8S_MANAGED_LABEL = "memdog/managed-model"
 
 # Tier resource presets
 TIER_RESOURCES: dict[str, dict] = {
@@ -187,8 +187,8 @@ def _build_deployment(spec: ModelDeploymentSpec):
     labels = {
         "app": dep_name,
         K8S_MANAGED_LABEL: "true",
-        "mem-dog/tier": tier,
-        "app.kubernetes.io/part-of": "mem-dog-webhook-pipeline",
+        "memdog/tier": tier,
+        "app.kubernetes.io/part-of": "memdog-webhook-pipeline",
     }
 
     deployment = client.V1Deployment(
@@ -199,8 +199,8 @@ def _build_deployment(spec: ModelDeploymentSpec):
             namespace=K8S_MODEL_NAMESPACE,
             labels=labels,
             annotations={
-                "mem-dog/models": ",".join(spec.models_to_pull),
-                "mem-dog/tier": tier,
+                "memdog/models": ",".join(spec.models_to_pull),
+                "memdog/tier": tier,
             },
         ),
         spec=client.V1DeploymentSpec(
@@ -233,7 +233,7 @@ def _build_service(name: str):
             labels={
                 "app": dep_name,
                 K8S_MANAGED_LABEL: "true",
-                "app.kubernetes.io/part-of": "mem-dog-webhook-pipeline",
+                "app.kubernetes.io/part-of": "memdog-webhook-pipeline",
             },
         ),
         spec=client.V1ServiceSpec(
@@ -256,8 +256,8 @@ def _deployment_to_status(dep) -> ModelDeploymentStatus:
     annotations = dep.metadata.annotations or {}
     is_managed = labels.get(K8S_MANAGED_LABEL) == "true"
 
-    models = [m for m in (annotations.get("mem-dog/models", "")).split(",") if m]
-    tier = annotations.get("mem-dog/tier", "unknown")
+    models = [m for m in (annotations.get("memdog/models", "")).split(",") if m]
+    tier = annotations.get("memdog/tier", "unknown")
 
     # For unmanaged pods, try to infer models from the postStart lifecycle hook
     if not models and not is_managed:

@@ -4,7 +4,7 @@ metadata:
   name: allow-webhook-gateway
   namespace: nango
   labels:
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
 spec:
   from:
     - group: gateway.networking.k8s.io

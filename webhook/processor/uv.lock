@@ -416,7 +416,7 @@ wheels = [
 ]
 
 [[package]]
-name = "mem-dog-webhook-processor"
+name = "memdog-webhook-processor"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

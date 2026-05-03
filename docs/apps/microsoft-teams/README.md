@@ -1,6 +1,6 @@
 # Microsoft Teams
 
-Connect Microsoft Teams to mem-dog to ingest channel messages, chats, and meeting data.
+Connect Microsoft Teams to memdog to ingest channel messages, chats, and meeting data.
 
 **Category:** Chat
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Microsoft Teams to mem-dog to ingest channel messages, chats, and meetin
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Microsoft Teams
@@ -18,7 +18,7 @@ Connect Microsoft Teams to mem-dog to ingest channel messages, chats, and meetin
 1. In the UI, go to **Settings > Apps**
 2. Find **Microsoft Teams** under the "Chat" category
 3. Click **Connect**
-4. Sign in with your Microsoft account and authorize mem-dog
+4. Sign in with your Microsoft account and authorize memdog
 5. The Microsoft Teams card should now show **Active**
 
 ### 3. Create a Webhook Endpoint
@@ -77,5 +77,5 @@ Send messages or query Teams data via the integration proxy:
 curl -X POST "https://<your-api>/api/v1/integrations/proxy/microsoft-teams/teams/{team-id}/channels/{channel-id}/messages" \
   -H "Authorization: Bearer <your-jwt>" \
   -H "Content-Type: application/json" \
-  -d '{"body": {"content": "Hello from mem-dog!"}}'
+  -d '{"body": {"content": "Hello from memdog!"}}'
 ```

@@ -1,6 +1,6 @@
 # Airtable
 
-Connect Airtable to mem-dog to sync bases, tables, and structured data.
+Connect Airtable to memdog to sync bases, tables, and structured data.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Airtable to mem-dog to sync bases, tables, and structured data.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Airtable
@@ -18,7 +18,7 @@ Connect Airtable to mem-dog to sync bases, tables, and structured data.
 1. In the UI, go to **Settings > Apps**
 2. Find **Airtable** under the "Productivity" category
 3. Click **Connect**
-4. Authorize mem-dog via Airtable's OAuth consent screen
+4. Authorize memdog via Airtable's OAuth consent screen
 5. The Airtable card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -51,9 +51,9 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/airtable/v0/bases/<bas
 - Attachments and linked records
 - View configurations
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Airtable and store in mem-dog:
+Pull data from Airtable and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

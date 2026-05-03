@@ -60,7 +60,7 @@ kubectl get pods --all-namespaces
 3. **Gmail watches** — watches expire after 7 days. If the cluster was asleep longer, re-register via the integrations API.
 4. **Pod health** — some pods may enter CrashLoopBackOff if dependencies start slowly. A rolling restart usually fixes it:
    ```bash
-   kubectl rollout restart deployment -n mem-dog
+   kubectl rollout restart deployment -n memdog
    kubectl rollout restart deployment -n webhook-pipeline
    kubectl rollout restart deployment -n webhook-gateway
    kubectl rollout restart deployment -n supabase

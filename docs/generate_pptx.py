@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate mem-dog presentation as .pptx from presentation.md content."""
+"""Generate memdog presentation as .pptx from presentation.md content."""
 
 from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
@@ -306,7 +306,7 @@ for left, top, width, text, accent_color in components:
 # Component table
 make_table(slide, Inches(0.5), Inches(5.0), Inches(12.3), [
     ["Component", "Stack", "Port", "Deployment"],
-    ["API", "Python 3.12, FastAPI, 33 routers", "8080", "GKE (mem-dog)"],
+    ["API", "Python 3.12, FastAPI, 33 routers", "8080", "GKE (memdog)"],
     ["UI", "Next.js 14, React 18, TypeScript", "3000", "Cloud Run"],
     ["Pipeline", "NATS JetStream, ADK, 42 agents", "8080", "GKE (webhook-pipeline)"],
     ["Gateway", "FastAPI, LiteLLM, 33 adapters", "8080", "GKE (webhook-gateway)"],
@@ -336,8 +336,8 @@ paths = [
       "Optional: forward to pipeline", "Supports 6 upload modes in UI", ""]),
     ("Path 3: Conversational",
      "DigiMe Agent (25+ apps)",
-     ["User messages DigiMe on any platform", "mem-dog-bridge forwards to pipeline",
-      "mem-dog-ingest stores explicit data", "Channel identity resolves user_id", ""]),
+     ["User messages DigiMe on any platform", "memdog-bridge forwards to pipeline",
+      "memdog-ingest stores explicit data", "Channel identity resolves user_id", ""]),
 ]
 
 for i, (title, subtitle, steps) in enumerate(paths):
@@ -601,10 +601,10 @@ add_text_box(slide, Inches(0.8), Inches(1.3), Inches(11.5), Inches(0.5),
 # Skills table
 make_table(slide, Inches(0.5), Inches(2.0), Inches(12.3), [
     ["Skill", "Purpose", "Behavior"],
-    ["mem-dog-bridge", "Record everything", "Forwards EVERY message to pipeline. Non-negotiable."],
-    ["mem-dog-ingest", "Store explicit data", "Stores notes, facts, session memories via POST /api/v1/data"],
-    ["mem-dog-query", "Lookup data", "Retrieves memories, data items, lists via API"],
-    ["mem-dog-semantic-search", "Recall by meaning", "Vector similarity search via POST /api/v1/ai/query/semantic"],
+    ["memdog-bridge", "Record everything", "Forwards EVERY message to pipeline. Non-negotiable."],
+    ["memdog-ingest", "Store explicit data", "Stores notes, facts, session memories via POST /api/v1/data"],
+    ["memdog-query", "Lookup data", "Retrieves memories, data items, lists via API"],
+    ["memdog-semantic-search", "Recall by meaning", "Vector similarity search via POST /api/v1/ai/query/semantic"],
 ], font_size=13)
 
 # Multi-user isolation
@@ -940,7 +940,7 @@ add_text_box(slide, Inches(0.8), Inches(3.2), Inches(5), Inches(0.5),
 
 make_table(slide, Inches(0.5), Inches(3.8), Inches(6.0), [
     ["Namespace", "Services"],
-    ["mem-dog", "API, MCP Server"],
+    ["memdog", "API, MCP Server"],
     ["webhook-pipeline", "NATS worker, 42 agents, Ollama (3 tiers)"],
     ["webhook-gateway", "Gateway, DigiMe (OpenClaw Node)"],
     ["supabase", "Postgres 16, GoTrue, Kong, PostgREST"],
@@ -1070,7 +1070,7 @@ add_text_box(slide, Inches(1.5), Inches(6.3), Inches(10), Inches(0.6),
 # ─────────────────────────────────────────────────────────────────────────────
 # Save
 # ─────────────────────────────────────────────────────────────────────────────
-output_path = "/Users/paragagarwal/repos/mem-dog/docs/presentation.pptx"
+output_path = "/Users/paragagarwal/repos/memdog/docs/presentation.pptx"
 prs.save(output_path)
 print(f"Saved: {output_path}")
 print(f"Slides: {len(prs.slides)}")

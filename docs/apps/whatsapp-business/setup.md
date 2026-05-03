@@ -1,13 +1,13 @@
 # WhatsApp Business Integration — Setup Guide
 
-Automatically ingest WhatsApp messages, images, documents, and voice notes into mem-dog via Meta's WhatsApp Cloud API.
+Automatically ingest WhatsApp messages, images, documents, and voice notes into memdog via Meta's WhatsApp Cloud API.
 
 ## Architecture
 
 ```mermaid
 graph LR
     WA[WhatsApp] -- "Cloud API webhook" --> GW[Webhook Gateway<br/>WhatsApp adapter]
-    GW -- "normalize" --> API[mem-dog API]
+    GW -- "normalize" --> API[memdog API]
     API -- "NATS" --> PIPE[AI Pipeline<br/>40 agents]
 ```
 
@@ -61,7 +61,7 @@ kubectl -n webhook-gateway set env deployment/webhook-gateway \
 
 1. Send a message from WhatsApp to your test number (shown in API Setup)
 2. Or use the **Test** button in Meta's API Setup to send yourself a template message, then reply
-3. Check mem-dog:
+3. Check memdog:
    - **Data** tab — search for the message
    - **Timeline** — should show new entry
 

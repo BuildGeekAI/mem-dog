@@ -36,7 +36,7 @@ export default function McpConnectionInfo() {
 
   const configJson = {
     mcpServers: {
-      'mem-dog': {
+      'memdog': {
         url: mcpEndpoint,
         headers: {
           'x-api-key': keyForConfig,
@@ -78,7 +78,7 @@ export default function McpConnectionInfo() {
           <div>
             <h3 className="text-lg font-semibold text-white">MCP Server</h3>
             <p className="text-sm text-white/50">
-              Connect Claude Desktop, Cursor, or any MCP-compatible agent to mem-dog
+              Connect Claude Desktop, Cursor, or any MCP-compatible agent to memdog
             </p>
           </div>
         </div>

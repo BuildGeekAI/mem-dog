@@ -89,7 +89,7 @@ const TOOL_DEFS: { id: ToolName; label: string; icon: typeof Server; desc: strin
 ];
 
 // ---------------------------------------------------------------------------
-// Tool API calls — goes through the mem-dog API directly (same auth)
+// Tool API calls — goes through the memdog API directly (same auth)
 // ---------------------------------------------------------------------------
 
 async function callTool(tool: ToolName, params: Record<string, string>): Promise<string> {
@@ -316,7 +316,7 @@ export default function McpPlayground() {
                 </div>
                 <h3 className="text-lg font-semibold text-white/80 mb-2">MCP Chat</h3>
                 <p className="text-sm text-white/40 mb-8 max-w-md">
-                  Chat with your mem-dog data through the MCP server. Ask questions and get answers with citations.
+                  Chat with your memdog data through the MCP server. Ask questions and get answers with citations.
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 max-w-lg">
                   {['What data do I have stored?', 'Summarize my recent uploads', 'Search for meeting notes'].map((s) => (

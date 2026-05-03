@@ -692,7 +692,7 @@ add_text(slide, Inches(1.5), Inches(6.5), Inches(10), Inches(0.6),
          size=26, color=GREEN, bold=True, align=PP_ALIGN.CENTER)
 
 # ═══════════════════════════════════════════════════════════════════════════
-output_path = "/Users/paragagarwal/repos/mem-dog/docs/ingestion-pipeline.pptx"
+output_path = "/Users/paragagarwal/repos/memdog/docs/ingestion-pipeline.pptx"
 prs.save(output_path)
 print(f"Saved: {output_path}")
 print(f"Slides: {len(prs.slides)}")

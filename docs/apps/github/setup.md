@@ -1,19 +1,19 @@
 # GitHub Integration — Setup Guide
 
-Automatically ingest GitHub events (commits, pull requests, issues, comments, releases) into mem-dog via webhooks.
+Automatically ingest GitHub events (commits, pull requests, issues, comments, releases) into memdog via webhooks.
 
 ## Architecture
 
 ```mermaid
 graph LR
     GH[GitHub] -- "webhook POST" --> GW[Webhook Gateway<br/>GitHub adapter]
-    GW -- "normalize" --> API[mem-dog API]
+    GW -- "normalize" --> API[memdog API]
     API -- "NATS" --> PIPE[AI Pipeline<br/>40 agents]
 ```
 
 ## What Gets Ingested
 
-| Event | What mem-dog captures |
+| Event | What memdog captures |
 |-------|----------------------|
 | **Push** | Commits, authors, changed files, branch |
 | **Pull Request** | Title, body, branch, status (opened/merged/closed) |
@@ -52,17 +52,17 @@ For ingesting events across all repos in an organization:
 
 ### Option C — OAuth via Nango (for API access)
 
-If you want mem-dog to also **pull** data from GitHub (search repos, read files):
+If you want memdog to also **pull** data from GitHub (search repos, read files):
 
 1. Create a GitHub OAuth App at [github.com/settings/developers](https://github.com/settings/developers)
 2. Set redirect URL: `https://<ngrok-url>/oauth/callback`
-3. In mem-dog UI → **Settings → Apps → GitHub → gear icon** → enter Client ID and Secret
+3. In memdog UI → **Settings → Apps → GitHub → gear icon** → enter Client ID and Secret
 4. Click **Connect**
 
 ## Test
 
 1. Push a commit or create an issue in a repo with the webhook configured
-2. Check mem-dog:
+2. Check memdog:
    - **Data** tab — search for the commit message or issue title
    - **Timeline** — should show the event
 

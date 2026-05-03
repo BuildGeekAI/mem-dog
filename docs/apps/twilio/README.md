@@ -1,6 +1,6 @@
 # Twilio
 
-Connect Twilio to mem-dog to ingest SMS, MMS, and voice call data.
+Connect Twilio to memdog to ingest SMS, MMS, and voice call data.
 
 **Category:** Messaging
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Twilio to mem-dog to ingest SMS, MMS, and voice call data.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Twilio
@@ -18,7 +18,7 @@ Connect Twilio to mem-dog to ingest SMS, MMS, and voice call data.
 1. In the UI, go to **Settings > Apps**
 2. Find **Twilio** under the "Messaging" category
 3. Click **Connect**
-4. Authorize mem-dog via Twilio's OAuth consent screen
+4. Authorize memdog via Twilio's OAuth consent screen
 5. The Twilio card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -58,7 +58,7 @@ Twilio event → Webhook Gateway → normalizes → NATS queue
 - WhatsApp messages via Twilio
 - Delivery status callbacks
 
-## Ingest into mem-dog
+## Ingest into memdog
 
 Data from Twilio flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

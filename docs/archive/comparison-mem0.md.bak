@@ -1,14 +1,14 @@
-# mem-dog vs mem0: Detailed Comparison
+# memdog vs mem0: Detailed Comparison
 
 **Last updated:** March 2026
 
-mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A, Apache 2.0). This document compares mem-dog against mem0 feature-by-feature to identify where mem-dog leads, where mem0 leads, and where they're comparable.
+mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A, Apache 2.0). This document compares memdog against mem0 feature-by-feature to identify where memdog leads, where mem0 leads, and where they're comparable.
 
 ---
 
 ## At a Glance
 
-| | mem-dog | mem0 |
+| | memdog | mem0 |
 |-|---------|------|
 | **What it is** | Full-stack memory platform with multi-channel ingestion, AI pipeline, and query engine | Memory layer SDK for adding persistent memory to AI agents |
 | **Focus** | End-to-end data lifecycle: ingest, enrich, store, query | Memory CRUD: add, search, get, update, delete |
@@ -22,19 +22,19 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 
 ### Data Ingestion
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Multi-channel ingestion** | 25+ channels (WhatsApp, Telegram, Slack, Discord, Signal, email, etc.) via DigiMe agent | None — API-only ingestion |
 | **Web UI upload** | 6 modes: text, file, URL, camera, voice, video | None |
 | **Webhook pipeline** | Real-time NATS streaming with typed message routing | None |
 | **Integration platform** | 300+ providers with OAuth2, API-key auth, encrypted credentials | None |
-| **Channel agent** | DigiMe — AI agent in messaging apps that queries the mem-dog RAG system, performs semantic search, and ingests data through conversation | Browser extension for ChatGPT, Perplexity, Claude |
+| **Channel agent** | DigiMe — AI agent in messaging apps that queries the memdog RAG system, performs semantic search, and ingests data through conversation | Browser extension for ChatGPT, Perplexity, Claude |
 
-**Verdict:** mem-dog wins significantly. mem0 is API-only — data enters via `memory.add()` calls. mem-dog supports 25+ channels with DigiMe as an AI agent for querying the RAG system and ingesting data through conversation, plus a web UI for manual upload.
+**Verdict:** memdog wins significantly. mem0 is API-only — data enters via `memory.add()` calls. memdog supports 25+ channels with DigiMe as an AI agent for querying the RAG system and ingesting data through conversation, plus a web UI for manual upload.
 
 ### AI Enrichment
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Automatic processing** | 40 typed sub-agents process every piece of data at ingest | LLM extracts facts from `add()` calls |
 | **Data type coverage** | 60+ types: PDFs, images, video, audio, code, medical, geospatial, IoT | Text conversations only |
@@ -44,11 +44,11 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 | **Model routing** | 5 tiers: small (4b) → medium (12b) → large (27b) → multimodal → omni | Single model (GPT-4 Nano default) |
 | **Customizable prompts** | Per-agent-type configurable prompts, output schemas, skills | Custom prompt for entity extraction |
 
-**Verdict:** mem-dog wins. mem0 focuses on extracting facts from conversations. mem-dog processes any data type through specialized agents with tiered model routing.
+**Verdict:** memdog wins. mem0 focuses on extracting facts from conversations. memdog processes any data type through specialized agents with tiered model routing.
 
 ### Memory & Storage
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Memory types** | 10 types (timeline, session, conversation, user, organizational, factual, episodic, semantic, custom, tracing) | 3 levels (user, session, agent) |
 | **Versioning** | Every mutation creates a new version with diff tracking | None |
@@ -59,11 +59,11 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 | **Memory compression** | LLM summarization with archive, auto-trigger at threshold | Intelligent compression built into core pipeline |
 | **Memory categories** | 4 Mem0-aligned categories: conversation, session, user, organizational | 3: user, session, agent |
 
-**Verdict:** mem-dog has more memory structure (10 types, versioning, ACLs, TTL). mem0 has simpler, more opinionated memory that "just works" for conversation state.
+**Verdict:** memdog has more memory structure (10 types, versioning, ACLs, TTL). mem0 has simpler, more opinionated memory that "just works" for conversation state.
 
 ### Knowledge Graph
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Graph storage** | Postgres tables (same DB as embeddings) | Neo4j, Memgraph, AWS Neptune, Kuzu |
 | **Entity extraction** | Automatic in webhook pipeline (typed_entities + relationships) | LLM extraction on `memory.add()` |
@@ -75,11 +75,11 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 | **Cost** | Free (Postgres) | Neo4j Aura: $65+/mo; self-hosted: ops overhead |
 | **Performance impact** | ~0% (same DB, SQL joins) | ~2% improvement per mem0's own benchmarks |
 
-**Verdict:** Comparable. mem0 supports more graph backends (Neo4j, Neptune, Kuzu) and has a more mature extraction pipeline. mem-dog's Postgres approach is simpler (zero new infra) and integrates entity context directly into RAG answers.
+**Verdict:** Comparable. mem0 supports more graph backends (Neo4j, Neptune, Kuzu) and has a more mature extraction pipeline. memdog's Postgres approach is simpler (zero new infra) and integrates entity context directly into RAG answers.
 
 ### Query & Search
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Semantic search** | pgvector cosine similarity | Vector DB (Qdrant, Chroma, etc.) |
 | **RAG chat** | Conversational with inline [1] [2] citations + conversation history | Not built-in (memory feeds into external LLM) |
@@ -87,11 +87,11 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 | **Entity-aware search** | Entities from query boost relevant results + system prompt hints | Graph results in `relations` key |
 | **Web UI search** | Full-text search, tag faceting, data browser | Dashboard (managed platform) |
 
-**Verdict:** mem-dog wins on query capabilities. Built-in RAG chat with citations is a major differentiator. mem0's search returns memories that you then feed into your own LLM.
+**Verdict:** memdog wins on query capabilities. Built-in RAG chat with citations is a major differentiator. mem0's search returns memories that you then feed into your own LLM.
 
 ### Developer Experience
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Simple SDK** | `MemDog` with 8 methods (add, search, get, delete, entities, related, compress) | `Memory` with 5 methods (add, search, get, update, delete) |
 | **Full SDK** | `MemDogClient` with 70+ methods (every API endpoint) | Same 5 methods |
@@ -101,11 +101,11 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 | **API endpoints** | 60+ REST endpoints | ~5 REST endpoints |
 | **Documentation** | 12 docs covering architecture, API, pipeline, deployment, graph, etc. | Comprehensive docs site |
 
-**Verdict:** Mixed. mem0 has TypeScript SDK and simpler API surface. mem-dog has far more API endpoints and the full REST client, but only Python. Agent adapter coverage is comparable.
+**Verdict:** Mixed. mem0 has TypeScript SDK and simpler API surface. memdog has far more API endpoints and the full REST client, but only Python. Agent adapter coverage is comparable.
 
 ### Deployment & Infrastructure
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Managed service** | None | mem0 Cloud (app.mem0.ai) |
 | **Self-hosted** | Docker Compose (1 command), GKE, Mac Mini | pip install + configure backends |
@@ -114,11 +114,11 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 | **Model flexibility** | 5 tiers, Model Garden (10+ providers), BYO API key | OpenAI default, configurable LLM |
 | **Storage flexibility** | 3 backends (local, GCS, Supabase) | Multiple vector DBs + graph DBs |
 
-**Verdict:** mem0 wins on ease of getting started (pip install + managed cloud). mem-dog wins on self-hosted production deployment with deploy scripts, Mac Mini support, and full infrastructure control.
+**Verdict:** mem0 wins on ease of getting started (pip install + managed cloud). memdog wins on self-hosted production deployment with deploy scripts, Mac Mini support, and full infrastructure control.
 
 ### Security & Compliance
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Authentication** | Supabase Auth (email + Google OAuth) + per-user API keys | API key |
 | **Encryption** | Fernet AES-256 for credentials at rest | Not specified (open source) |
@@ -128,22 +128,22 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 | **HIPAA** | No | Yes (managed platform, BYOK) |
 | **Audit trail** | OpenTelemetry traces + version history | Audit logs (Enterprise) |
 
-**Verdict:** mem0 wins on enterprise compliance (SOC 2, HIPAA) via managed platform. mem-dog has stronger per-item access control and versioning for self-hosted deployments.
+**Verdict:** mem0 wins on enterprise compliance (SOC 2, HIPAA) via managed platform. memdog has stronger per-item access control and versioning for self-hosted deployments.
 
 ### Observability
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Distributed tracing** | OpenTelemetry across all components | None (open source) |
 | **Span viewer** | Waterfall UI in Insights tab | Analytics dashboard (managed) |
 | **Token tracking** | Per-user, per-model, per-agent breakdown | Usage analytics (managed) |
 | **Stats dashboard** | Data counts, embeddings, memories, agent performance | Memory analytics (Pro+) |
 
-**Verdict:** mem-dog wins for self-hosted observability. mem0 managed platform has its own analytics.
+**Verdict:** memdog wins for self-hosted observability. mem0 managed platform has its own analytics.
 
 ### Web UI
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Data browser** | Full CRUD with search, filter, tag faceting | None (open source) |
 | **RAG chat** | Conversational interface with inline citations | None |
@@ -152,11 +152,11 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 | **AI settings** | Model garden, smart routing, agent configs, prompts | None |
 | **Dashboard** | Stats, token usage, OTel traces | Dashboard (managed platform) |
 
-**Verdict:** mem-dog wins. Full web UI vs. API-only for open source mem0.
+**Verdict:** memdog wins. Full web UI vs. API-only for open source mem0.
 
 ### Model Garden & AI Providers
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Provider management** | Model Garden UI — connect 10+ providers (OpenAI, Anthropic, Gemini, Groq, Mistral, Cohere, DeepSeek, xAI, Ollama, Ollama Cloud) with encrypted API keys | Single LLM config (default: GPT-4 Nano) |
 | **Model discovery** | Auto-discovers available models per provider via API introspection | Manual model name configuration |
@@ -169,11 +169,11 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 | **BYO model** | Any OpenAI-compatible endpoint via custom base URL | Limited to supported providers |
 | **UI management** | Full settings page: add/remove providers, test connections, set defaults | None (config file or API) |
 
-**Verdict:** mem-dog wins significantly. Model Garden gives users and admins full control over which AI providers and models are used, per-user and per-data-type. mem0 locks you into a single model configuration.
+**Verdict:** memdog wins significantly. Model Garden gives users and admins full control over which AI providers and models are used, per-user and per-data-type. mem0 locks you into a single model configuration.
 
 ### Token Cost & Local Models
 
-| Feature | mem-dog | mem0 |
+| Feature | memdog | mem0 |
 |---------|---------|------|
 | **Local model support** | First-class — Ollama in-cluster (GKE sidecar or standalone) | None — cloud APIs only |
 | **Default processing model** | Gemma3:4b (local, free) for ~80% of data types | GPT-4 Nano (cloud, usage-based) |
@@ -189,7 +189,7 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 
 **Cost breakdown example — 10,000 items/month:**
 
-| Cost component | mem-dog (local-first) | mem0 (cloud) |
+| Cost component | memdog (local-first) | mem0 (cloud) |
 |----------------|----------------------|--------------|
 | Classification | $0 (deterministic rules) | Included in add() |
 | LLM enrichment | $0 (Gemma3:4b local) | ~$5–10 (GPT-4 Nano) |
@@ -199,15 +199,15 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 | **Compute infra** | **$50–100/mo** (GKE node or Mac Mini amortized) | **$0** (managed) |
 | **Total** | **~$50–100/mo** | **~$260–280/mo** |
 
-At 10K items/month, mem-dog costs 60–80% less. The gap widens at scale because mem-dog's local model costs are fixed (compute) while mem0's API costs grow linearly with volume.
+At 10K items/month, memdog costs 60–80% less. The gap widens at scale because memdog's local model costs are fixed (compute) while mem0's API costs grow linearly with volume.
 
-**Verdict:** mem-dog wins on cost at scale. The 5-tier routing with local-first models means most processing is free. The 6-layer deterministic classification avoids LLM calls entirely for type detection. mem0's cloud-only approach is simpler to set up but costs significantly more at volume.
+**Verdict:** memdog wins on cost at scale. The 5-tier routing with local-first models means most processing is free. The 6-layer deterministic classification avoids LLM calls entirely for type detection. mem0's cloud-only approach is simpler to set up but costs significantly more at volume.
 
 ---
 
 ## Pricing Comparison
 
-| | mem-dog | mem0 Free | mem0 Starter | mem0 Pro | mem0 Enterprise |
+| | memdog | mem0 Free | mem0 Starter | mem0 Pro | mem0 Enterprise |
 |-|---------|-----------|-------------|----------|----------------|
 | **Cost** | Free (self-hosted) | $0/mo | $19/mo | $249/mo | Custom |
 | **Memories** | Unlimited | 10K | 50K | Unlimited | Unlimited |
@@ -216,11 +216,11 @@ At 10K items/month, mem-dog costs 60–80% less. The gap widens at scale because
 | **Compression** | Included | Yes | Yes | Yes | Yes |
 | **SOC 2 / HIPAA** | No | No | No | No | Yes |
 
-mem-dog is free but requires self-hosting (compute costs for GKE/Cloud Run or a Mac Mini). mem0's managed platform eliminates ops but costs $249/mo for full features.
+memdog is free but requires self-hosting (compute costs for GKE/Cloud Run or a Mac Mini). mem0's managed platform eliminates ops but costs $249/mo for full features.
 
 ---
 
-## Where mem-dog Leads
+## Where memdog Leads
 
 1. **Multi-channel ingestion** — 25+ channels vs. API-only
 2. **AI enrichment pipeline** — 40 typed agents vs. fact extraction
@@ -263,8 +263,8 @@ mem-dog is free but requires self-hosting (compute costs for GKE/Cloud Run or a 
 
 **mem0** is the right choice if you want a simple, drop-in memory layer for an AI agent — add 5 lines of code and memories persist across sessions. The managed platform handles infrastructure, and enterprise compliance is built in.
 
-**mem-dog** is the right choice if you want a complete data memory platform — multi-channel ingestion, automatic AI enrichment of any data type, built-in RAG chat, knowledge graph, and full infrastructure ownership. It does more, but requires self-hosting.
+**memdog** is the right choice if you want a complete data memory platform — multi-channel ingestion, automatic AI enrichment of any data type, built-in RAG chat, knowledge graph, and full infrastructure ownership. It does more, but requires self-hosting.
 
 They solve different problems at different scales:
 - mem0 = **memory for your agent** (SDK)
-- mem-dog = **memory for your organization** (platform)
+- memdog = **memory for your organization** (platform)

@@ -1,6 +1,6 @@
 # Google Drive
 
-Connect Google Drive to mem-dog to sync documents, spreadsheets, and files into your knowledge base.
+Connect Google Drive to memdog to sync documents, spreadsheets, and files into your knowledge base.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Google Drive to mem-dog to sync documents, spreadsheets, and files into 
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Google Drive
@@ -18,12 +18,12 @@ Connect Google Drive to mem-dog to sync documents, spreadsheets, and files into 
 1. In the UI, go to **Settings > Apps**
 2. Find **Google Drive** under the "Productivity" category
 3. Click **Connect**
-4. Authorize mem-dog to access your Google Drive
+4. Authorize memdog to access your Google Drive
 5. The Google Drive card should now show **Active**
 
 ### 3. Sync Content
 
-Google Drive is an outbound integration -- mem-dog pulls files via the Drive API through the integration proxy:
+Google Drive is an outbound integration -- memdog pulls files via the Drive API through the integration proxy:
 
 ```bash
 # List recent files
@@ -67,7 +67,7 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/google-drive/changes/w
 
 ## Tip: Bulk Ingest
 
-To ingest multiple Drive files into mem-dog:
+To ingest multiple Drive files into memdog:
 
 ```bash
 # Fetch file list, then ingest each via the data API

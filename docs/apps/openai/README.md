@@ -1,6 +1,6 @@
 # OpenAI
 
-Connect OpenAI to mem-dog to use GPT models for enrichment and analysis.
+Connect OpenAI to memdog to use GPT models for enrichment and analysis.
 
 **Category:** Data & AI
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect OpenAI to mem-dog to use GPT models for enrichment and analysis.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect OpenAI
@@ -40,9 +40,9 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/openai/v1/chat/complet
 
 - API usage and billing data
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from OpenAI and store in mem-dog:
+Pull data from OpenAI and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

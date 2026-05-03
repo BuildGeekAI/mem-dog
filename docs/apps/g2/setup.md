@@ -7,7 +7,7 @@ Ingest G2 software reviews.
 ```mermaid
 graph LR
     SRC[G2] -- "Webhook" --> GW[Webhook Gateway<br/>/webhooks/g2]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

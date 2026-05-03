@@ -1,4 +1,4 @@
-# K8s Job that seeds mem-dog tables into Supabase Postgres.
+# K8s Job that seeds memdog tables into Supabase Postgres.
 # Idempotent: all statements use IF NOT EXISTS / CREATE OR REPLACE.
 #
 # Re-run: kubectl delete job supabase-seed -n supabase --ignore-not-found && \
@@ -10,7 +10,7 @@ metadata:
   namespace: supabase
   labels:
     app.kubernetes.io/name: supabase-seed
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
     app.kubernetes.io/component: supabase
 spec:
   backoffLimit: 3
@@ -29,7 +29,7 @@ spec:
             - -c
             - |
               set -e
-              echo "=== Seeding mem-dog tables into Supabase Postgres ==="
+              echo "=== Seeding memdog tables into Supabase Postgres ==="
               for f in /seed-sql/*.sql; do
                 echo "--- Running $f ---"
                 psql -h supabase-db.supabase.svc.cluster.local \

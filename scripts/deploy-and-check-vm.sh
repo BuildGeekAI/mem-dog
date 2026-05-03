@@ -13,7 +13,7 @@
 # VM_TYPE / --vm: instance index (1-4), instance_type label (e.g. "g2-standard-8 + L4"), or legacy:
 #   g2-standard-8 | g2-standard-24 | a2-highgpu-1g | a2-ultragpu-1g (default: a2-highgpu-1g)
 # --model: model name from scripts/gcp-vm-options.json (e.g. "Gemma-3-12B"); script passes ollama_tag to setup.
-# If --model omitted, uses scripts/.mem-dog-vm-model (from manual-deploy) or default gemma3:27b.
+# If --model omitted, uses scripts/.memdog-vm-model (from manual-deploy) or default gemma3:27b.
 #
 # Examples:
 #   ./scripts/deploy-and-check-vm.sh -p myproject -e dev
@@ -39,7 +39,7 @@ print_info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 GCP_VM_OPTIONS_JSON="${SCRIPT_DIR}/gcp-vm-options.json"
-MEM_DOG_VM_MODEL_FILE="${SCRIPT_DIR}/.mem-dog-vm-model"
+MEM_DOG_VM_MODEL_FILE="${SCRIPT_DIR}/.memdog-vm-model"
 PROJECT_ID=""
 ENVIRONMENT="dev"
 REGION="us-central1"
@@ -109,10 +109,10 @@ if [[ -z "$PROJECT_ID" ]]; then
     exit 1
 fi
 
-VM_NAME="mem-dog-vm-${VM_TYPE}-${ENVIRONMENT}"
+VM_NAME="memdog-vm-${VM_TYPE}-${ENVIRONMENT}"
 ZONE="${REGION}-a"
 
-# Resolve OLLAMA_MODEL_TAG for setup script: --model (from config), .mem-dog-vm-model, or default
+# Resolve OLLAMA_MODEL_TAG for setup script: --model (from config), .memdog-vm-model, or default
 OLLAMA_MODEL_TAG=""
 if [[ -n "$VM_MODEL" ]] && [[ -f "$GCP_VM_OPTIONS_JSON" ]] && command -v jq &>/dev/null; then
     # Find instance index from current VM_TYPE (GCP machine type)
@@ -162,9 +162,9 @@ fi
 print_ok "VM IP: $EXTERNAL_IP"
 
 # Ensure firewall allows external access to wrapper (port 8000)
-if ! gcloud compute firewall-rules describe mem-dog-model-server --project="$PROJECT_ID" &>/dev/null; then
+if ! gcloud compute firewall-rules describe memdog-model-server --project="$PROJECT_ID" &>/dev/null; then
     print_info "Creating firewall rule for model server (tcp:8000)..."
-    gcloud compute firewall-rules create mem-dog-model-server \
+    gcloud compute firewall-rules create memdog-model-server \
         --project="$PROJECT_ID" \
         --allow tcp:8000 \
         --source-ranges=0.0.0.0/0 \

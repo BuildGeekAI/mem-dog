@@ -7,7 +7,7 @@ Ingest Capterra software reviews.
 ```mermaid
 graph LR
     SRC[Capterra] -- "API" --> GW[Webhook Gateway<br/>/webhooks/capterra]
-    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
+    GW --> API[memdog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

@@ -1,6 +1,6 @@
-# mem-dog-ingest
+# memdog-ingest
 
-Store new data, notes, or memories in the mem-dog platform.
+Store new data, notes, or memories in the memdog platform.
 
 ## When to use
 

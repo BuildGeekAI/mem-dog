@@ -1,6 +1,6 @@
 # Brex
 
-Connect Brex to mem-dog to sync expense data, transactions, and card activity.
+Connect Brex to memdog to sync expense data, transactions, and card activity.
 
 **Category:** Finance
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect Brex to mem-dog to sync expense data, transactions, and card activity.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Brex
@@ -41,9 +41,9 @@ curl https://<your-api>/api/v1/integrations/proxy/brex/v2/transactions/card/prim
 - Budget data
 - Cash account activity
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Brex and store in mem-dog:
+Pull data from Brex and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -21,9 +21,9 @@ from app.tools import (
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP(
-    "mem-dog",
+    "memdog",
     instructions=(
-        "mem-dog is a private AI memory and knowledge platform. "
+        "memdog is a private AI memory and knowledge platform. "
         "Use these tools to search, store, retrieve, and manage data and memories."
     ),
 )
@@ -54,7 +54,7 @@ async def add(
     memory_type: str = "",
     memory_id: str = "",
 ) -> str:
-    """Store text content in mem-dog with optional metadata.
+    """Store text content in memdog with optional metadata.
 
     Args:
         content: The text content to store

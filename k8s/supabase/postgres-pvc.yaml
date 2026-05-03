@@ -5,7 +5,7 @@ metadata:
   namespace: supabase
   labels:
     app.kubernetes.io/name: supabase-db
-    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/part-of: memdog
     app.kubernetes.io/component: supabase
 spec:
   accessModes:

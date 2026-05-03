@@ -1,12 +1,12 @@
-# mem-dog-semantic-search
+# memdog-semantic-search
 
 Search across all stored data using natural language and vector similarity. Returns ranked results with citations — data IDs, chunk text, and similarity scores.
 
 ## When to use
 
-Use this skill when the user asks a question that requires finding relevant information across all stored data. This is more powerful than `mem-dog-query` because it searches over embeddings (vector representations) of all ingested content — including documents, images, audio, and video.
+Use this skill when the user asks a question that requires finding relevant information across all stored data. This is more powerful than `memdog-query` because it searches over embeddings (vector representations) of all ingested content — including documents, images, audio, and video.
 
-Prefer this skill over `mem-dog-query` when:
+Prefer this skill over `memdog-query` when:
 - The user asks broad questions across multiple data items
 - You need to find semantically similar content (not just keyword matches)
 - You want ranked results with similarity scores and source citations

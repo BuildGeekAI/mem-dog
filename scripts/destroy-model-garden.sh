@@ -87,10 +87,10 @@ echo ""
 
 # 1. Cloud Run: model servers (so nothing new uses the bucket)
 SERVICES=(
-    "mem-dog-model-server-small-${ENVIRONMENT}"
-    "mem-dog-model-server-medium-${ENVIRONMENT}"
-    "mem-dog-model-server-large-${ENVIRONMENT}"
-    "mem-dog-model-server-very-large-${ENVIRONMENT}"
+    "memdog-model-server-small-${ENVIRONMENT}"
+    "memdog-model-server-medium-${ENVIRONMENT}"
+    "memdog-model-server-large-${ENVIRONMENT}"
+    "memdog-model-server-very-large-${ENVIRONMENT}"
 )
 print_info "Deleting Cloud Run services (model servers)..."
 for SVC in "${SERVICES[@]}"; do
@@ -103,7 +103,7 @@ for SVC in "${SERVICES[@]}"; do
 done
 
 # 2. Pub/Sub: delete subscriptions for the legacy download topic (if any), then the topic
-TOPIC="mem-dog-downloads-${ENVIRONMENT}"
+TOPIC="memdog-downloads-${ENVIRONMENT}"
 if gcloud pubsub topics describe "$TOPIC" --project="$PROJECT_ID" &>/dev/null; then
     print_info "Deleting Pub/Sub subscriptions for topic $TOPIC..."
     SUBS=$(gcloud pubsub subscriptions list --project="$PROJECT_ID" --filter="topic:projects/$PROJECT_ID/topics/$TOPIC" --format='value(name)' 2>/dev/null || true)
@@ -120,7 +120,7 @@ fi
 
 # 3. Models GCS bucket
 if [[ -z "$KEEP_BUCKET" ]]; then
-    MODELS_BUCKET="${PROJECT_ID}-mem-dog-models-${ENVIRONMENT}"
+    MODELS_BUCKET="${PROJECT_ID}-memdog-models-${ENVIRONMENT}"
     print_info "Deleting GCS bucket: gs://$MODELS_BUCKET..."
     if gcloud storage buckets describe "gs://$MODELS_BUCKET" --project="$PROJECT_ID" &>/dev/null; then
         gcloud storage rm -r "gs://$MODELS_BUCKET" --project="$PROJECT_ID" 2>/dev/null || true

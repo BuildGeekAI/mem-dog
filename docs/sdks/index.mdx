@@ -1,16 +1,16 @@
 ---
 title: "SDKs Overview"
-description: "5 language SDKs and 4 agent adapters for integrating with mem-dog"
+description: "5 language SDKs and 4 agent adapters for integrating with memdog"
 icon: "code"
 ---
 
-mem-dog provides native SDKs in 5 languages and adapter libraries for popular AI agent frameworks.
+memdog provides native SDKs in 5 languages and adapter libraries for popular AI agent frameworks.
 
 ## Language SDKs
 
 <CardGroup cols={3}>
   <Card title="Python" icon="python" href="/sdks/python">
-    `mem-dog-client` — httpx-based, async support, 70+ methods. Simple facade with 8 high-level methods.
+    `memdog-client` — httpx-based, async support, 70+ methods. Simple facade with 8 high-level methods.
   </Card>
   <Card title="TypeScript" icon="js">
     Native `fetch` API, zero dependencies. Full type safety with generated interfaces.
@@ -36,7 +36,7 @@ mem-dog provides native SDKs in 5 languages and adapter libraries for popular AI
     `save` and `search` tools for crew agent memory.
   </Card>
   <Card title="OpenAI" icon="message-bot" href="/sdks/agent-adapters">
-    Function calling integration — mem-dog as tool definitions for GPT.
+    Function calling integration — memdog as tool definitions for GPT.
   </Card>
   <Card title="MCP" icon="plug" href="/features/mcp-server">
     8 tools exposed via MCP SSE for Claude Desktop, Cursor, and other MCP clients.
@@ -47,29 +47,29 @@ mem-dog provides native SDKs in 5 languages and adapter libraries for popular AI
 
 | SDK | Package | Transport | Async | Methods |
 |-----|---------|-----------|-------|---------|
-| Python | `mem-dog-client` | httpx | Yes | 70+ |
-| TypeScript | `@mem-dog/client` | fetch | Yes | 70+ |
-| Go | `mem-dog-go` | net/http | Yes (goroutines) | 70+ |
-| Rust | `mem-dog-rs` | reqwest/tokio | Yes | 70+ |
+| Python | `memdog-client` | httpx | Yes | 70+ |
+| TypeScript | `@memdog/client` | fetch | Yes | 70+ |
+| Go | `memdog-go` | net/http | Yes (goroutines) | 70+ |
+| Rust | `memdog-rs` | reqwest/tokio | Yes | 70+ |
 | Ruby | `mem_dog` | faraday | No | 70+ |
 
 ## Installation
 
 <CodeGroup>
 ```bash Python
-pip install mem-dog-client
+pip install memdog-client
 ```
 
 ```bash TypeScript
-npm install @mem-dog/client
+npm install @memdog/client
 ```
 
 ```bash Go
-go get github.com/mem-dog/mem-dog-go
+go get github.com/memdog/memdog-go
 ```
 
 ```bash Rust
-cargo add mem-dog-rs
+cargo add memdog-rs
 ```
 
 ```bash Ruby

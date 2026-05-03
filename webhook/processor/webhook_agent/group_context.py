@@ -228,7 +228,7 @@ def build_group_context(payload: dict, meta_data: dict | None = None) -> GroupCo
 
 
 def ensure_group_memories(ctx: GroupContext, agent_instance_id: str = "router") -> GroupContext:
-    """Return group context without creating any group memories in mem-dog.
+    """Return group context without creating any group memories in memdog.
 
     Memory-creation policy: only **data-processing** memories (stored data
     items) and **telemetry** memories (tracing, pipeline telemetry) are

@@ -2,7 +2,7 @@ import type { AddOptions, AddResult, SearchOptions, EntitiesOptions, RelatedOpti
 import { MemDogClient } from "./client.js";
 
 /**
- * High-level 7-method facade for the mem-dog API.
+ * High-level 7-method facade for the memdog API.
  *
  * For full API coverage (~80 methods) use {@link MemDogClient} directly,
  * accessible via the {@link MemDog.client} property.

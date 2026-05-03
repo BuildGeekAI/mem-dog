@@ -1,6 +1,6 @@
-# mem-dog-query
+# memdog-query
 
-Query the mem-dog memory platform to retrieve stored memories, documents, and context.
+Query the memdog memory platform to retrieve stored memories, documents, and context.
 
 ## When to use
 
@@ -30,7 +30,7 @@ Include x-channel-type and x-peer-id headers so the gateway resolves the correct
 
 ### Response
 
-Returns matching memories and context from the mem-dog platform as JSON.
+Returns matching memories and context from the memdog platform as JSON.
 
 ## Examples
 

@@ -4,7 +4,7 @@
 
 | Component | Target | Namespace | Command |
 |-----------|--------|-----------|---------|
-| **API** | GKE | `mem-dog` | `deploy-api-gke` |
+| **API** | GKE | `memdog` | `deploy-api-gke` |
 | **UI** | Cloud Run | -- | `deploy-ui` |
 | **Webhook Pipeline** | GKE | `webhook-pipeline` | `deploy-webhook-pipeline-gke` |
 | **Webhook Gateway** | GKE | `webhook-gateway` | `deploy-webhook-gateway-gke` |
@@ -47,7 +47,7 @@ kubectl apply -f k8s/neo4j/
 
 ## GKE Namespaces
 
-### `mem-dog` -- API
+### `memdog` -- API
 
 - `api` Deployment (1 replica, PVC at `/data`)
 - `api` Service (ClusterIP :8080)

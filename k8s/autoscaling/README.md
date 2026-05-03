@@ -1,6 +1,6 @@
 # Scale-to-Zero Autoscaling
 
-Uses [KEDA](https://keda.sh) to scale all mem-dog services to 0 replicas when idle, saving compute costs.
+Uses [KEDA](https://keda.sh) to scale all memdog services to 0 replicas when idle, saving compute costs.
 
 ## Setup
 
@@ -42,17 +42,17 @@ When a webhook arrives:
 
 ```bash
 # Wake everything up now
-kubectl scale deployment -n mem-dog api mcp-server --replicas=1
+kubectl scale deployment -n memdog api mcp-server --replicas=1
 kubectl scale deployment -n webhook-gateway webhook-gateway --replicas=1
 kubectl scale deployment -n webhook-pipeline webhook-agent webhook-receiver webhook-pull-worker ollama ollama-chat --replicas=1
 
 # Force sleep everything
-kubectl scale deployment -n mem-dog api mcp-server --replicas=0
+kubectl scale deployment -n memdog api mcp-server --replicas=0
 kubectl scale deployment -n webhook-gateway webhook-gateway --replicas=0
 kubectl scale deployment -n webhook-pipeline webhook-agent webhook-receiver webhook-pull-worker ollama ollama-chat --replicas=0
 
 # Check current state
-kubectl get pods -A | grep -E 'mem-dog|webhook|ollama'
+kubectl get pods -A | grep -E 'memdog|webhook|ollama'
 ```
 
 ## Adjust Cron Schedule

@@ -17,8 +17,8 @@ logging.basicConfig(level=LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="mem-dog MCP Server",
-    description="MCP server exposing mem-dog data, search, and RAG tools over SSE",
+    title="memdog MCP Server",
+    description="MCP server exposing memdog data, search, and RAG tools over SSE",
     version="0.1.0",
 )
 

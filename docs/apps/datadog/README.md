@@ -1,6 +1,6 @@
 # Datadog
 
-Connect Datadog to mem-dog to sync monitoring data, alerts, and dashboards.
+Connect Datadog to memdog to sync monitoring data, alerts, and dashboards.
 
 **Category:** Dev Tools
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect Datadog to mem-dog to sync monitoring data, alerts, and dashboards.
 
 ## Setup
 
-### 1. Login to mem-dog
+### 1. Login to memdog
 
-1. Go to your mem-dog UI
+1. Go to your memdog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Datadog
@@ -43,9 +43,9 @@ For alerts, configure a Datadog webhook integration pointing to your `inbound_ur
 - Log entries
 - APM traces
 
-## Ingest into mem-dog
+## Ingest into memdog
 
-Pull data from Datadog and store in mem-dog:
+Pull data from Datadog and store in memdog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \
