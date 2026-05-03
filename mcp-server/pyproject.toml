@@ -1,7 +1,7 @@
 [project]
-name = "memdog-mcp-server"
+name = "mem-dog-mcp-server"
 version = "0.1.0"
-description = "MCP server for memdog — exposes data, search, and RAG tools over SSE"
+description = "MCP server for mem-dog — exposes data, search, and RAG tools over SSE"
 requires-python = ">=3.12"
 dependencies = [
     "mcp[cli]>=1.9.0",
@@ -9,7 +9,7 @@ dependencies = [
     "uvicorn[standard]>=0.27.0",
     "httpx>=0.28.1,<1.0.0",
     "pydantic>=2.11.0",
-    "memdog-client",
+    "mem-dog-client",
 ]
 
 [project.optional-dependencies]

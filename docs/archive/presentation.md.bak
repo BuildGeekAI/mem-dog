@@ -1,14 +1,14 @@
-# memdog: The AI Memory Platform
+# mem-dog: The AI Memory Platform
 
 **A complete data memory layer with multi-channel ingestion, 40-agent AI enrichment, knowledge graph, and conversational RAG.**
 
 ---
 
-## Slide 1 — What is memdog?
+## Slide 1 — What is mem-dog?
 
 ### Your data. Your AI. Your memory.
 
-memdog is a self-hosted memory platform that:
+mem-dog is a self-hosted memory platform that:
 
 - **Ingests** from 25+ channels (WhatsApp, Telegram, Slack, Discord, Signal, email, and more)
 - **Enriches** every piece of data through a 40-agent AI pipeline
@@ -288,9 +288,9 @@ m.compress("mem_session_xyz")
 
 | Framework | Adapter | Install |
 |-----------|---------|---------|
-| **LangChain** | `MemDogChatMessageHistory` + `MemDogRetriever` | `pip install memdog-client[langchain]` |
-| **CrewAI** | `MemDogCrewMemory` (save/search) | `pip install memdog-client[crewai]` |
-| **OpenAI** | Function calling tools + handler | `pip install memdog-client[openai]` |
+| **LangChain** | `MemDogChatMessageHistory` + `MemDogRetriever` | `pip install mem-dog-client[langchain]` |
+| **CrewAI** | `MemDogCrewMemory` (save/search) | `pip install mem-dog-client[crewai]` |
+| **OpenAI** | Function calling tools + handler | `pip install mem-dog-client[openai]` |
 
 ```python
 # LangChain
@@ -313,7 +313,7 @@ tools = get_mem_dog_tools()  # → pass to chat.completions.create()
 
 ### 25+ channels through DigiMe
 
-DigiMe is an OpenClaw-powered AI agent that lives inside messaging apps — it communicates with the memdog RAG system to answer queries, perform semantic search, and ingest data through natural conversation.
+DigiMe is an OpenClaw-powered AI agent that lives inside messaging apps — it communicates with the mem-dog RAG system to answer queries, perform semantic search, and ingest data through natural conversation.
 
 | Channel Type | Channels |
 |-------------|----------|
@@ -414,7 +414,7 @@ flowchart LR
 ```mermaid
 flowchart TB
     API["API"] --> SA["Storage Abstraction\nBaseStorage"]
-    SA --> Local["LocalStorage\n~/.memdog"]
+    SA --> Local["LocalStorage\n~/.mem-dog"]
     SA --> GCS2["GCSStorage\nGoogle Cloud Storage"]
     SA --> Supa["SupabaseStorage\nPostgres + GCS hybrid"]
 
@@ -475,11 +475,11 @@ No frontier model in the default pipeline. Gemini serves only as fallback.
 
 ---
 
-## Slide 16 — How memdog Compares
+## Slide 16 — How mem-dog Compares
 
 ### vs. mem0 and other memory platforms
 
-| Feature | memdog | mem0 |
+| Feature | mem-dog | mem0 |
 |---------|---------|------|
 | Multi-channel ingest | 25+ channels + DigiMe agent | API only |
 | AI enrichment pipeline | 40 typed agents, auto on ingest | Basic extraction |
@@ -543,7 +543,7 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 
 ## Slide 18 — Summary
 
-### memdog is a complete AI memory platform
+### mem-dog is a complete AI memory platform
 
 - **Ingest** from 25+ channels or direct upload (text, files, camera, voice, video)
 - **Enrich** with 40 AI agents, 6-layer classification, 5 model tiers

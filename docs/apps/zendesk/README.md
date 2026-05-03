@@ -1,6 +1,6 @@
 # Zendesk
 
-Connect Zendesk to memdog to ingest support tickets, conversations, and knowledge base content.
+Connect Zendesk to mem-dog to ingest support tickets, conversations, and knowledge base content.
 
 **Category:** Customer Support
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Zendesk to memdog to ingest support tickets, conversations, and knowledg
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Zendesk
@@ -18,7 +18,7 @@ Connect Zendesk to memdog to ingest support tickets, conversations, and knowledg
 1. In the UI, go to **Settings > Apps**
 2. Find **Zendesk** under the "Customer Support" category
 3. Click **Connect**
-4. Authorize memdog via Zendesk's OAuth consent screen
+4. Authorize mem-dog via Zendesk's OAuth consent screen
 5. The Zendesk card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -57,7 +57,7 @@ Zendesk event → Webhook Gateway → normalizes → NATS queue
 - Knowledge base articles
 - Satisfaction ratings
 
-## Ingest into memdog
+## Ingest into mem-dog
 
 Data from Zendesk flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

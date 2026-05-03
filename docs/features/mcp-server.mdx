@@ -4,7 +4,7 @@ description: "Model Context Protocol SSE server with 8 tools for Claude Desktop 
 icon: "plug"
 ---
 
-memdog includes a built-in MCP (Model Context Protocol) server that exposes your knowledge base as tools for AI assistants like Claude Desktop and Cursor.
+mem-dog includes a built-in MCP (Model Context Protocol) server that exposes your knowledge base as tools for AI assistants like Claude Desktop and Cursor.
 
 ## 8 MCP Tools
 
@@ -26,7 +26,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "memdog": {
+    "mem-dog": {
       "url": "http://localhost:8080/api/v1/mcp/sse",
       "headers": {
         "Authorization": "Bearer md_your_api_key"
@@ -43,7 +43,7 @@ Add to your Cursor MCP settings (`.cursor/mcp.json`):
 ```json
 {
   "mcpServers": {
-    "memdog": {
+    "mem-dog": {
       "url": "http://localhost:8080/api/v1/mcp/sse",
       "headers": {
         "Authorization": "Bearer md_your_api_key"
@@ -55,7 +55,7 @@ Add to your Cursor MCP settings (`.cursor/mcp.json`):
 
 ## Example Usage
 
-Once connected, your AI assistant can use memdog tools naturally:
+Once connected, your AI assistant can use mem-dog tools naturally:
 
 <CodeGroup>
 ```text Search

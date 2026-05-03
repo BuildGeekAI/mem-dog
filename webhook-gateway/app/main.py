@@ -2,7 +2,7 @@
 
 Receives inbound channel webhooks (email, video conferencing, generic),
 normalises them into UniversalEnvelope format, and forwards them through
-the existing memdog webhook pipeline.  Provides OTEL tracing, Gemini 3
+the existing mem-dog webhook pipeline.  Provides OTEL tracing, Gemini 3
 Flash integration for message understanding, and proxy endpoints for
 laptop / UI access.
 """
@@ -42,7 +42,7 @@ app = FastAPI(
     title="Webhook Gateway",
     version="0.1.0",
     description=(
-        "Channel adapter, integration proxy, and webhook forwarder for the memdog platform. "
+        "Channel adapter, integration proxy, and webhook forwarder for the mem-dog platform. "
         "Accepts inbound messages from 25+ channels, normalises them into UniversalEnvelope "
         "format, and forwards through the webhook pipeline. Provides a credential-injecting "
         "API proxy for 300+ integration providers with per-provider rate limiting and "

@@ -44,7 +44,7 @@ else:
     STORAGE_BACKEND = "local"
 
 # Local storage directory (only used when STORAGE_BACKEND=local).
-MEM_DOG_DATA_DIR = os.getenv("MEM_DOG_DATA_DIR", str(Path.home() / ".memdog"))
+MEM_DOG_DATA_DIR = os.getenv("MEM_DOG_DATA_DIR", str(Path.home() / ".mem-dog"))
 
 _config_logger.info(
     "Storage backend: %s%s",
@@ -164,7 +164,7 @@ MEMORIES_BUCKET = _resolve("MEMORIES_BUCKET", "buckets.memories")
 # =============================================================================
 
 OTEL_ENABLED = _resolve("OTEL_ENABLED", "telemetry.otel_enabled", "true").lower() == "true"
-OTEL_SERVICE_NAME = _resolve("OTEL_SERVICE_NAME", "telemetry.otel_service_name", "memdog-api")
+OTEL_SERVICE_NAME = _resolve("OTEL_SERVICE_NAME", "telemetry.otel_service_name", "mem-dog-api")
 OTEL_EXPORTER_OTLP_ENDPOINT = _resolve("OTEL_EXPORTER_OTLP_ENDPOINT", "telemetry.otel_exporter_otlp_endpoint")
 OTEL_EXPORTER_OTLP_PROTOCOL = _resolve("OTEL_EXPORTER_OTLP_PROTOCOL", "telemetry.otel_exporter_otlp_protocol", "grpc")
 LOG_LEVEL = _resolve("LOG_LEVEL", "app.log_level", "INFO").upper()
@@ -368,9 +368,9 @@ def _validate_bucket_config():
             "Missing required bucket configuration: %s. "
             "Set via environment variables or system config bucket "
             "(SYSTEM_CONFIG_BUCKET). Example: "
-            "RAW_BUCKET=myproject-memdog-raw-dev "
-            "META_BUCKET=myproject-memdog-meta-dev "
-            "MEMORIES_BUCKET=myproject-memdog-memories-dev",
+            "RAW_BUCKET=myproject-mem-dog-raw-dev "
+            "META_BUCKET=myproject-mem-dog-meta-dev "
+            "MEMORIES_BUCKET=myproject-mem-dog-memories-dev",
             ", ".join(missing),
         )
         sys.exit(1)
@@ -543,7 +543,7 @@ DEPLOYMENT_MODE: str = os.getenv("DEPLOYMENT_MODE", "local")  # "local" | "cloud
 MODEL_LOCAL_DIR: str = os.getenv("MODEL_LOCAL_DIR", "/models")
 
 # GCS bucket that holds GGUF files (cloud mode).
-# Matches the pattern used in deploy-webhook.yml: {PROJECT}-memdog-models-{ENV}
+# Matches the pattern used in deploy-webhook.yml: {PROJECT}-mem-dog-models-{ENV}
 GCS_MODELS_BUCKET: str = os.getenv("GCS_MODELS_BUCKET", "")
 
 # Cloud Run deployment metadata (cloud mode).
@@ -558,10 +558,10 @@ MODEL_SERVER_SERVICE_VERY_LARGE: str = os.getenv("MODEL_SERVER_SERVICE_VERY_LARG
 
 # Docker container names as reported by `docker ps` (local mode).
 # docker-compose names containers as <project>-<service>-<index> by default.
-DOCKER_SERVICE_SMALL: str  = os.getenv("DOCKER_SERVICE_SMALL",  "memdog-model-server-small-1")
-DOCKER_SERVICE_MEDIUM: str = os.getenv("DOCKER_SERVICE_MEDIUM", "memdog-model-server-medium-1")
-DOCKER_SERVICE_LARGE: str  = os.getenv("DOCKER_SERVICE_LARGE",  "memdog-model-server-large-1")
-DOCKER_SERVICE_VERY_LARGE: str = os.getenv("DOCKER_SERVICE_VERY_LARGE", "memdog-model-server-very-large-1")
+DOCKER_SERVICE_SMALL: str  = os.getenv("DOCKER_SERVICE_SMALL",  "mem-dog-model-server-small-1")
+DOCKER_SERVICE_MEDIUM: str = os.getenv("DOCKER_SERVICE_MEDIUM", "mem-dog-model-server-medium-1")
+DOCKER_SERVICE_LARGE: str  = os.getenv("DOCKER_SERVICE_LARGE",  "mem-dog-model-server-large-1")
+DOCKER_SERVICE_VERY_LARGE: str = os.getenv("DOCKER_SERVICE_VERY_LARGE", "mem-dog-model-server-very-large-1")
 
 # Optional HuggingFace token (e.g. for Hugging Face inference API).
 HUGGING_FACE_HUB_TOKEN: str = os.getenv("HUGGING_FACE_HUB_TOKEN", os.getenv("HF_TOKEN", ""))

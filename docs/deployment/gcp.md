@@ -1,4 +1,4 @@
-# Deploying memdog on Google Cloud (GKE + Cloud Run)
+# Deploying mem-dog on Google Cloud (GKE + Cloud Run)
 
 Production deployment on GKE with Cloud Run for the UI.
 
@@ -10,7 +10,7 @@ graph TD
 
     subgraph GKE ["GKE Cluster (open-jaw)"]
         GW[open-jaws Gateway · L7 LB]
-        subgraph ns_memdog ["namespace: memdog"]
+        subgraph ns_memdog ["namespace: mem-dog"]
             API[API · FastAPI]
             MCP[MCP Server · SSE]
         end
@@ -85,7 +85,7 @@ gcloud services enable \
 ### Create Artifact Registry
 
 ```bash
-gcloud artifacts repositories create memdog \
+gcloud artifacts repositories create mem-dog \
   --repository-format=docker \
   --location=us-central1 \
   --project=memdog-dev
@@ -172,7 +172,7 @@ GATEWAY_IP=$(kubectl get gateway open-jaws -n webhook-gateway \
   -o jsonpath='{.status.addresses[0].value}')
 
 # Pods
-kubectl get pods -A | grep -E 'memdog|webhook|supabase'
+kubectl get pods -A | grep -E 'mem-dog|webhook|supabase'
 
 # Health
 curl http://$GATEWAY_IP/gke-api/health     # API
@@ -205,8 +205,8 @@ All external traffic enters through the `open-jaws` Gateway (L7 Global External 
 
 | Path | Backend | Namespace |
 |------|---------|-----------|
-| `/gke-api/*` | API | memdog |
-| `/mcp/*` | MCP Server | memdog |
+| `/gke-api/*` | API | mem-dog |
+| `/mcp/*` | MCP Server | mem-dog |
 | `/webhooks/*`, `/channels/*` | Webhook Gateway | webhook-gateway |
 | `/oc/*` | DigiMe Agent | webhook-gateway |
 | `/auth/v1/*` | GoTrue | supabase |
@@ -226,8 +226,8 @@ export GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a
 ### Logs
 
 ```bash
-kubectl logs -n memdog deployment/api -f --tail=50
-kubectl logs -n memdog deployment/mcp-server -f --tail=50
+kubectl logs -n mem-dog deployment/api -f --tail=50
+kubectl logs -n mem-dog deployment/mcp-server -f --tail=50
 kubectl logs -n webhook-pipeline deployment/webhook-agent -f --tail=50
 ```
 

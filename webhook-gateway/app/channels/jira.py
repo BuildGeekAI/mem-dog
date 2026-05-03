@@ -1,7 +1,7 @@
 """Jira webhook channel adapter.
 
 Normalizes Jira webhook payloads for issue events, comments, sprints,
-and worklog updates into memdog's NormalizedMessage format.
+and worklog updates into mem-dog's NormalizedMessage format.
 
 Reference: https://developer.atlassian.com/server/jira/platform/webhooks/
 """

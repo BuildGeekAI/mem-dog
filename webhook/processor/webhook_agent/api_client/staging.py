@@ -7,7 +7,7 @@ Every sub-agent calls :meth:`StagingClient.stage` to:
    ``gs://{WEBHOOK_STAGING_BUCKET}/{agent_type}/{data_id}/raw``.
 3. Build and upload a rich ``meta.json`` provenance document alongside it.
 
-The staged files are **permanent** — they are linked to the memdog
+The staged files are **permanent** — they are linked to the mem-dog
 ``data_id`` and serve as the authoritative record of what was ingested.
 
 GCS bucket layout::
@@ -76,7 +76,7 @@ class StagingClient:
         Args:
             payload: The decoded webhook payload dict.
             agent_type: The sub-agent type string (e.g. ``"json"``).
-            data_id: The memdog data ID returned by ``write_record()``.
+            data_id: The mem-dog data ID returned by ``write_record()``.
             agent_instance_id: Stable instance ID of the calling sub-agent.
             agent_purpose: Human-readable purpose of the calling sub-agent.
             group_ctx: Optional :class:`~group_context.GroupContext` for the
@@ -133,7 +133,7 @@ class StagingClient:
         """Download or extract the main content from a payload.
 
         When ``payload_meta`` has ``is_downloaded`` true and ``data_id`` is set,
-        content is already stored in memdog; skip URL download and fetch from
+        content is already stored in mem-dog; skip URL download and fetch from
         the API instead.
 
         Returns:
@@ -424,7 +424,7 @@ class StagingClient:
         """Download binary media content from a URL or the API.
 
         When ``payload_meta`` has ``is_downloaded`` true and ``data_id`` is set,
-        content is already stored in memdog; fetch bytes from the API instead
+        content is already stored in mem-dog; fetch bytes from the API instead
         of re-downloading from the URL.
 
         Returns:

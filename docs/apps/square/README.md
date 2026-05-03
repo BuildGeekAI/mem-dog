@@ -1,6 +1,6 @@
 # Square
 
-Connect Square to memdog to sync payments, orders, and catalog data.
+Connect Square to mem-dog to sync payments, orders, and catalog data.
 
 **Category:** Finance
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Square to memdog to sync payments, orders, and catalog data.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Square
@@ -18,7 +18,7 @@ Connect Square to memdog to sync payments, orders, and catalog data.
 1. In the UI, go to **Settings > Apps**
 2. Find **Square** under the "Finance" category
 3. Click **Connect**
-4. Authorize memdog via Square's OAuth consent screen
+4. Authorize mem-dog via Square's OAuth consent screen
 5. The Square card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ For webhooks, configure in the Square Developer Dashboard under **Webhooks**.
 - Customer profiles
 - Inventory and catalog data
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Square and store in memdog:
+Pull data from Square and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -40,7 +40,7 @@ def processing_span(
     name: str,
     trace_id: Optional[str] = None,
     parent_span_id: Optional[str] = None,
-    service_name: str = "memdog-api",
+    service_name: str = "mem-dog-api",
     service_type: str = "gcp_cloud_run_http",
     kind: str = "INTERNAL",
     attributes: Optional[dict[str, Any]] = None,

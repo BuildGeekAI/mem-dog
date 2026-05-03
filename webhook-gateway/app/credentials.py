@@ -1,7 +1,7 @@
 """Look up integration credentials for a user via Nango.
 
 Replaces direct Supabase reads with Nango API calls. Falls back to the
-memdog API when Nango is not available.
+mem-dog API when Nango is not available.
 
 Channel affinity tagging logic (tag_connection, _CHANNEL_CATEGORY_AFFINITY,
 _CHANNEL_PROVIDER_MATCH) is unchanged — it's pure business logic.
@@ -226,7 +226,7 @@ def tag_connection(
 async def lookup_connections(user_id: str) -> list[dict[str, Any]]:
     """Return ALL active integration connections for a user.
 
-    Tries Nango first, falls back to memdog API.
+    Tries Nango first, falls back to mem-dog API.
     """
     if not user_id:
         return []
@@ -244,7 +244,7 @@ async def lookup_connections(user_id: str) -> list[dict[str, Any]]:
         _cache[user_id] = (connections, time.monotonic())
         return connections
 
-    # Fallback: memdog API
+    # Fallback: mem-dog API
     if not config.MEM_DOG_API_URL:
         return []
 
@@ -306,7 +306,7 @@ async def get_credentials(
         except Exception as exc:
             _log.warning("Nango credential fetch failed for %s/%s: %s", user_id, provider_key, exc)
 
-    # Fallback: memdog API
+    # Fallback: mem-dog API
     if not config.MEM_DOG_API_URL:
         return None
 

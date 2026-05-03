@@ -61,9 +61,9 @@ services:
       - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=memdog_neo4j
       # Docker container names (for tier activation when using local model servers)
-      - DOCKER_SERVICE_SMALL=memdog-model-server-small-1
-      - DOCKER_SERVICE_MEDIUM=memdog-model-server-medium-1
-      - DOCKER_SERVICE_LARGE=memdog-model-server-large-1
+      - DOCKER_SERVICE_SMALL=mem-dog-model-server-small-1
+      - DOCKER_SERVICE_MEDIUM=mem-dog-model-server-medium-1
+      - DOCKER_SERVICE_LARGE=mem-dog-model-server-large-1
     depends_on:
       db:
         condition: service_healthy
@@ -72,7 +72,7 @@ services:
       neo4j:
         condition: service_healthy
     volumes:
-      - memdog-data:/data
+      - mem-dog-data:/data
       # Shared model weights volume (legacy; Ollama uses per-tier volumes)
       - model-weights:/models
       # Docker socket lets the API restart tier containers on activation
@@ -167,7 +167,7 @@ services:
   # Webhook Gateway — channel adapter and webhook forwarder
   #
   # Receives inbound webhooks from email, video conferencing, and generic
-  # channels, normalises them, and forwards to the memdog webhook pipeline.
+  # channels, normalises them, and forwards to the mem-dog webhook pipeline.
   # Docs at http://localhost:8070/docs
   # ---------------------------------------------------------------------------
   webhook-gateway:
@@ -250,7 +250,7 @@ services:
         condition: service_healthy
 
 volumes:
-  memdog-data:
+  mem-dog-data:
   model-weights:
   pgdata:
   ollama-small-data:

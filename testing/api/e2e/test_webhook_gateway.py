@@ -1,6 +1,6 @@
 """E2E test for the Webhook Gateway.
 
-Requires a running memdog API + Webhook Gateway stack.
+Requires a running mem-dog API + Webhook Gateway stack.
 Run with: pytest testing/api/e2e/test_webhook_gateway.py
 
 Marked as integration so it is skipped by default in unit-test runs.

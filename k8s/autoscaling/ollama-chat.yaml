@@ -4,7 +4,7 @@ metadata:
   name: ollama-chat-scaler
   namespace: webhook-pipeline
   labels:
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
 spec:
   scaleTargetRef:
     name: ollama-chat

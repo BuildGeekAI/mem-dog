@@ -1,13 +1,13 @@
 # MCP Server Setup
 
-The MCP server exposes memdog data, search, and RAG tools over SSE (Server-Sent Events) transport, enabling Claude Desktop, Cursor, and other MCP-compatible agents to interact with the memdog API.
+The MCP server exposes mem-dog data, search, and RAG tools over SSE (Server-Sent Events) transport, enabling Claude Desktop, Cursor, and other MCP-compatible agents to interact with the mem-dog API.
 
 ## Architecture
 
 - **Standalone Python service** in `mcp-server/` using the official `mcp` SDK with SSE transport
-- **Thin proxy** over the memdog API — reuses the `mem_dog_client` Python SDK
+- **Thin proxy** over the mem-dog API — reuses the `mem_dog_client` Python SDK
 - **Per-user auth** via `md_*` API keys forwarded to the API on every tool call
-- **GKE namespace**: `memdog` (same as API, for direct in-cluster HTTP)
+- **GKE namespace**: `mem-dog` (same as API, for direct in-cluster HTTP)
 
 ## Local Development
 
@@ -22,7 +22,7 @@ docker compose up
 
 ```bash
 cd mcp-server
-pip install -e ../client   # Install memdog client SDK
+pip install -e ../client   # Install mem-dog client SDK
 pip install -e ".[dev]"    # Install MCP server + dev deps
 uvicorn app.main:app --reload --port 8090
 # MCP server at http://localhost:8090/mcp/sse
@@ -55,11 +55,11 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MEM_DOG_API_URL` | `http://localhost:8080` | memdog API base URL |
+| `MEM_DOG_API_URL` | `http://localhost:8080` | mem-dog API base URL |
 | `PORT` | `8090` | Server listen port |
 | `LOG_LEVEL` | `INFO` | Python log level |
 
-In GKE, `MEM_DOG_API_URL` is set to `http://api.memdog.svc.cluster.local:8080` for in-cluster communication.
+In GKE, `MEM_DOG_API_URL` is set to `http://api.mem-dog.svc.cluster.local:8080` for in-cluster communication.
 
 ### External Access
 

@@ -1,6 +1,6 @@
 # Vercel
 
-Connect Vercel to memdog to sync deployment data and project configuration.
+Connect Vercel to mem-dog to sync deployment data and project configuration.
 
 **Category:** Dev Tools
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Vercel to memdog to sync deployment data and project configuration.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Vercel
@@ -18,7 +18,7 @@ Connect Vercel to memdog to sync deployment data and project configuration.
 1. In the UI, go to **Settings > Apps**
 2. Find **Vercel** under the "Dev Tools" category
 3. Click **Connect**
-4. Authorize memdog via Vercel's OAuth consent screen
+4. Authorize mem-dog via Vercel's OAuth consent screen
 5. The Vercel card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ For webhooks, configure in Vercel project **Settings > Webhooks**.
 - Domain and environment settings
 - Build logs
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Vercel and store in memdog:
+Pull data from Vercel and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

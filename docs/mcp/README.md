@@ -1,6 +1,6 @@
 # MCP Server
 
-The memdog MCP (Model Context Protocol) server exposes 8 tools over SSE transport, enabling Claude Desktop, Cursor, and other MCP-compatible agents to interact with the memdog API.
+The mem-dog MCP (Model Context Protocol) server exposes 8 tools over SSE transport, enabling Claude Desktop, Cursor, and other MCP-compatible agents to interact with the mem-dog API.
 
 ## Quick Start
 
@@ -11,7 +11,7 @@ Add to `~/.claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "memdog": {
+    "mem-dog": {
       "url": "http://<gateway-ip>/mcp/sse",
       "headers": { "x-api-key": "md_your_key" }
     }
@@ -56,10 +56,10 @@ graph TD
         MI[MCP Inspector]
     end
 
-    subgraph GKE [GKE Cluster · memdog namespace]
+    subgraph GKE [GKE Cluster · mem-dog namespace]
         GW[Gateway<br/>open-jaws L7 LB]
         MCP[MCP Server<br/>FastMCP + FastAPI<br/>port 8080]
-        API[memdog API<br/>FastAPI<br/>port 8080]
+        API[mem-dog API<br/>FastAPI<br/>port 8080]
     end
 
     subgraph Storage
@@ -87,7 +87,7 @@ graph TD
     style GCS fill:#06b6d422,stroke:#06b6d4,color:#67e8f9
 ```
 
-- **Namespace**: `memdog` (same as API for in-cluster HTTP)
+- **Namespace**: `mem-dog` (same as API for in-cluster HTTP)
 - **Gateway path**: `/mcp/*` via `open-jaws` HTTPRoute
 - **Auth**: `md_*` API keys forwarded to API on every tool call
 

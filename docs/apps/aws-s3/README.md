@@ -1,6 +1,6 @@
 # AWS S3
 
-Connect AWS S3 to memdog to sync files and objects from your buckets.
+Connect AWS S3 to mem-dog to sync files and objects from your buckets.
 
 **Category:** Cloud & Storage
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect AWS S3 to memdog to sync files and objects from your buckets.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect AWS S3
@@ -27,7 +27,7 @@ Credentials are stored encrypted (AES-256-GCM) via Nango.
 
 Provide your AWS access key ID and secret access key during setup.
 
-For S3 event notifications to memdog:
+For S3 event notifications to mem-dog:
 1. Go to your S3 bucket **Properties > Event notifications**
 2. Create an event notification targeting an SNS topic or Lambda
 3. Forward events to your `inbound_url`
@@ -38,9 +38,9 @@ For S3 event notifications to memdog:
 - Bucket event notifications
 - Access logs
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from AWS S3 and store in memdog:
+Pull data from AWS S3 and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

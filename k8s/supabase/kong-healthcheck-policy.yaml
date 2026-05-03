@@ -6,7 +6,7 @@ metadata:
   name: supabase-kong-healthcheck
   namespace: supabase
   labels:
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: supabase
 spec:
   default:

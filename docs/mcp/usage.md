@@ -2,13 +2,13 @@
 
 ## Connecting from Claude Desktop
 
-1. Get your API key from the memdog UI (Settings > API Keys)
+1. Get your API key from the mem-dog UI (Settings > API Keys)
 2. Add to `~/.claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
-    "memdog": {
+    "mem-dog": {
       "url": "http://<gateway-ip>/mcp/sse",
       "headers": {
         "x-api-key": "md_your_api_key_here"

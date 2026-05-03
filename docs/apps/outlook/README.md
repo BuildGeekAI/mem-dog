@@ -1,6 +1,6 @@
 # Outlook
 
-Connect Outlook to memdog to ingest emails, calendar events, and attachments.
+Connect Outlook to mem-dog to ingest emails, calendar events, and attachments.
 
 **Category:** Email
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Outlook to memdog to ingest emails, calendar events, and attachments.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Outlook
@@ -18,7 +18,7 @@ Connect Outlook to memdog to ingest emails, calendar events, and attachments.
 1. In the UI, go to **Settings > Apps**
 2. Find **Outlook** under the "Email" category
 3. Click **Connect**
-4. Authorize memdog via Outlook's OAuth consent screen
+4. Authorize mem-dog via Outlook's OAuth consent screen
 5. The Outlook card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -67,7 +67,7 @@ Outlook event → Webhook Gateway → normalizes → NATS queue
 - Calendar events and invites
 - Contact data
 
-## Ingest into memdog
+## Ingest into mem-dog
 
 Data from Outlook flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

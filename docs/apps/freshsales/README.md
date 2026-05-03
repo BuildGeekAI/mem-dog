@@ -1,6 +1,6 @@
 # Freshsales
 
-Connect Freshsales to memdog to sync contacts, deals, and sales activity.
+Connect Freshsales to mem-dog to sync contacts, deals, and sales activity.
 
 **Category:** CRM & Sales
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Freshsales to memdog to sync contacts, deals, and sales activity.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Freshsales
@@ -18,7 +18,7 @@ Connect Freshsales to memdog to sync contacts, deals, and sales activity.
 1. In the UI, go to **Settings > Apps**
 2. Find **Freshsales** under the "CRM & Sales" category
 3. Click **Connect**
-4. Authorize memdog via Freshsales's OAuth consent screen
+4. Authorize mem-dog via Freshsales's OAuth consent screen
 5. The Freshsales card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -41,9 +41,9 @@ curl https://<your-api>/api/v1/integrations/proxy/freshsales/api/contacts \
 - Tasks and appointments
 - Sales activity logs
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Freshsales and store in memdog:
+Pull data from Freshsales and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

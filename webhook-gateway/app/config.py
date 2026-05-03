@@ -91,13 +91,13 @@ def has_llm_configured() -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Existing memdog webhook API gateway
+# Existing mem-dog webhook API gateway
 # ---------------------------------------------------------------------------
 WEBHOOK_GATEWAY_URL: str = os.getenv("WEBHOOK_GATEWAY_URL", "")
 WEBHOOK_API_KEY: str = os.getenv("WEBHOOK_API_KEY", "")
 
 # ---------------------------------------------------------------------------
-# memdog API service
+# mem-dog API service
 # ---------------------------------------------------------------------------
 MEM_DOG_API_URL: str = os.getenv("MEM_DOG_API_URL", "").rstrip("/")
 MEM_DOG_API_KEY: str = os.getenv("MEM_DOG_API_KEY", "")
@@ -124,12 +124,12 @@ def get_webhook_url(pipeline: str | None = None) -> str:
 # Direct Supabase read access (optional — OC-Read pattern)
 # ---------------------------------------------------------------------------
 # When both are set, high-frequency reads (identity lookups, memory checks,
-# channel config) go directly to Supabase, bypassing the memdog API.
+# channel config) go directly to Supabase, bypassing the mem-dog API.
 # All writes still go through the API.  Falls back to API-only when unset.
 SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "") or os.getenv("SUPABASE_KEY", "")
 
-# Publish every inbound message as a memory record in the memdog API.
+# Publish every inbound message as a memory record in the mem-dog API.
 # Runs regardless of LLM configuration.  Set to "false" to disable.
 PUBLISH_TO_MEMORY: bool = os.getenv("PUBLISH_TO_MEMORY", "true").lower() == "true"
 

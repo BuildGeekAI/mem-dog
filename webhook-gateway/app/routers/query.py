@@ -1,4 +1,4 @@
-"""Query pass-through to the memdog API.
+"""Query pass-through to the mem-dog API.
 
 Provides a convenience endpoint for OpenClaw and UI access. Resolves
 user_id from channel identity when x-channel-type and x-peer-id headers
@@ -25,7 +25,7 @@ _TIMEOUT_S = 60.0
 
 
 def _api_headers() -> dict[str, str]:
-    """Build headers for forwarding to the memdog API."""
+    """Build headers for forwarding to the mem-dog API."""
     headers: dict[str, str] = {"Content-Type": "application/json"}
     if config.MEM_DOG_API_KEY:
         headers["x-api-key"] = config.MEM_DOG_API_KEY
@@ -64,7 +64,7 @@ async def _resolve_user(request: Request, body: dict[str, Any]) -> str:
 
 @router.post("")
 async def query(request: Request, body: dict[str, Any]) -> Any:
-    """Forward a query to the memdog AI query endpoint.
+    """Forward a query to the mem-dog AI query endpoint.
 
     Supports multi-user via:
     - x-user-id header
@@ -91,7 +91,7 @@ async def query(request: Request, body: dict[str, Any]) -> Any:
 
 @router.post("/search")
 async def search(request: Request, body: dict[str, Any]) -> Any:
-    """Forward a semantic search to the memdog API."""
+    """Forward a semantic search to the mem-dog API."""
     if not config.MEM_DOG_API_URL:
         raise HTTPException(status_code=503, detail="MEM_DOG_API_URL not configured")
 
@@ -112,7 +112,7 @@ async def search(request: Request, body: dict[str, Any]) -> Any:
 
 @router.post("/chat")
 async def chat(request: Request, body: dict[str, Any]) -> Any:
-    """Forward a RAG chat query to the memdog API."""
+    """Forward a RAG chat query to the mem-dog API."""
     if not config.MEM_DOG_API_URL:
         raise HTTPException(status_code=503, detail="MEM_DOG_API_URL not configured")
 
@@ -133,7 +133,7 @@ async def chat(request: Request, body: dict[str, Any]) -> Any:
 
 @router.post("/ingest")
 async def ingest(request: Request, body: dict[str, Any]) -> Any:
-    """Forward data ingestion to the memdog API, scoped to resolved user."""
+    """Forward data ingestion to the mem-dog API, scoped to resolved user."""
     if not config.MEM_DOG_API_URL:
         raise HTTPException(status_code=503, detail="MEM_DOG_API_URL not configured")
 

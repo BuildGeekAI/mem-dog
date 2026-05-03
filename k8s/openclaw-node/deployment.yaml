@@ -5,7 +5,7 @@ metadata:
   namespace: webhook-gateway
   labels:
     app: openclaw-node
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: openclaw-node
 spec:
   replicas: 1
@@ -29,20 +29,20 @@ spec:
               mkdir -p /home/node/.openclaw/workspace
               cp /skills-src/IDENTITY.md /home/node/.openclaw/workspace/IDENTITY.md
               cp /skills-src/SOUL.md /home/node/.openclaw/workspace/SOUL.md
-              mkdir -p /home/node/.openclaw/skills/memdog-query
-              mkdir -p /home/node/.openclaw/skills/memdog-ingest
-              mkdir -p /home/node/.openclaw/skills/memdog-bridge
-              mkdir -p /home/node/.openclaw/skills/memdog-semantic-search
+              mkdir -p /home/node/.openclaw/skills/mem-dog-query
+              mkdir -p /home/node/.openclaw/skills/mem-dog-ingest
+              mkdir -p /home/node/.openclaw/skills/mem-dog-bridge
+              mkdir -p /home/node/.openclaw/skills/mem-dog-semantic-search
               cp /config-src/openclaw.json /home/node/.openclaw/openclaw.json
               sed -i "s|__GEMINI_API_KEY__|${GEMINI_API_KEY}|g" /home/node/.openclaw/openclaw.json
               sed -i "s|__OPENCLAW_GATEWAY_TOKEN__|${OPENCLAW_GATEWAY_TOKEN}|g" /home/node/.openclaw/openclaw.json
-              cp /skills-src/memdog-query.md /home/node/.openclaw/skills/memdog-query/SKILL.md
-              cp /skills-src/memdog-ingest.md /home/node/.openclaw/skills/memdog-ingest/SKILL.md
-              cp /skills-src/memdog-bridge.md /home/node/.openclaw/skills/memdog-bridge/SKILL.md
-              cp /skills-src/memdog-semantic-search.md /home/node/.openclaw/skills/memdog-semantic-search/SKILL.md
-              sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/memdog-query/SKILL.md
-              sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/memdog-ingest/SKILL.md
-              sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/memdog-semantic-search/SKILL.md
+              cp /skills-src/mem-dog-query.md /home/node/.openclaw/skills/mem-dog-query/SKILL.md
+              cp /skills-src/mem-dog-ingest.md /home/node/.openclaw/skills/mem-dog-ingest/SKILL.md
+              cp /skills-src/mem-dog-bridge.md /home/node/.openclaw/skills/mem-dog-bridge/SKILL.md
+              cp /skills-src/mem-dog-semantic-search.md /home/node/.openclaw/skills/mem-dog-semantic-search/SKILL.md
+              sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/mem-dog-query/SKILL.md
+              sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/mem-dog-ingest/SKILL.md
+              sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/mem-dog-semantic-search/SKILL.md
           env:
             - name: GEMINI_API_KEY
               valueFrom:

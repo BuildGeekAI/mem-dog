@@ -1,4 +1,4 @@
-# memdog
+# mem-dog
 
 Personal memory platform that ingests, stores, enriches, and queries arbitrary data from 25+ communication channels through AI-powered processing.
 
@@ -82,7 +82,7 @@ docker compose up
 ## Project Structure
 
 ```
-memdog/
+mem-dog/
 ├── api/                  # Core API (FastAPI, Python 3.12)
 ├── ui/                   # Web frontend (Next.js 14, TypeScript)
 ├── webhook/              # Data processing pipeline
@@ -90,11 +90,11 @@ memdog/
 │   ├── processor/        #   NATS pull worker
 │   └── webhook_agent/    #   Agent server + 40 sub-agents
 ├── webhook-gateway/      # Multi-channel webhook gateway
-├── openclaw-node/        # DigiMe AI agent (queries memdog RAG system)
+├── openclaw-node/        # DigiMe AI agent (queries mem-dog RAG system)
 ├── client/               # Python SDK
 ├── mcp-server/           # MCP server
 ├── k8s/                  # Kubernetes manifests
-│   ├── *.yaml            #   API + UI (memdog namespace)
+│   ├── *.yaml            #   API + UI (mem-dog namespace)
 │   ├── webhook-pipeline/ #   NATS + agents + Ollama
 │   ├── webhook-gateway/  #   Gateway + load balancer
 │   ├── openclaw-node/    #   DigiMe AI agent

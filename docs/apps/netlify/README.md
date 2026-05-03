@@ -1,6 +1,6 @@
 # Netlify
 
-Connect Netlify to memdog to sync site data, deploys, and build information.
+Connect Netlify to mem-dog to sync site data, deploys, and build information.
 
 **Category:** Dev Tools
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Netlify to memdog to sync site data, deploys, and build information.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Netlify
@@ -18,7 +18,7 @@ Connect Netlify to memdog to sync site data, deploys, and build information.
 1. In the UI, go to **Settings > Apps**
 2. Find **Netlify** under the "Dev Tools" category
 3. Click **Connect**
-4. Authorize memdog via Netlify's OAuth consent screen
+4. Authorize mem-dog via Netlify's OAuth consent screen
 5. The Netlify card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ For deploy notifications, add your `inbound_url` under **Site Settings > Build &
 - Form submissions
 - Split test data
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Netlify and store in memdog:
+Pull data from Netlify and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

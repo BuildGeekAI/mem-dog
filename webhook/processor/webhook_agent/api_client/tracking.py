@@ -75,7 +75,7 @@ class WebhookTrackingClient:
     ``trace_memory_id`` is provided by the upstream caller.
 
     Args:
-        base_url: Base URL of the memdog API.  Defaults to
+        base_url: Base URL of the mem-dog API.  Defaults to
             :data:`~config.MEM_DOG_API_URL`.
     """
 

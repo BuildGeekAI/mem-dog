@@ -31,7 +31,7 @@ class NormalizedMessage:
     source_type: str = "other"
     raw: dict[str, Any] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)
-    # memdog data_id when content is already stored (pipeline processes only once, no loop)
+    # mem-dog data_id when content is already stored (pipeline processes only once, no loop)
     data_id: str | None = None
     is_downloaded: bool = False
     mime_type: str | None = None

@@ -1,6 +1,6 @@
 # Mailgun
 
-Connect Mailgun to memdog for email sending and delivery event tracking.
+Connect Mailgun to mem-dog for email sending and delivery event tracking.
 
 **Category:** Email
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect Mailgun to memdog for email sending and delivery event tracking.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Mailgun
@@ -37,9 +37,9 @@ For inbound events, configure Mailgun webhooks:
 - Inbound email routing
 - Open and click tracking
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Mailgun and store in memdog:
+Pull data from Mailgun and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -24,7 +24,7 @@ ENVIRONMENT     ?= dev
 MODEL_FILE      ?=
 
 # GCS URI of the GGUF file for the model server to download on first start.
-MODEL_GCS_URI   ?= gs://memdog-dev-memdog-models-dev/gemma-3-4b-it-Q4_K_M.gguf
+MODEL_GCS_URI   ?= gs://memdog-dev-mem-dog-models-dev/gemma-3-4b-it-Q4_K_M.gguf
 
 # GPU layers for llama-cpp-python (0 = CPU only).
 # Set to 99 on Apple Silicon with Metal to use the GPU:
@@ -54,7 +54,7 @@ install:
 # Set MODEL_FILE=/path/to/model.gguf to use a pre-downloaded model instead.
 .PHONY: model-server
 model-server:
-	@MODEL_DIR=/tmp/memdog-model-server; \
+	@MODEL_DIR=/tmp/mem-dog-model-server; \
 	mkdir -p $$MODEL_DIR; \
 	MODEL_FILE_PATH="$(MODEL_FILE)"; \
 	if [ -z "$$MODEL_FILE_PATH" ]; then \

@@ -1,6 +1,6 @@
 # BambooHR
 
-Connect BambooHR to memdog to sync employee data, time-off, and HR workflows.
+Connect BambooHR to mem-dog to sync employee data, time-off, and HR workflows.
 
 **Category:** HR & People
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect BambooHR to memdog to sync employee data, time-off, and HR workflows.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect BambooHR
@@ -18,7 +18,7 @@ Connect BambooHR to memdog to sync employee data, time-off, and HR workflows.
 1. In the UI, go to **Settings > Apps**
 2. Find **BambooHR** under the "HR & People" category
 3. Click **Connect**
-4. Authorize memdog via BambooHR's OAuth consent screen
+4. Authorize mem-dog via BambooHR's OAuth consent screen
 5. The BambooHR card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ For webhooks, configure in BambooHR under **Account > Webhooks**.
 - Job and salary information
 - Custom reports
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from BambooHR and store in memdog:
+Pull data from BambooHR and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: memdog API
+  title: mem-dog API
   version: 4.0.0
   description: >
     Private AI system for multi-channel data ingestion, AI enrichment,

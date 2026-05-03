@@ -1,7 +1,7 @@
-"""OpenAI function-calling adapter for memdog memory.
+"""OpenAI function-calling adapter for mem-dog memory.
 
 Provides tool definitions and a handler for OpenAI's function calling API,
-enabling any OpenAI-compatible agent to use memdog as persistent memory.
+enabling any OpenAI-compatible agent to use mem-dog as persistent memory.
 
 Usage::
 
@@ -26,7 +26,7 @@ from mem_dog_client.simple import MemDog
 
 
 def get_mem_dog_tools() -> list[dict[str, Any]]:
-    """Return OpenAI-compatible tool definitions for memdog operations."""
+    """Return OpenAI-compatible tool definitions for mem-dog operations."""
     return [
         {
             "type": "function",
@@ -97,7 +97,7 @@ def handle_mem_dog_tool_call(
     function_name: str,
     arguments: dict[str, Any],
 ) -> str:
-    """Handle a memdog tool call and return the result as a JSON string.
+    """Handle a mem-dog tool call and return the result as a JSON string.
 
     Args:
         mem_dog: A configured MemDog instance.

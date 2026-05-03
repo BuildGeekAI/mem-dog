@@ -1,5 +1,5 @@
 #!/bin/bash
-# Entrypoint for the memdog webhook agent container (Cloud Run A).
+# Entrypoint for the mem-dog webhook agent container (Cloud Run A).
 #
 # Runs a direct FastAPI server (server.py) that calls route_payload() without
 # LLM orchestration.  Gemma 3 4B is not reliable enough at tool-calling to
@@ -13,7 +13,7 @@ set -euo pipefail
 
 PORT="${PORT:-8080}"
 
-echo "[entrypoint] Starting memdog webhook agent server"
+echo "[entrypoint] Starting mem-dog webhook agent server"
 echo "[entrypoint] MODEL_SERVER_URL=${MODEL_SERVER_URL:-<not set>}"
 echo "[entrypoint] MEM_DOG_API_URL=${MEM_DOG_API_URL:-<not set>}"
 

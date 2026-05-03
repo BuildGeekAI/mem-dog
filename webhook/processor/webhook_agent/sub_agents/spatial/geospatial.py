@@ -20,7 +20,7 @@ class GeospatialAgent(BaseSubAgent):
 
         Args:
             payload_json: The raw webhook payload as a JSON string.
-            data_id: memdog data ID returned by ``write_record()``.
+            data_id: mem-dog data ID returned by ``write_record()``.
             group_context: Optional group context forwarded from the router.
             payload_meta: Optional dict with ``detection_layer`` and
                 ``mime_type`` from the router.

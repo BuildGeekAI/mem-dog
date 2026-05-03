@@ -1,6 +1,6 @@
 # Google Calendar
 
-Connect Google Calendar to memdog to sync events, schedules, and meeting data.
+Connect Google Calendar to mem-dog to sync events, schedules, and meeting data.
 
 **Category:** Productivity
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Google Calendar to memdog to sync events, schedules, and meeting data.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Google Calendar
@@ -18,7 +18,7 @@ Connect Google Calendar to memdog to sync events, schedules, and meeting data.
 1. In the UI, go to **Settings > Apps**
 2. Find **Google Calendar** under the "Productivity" category
 3. Click **Connect**
-4. Authorize memdog via Google Calendar's OAuth consent screen
+4. Authorize mem-dog via Google Calendar's OAuth consent screen
 5. The Google Calendar card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -51,9 +51,9 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/google-calendar/calend
 - Meeting links and descriptions
 - Free/busy information
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Google Calendar and store in memdog:
+Pull data from Google Calendar and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

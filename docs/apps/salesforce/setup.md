@@ -1,13 +1,13 @@
 # Salesforce Integration — Setup Guide
 
-Ingest Salesforce CRM events (leads, opportunities, cases, accounts) into memdog.
+Ingest Salesforce CRM events (leads, opportunities, cases, accounts) into mem-dog.
 
 ## Architecture
 
 ```mermaid
 graph LR
     SF[Salesforce] -- "Platform Event / Outbound Message" --> GW[Webhook Gateway<br/>/webhooks/salesforce]
-    GW --> API[memdog API] --> PIPE[AI Pipeline]
+    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

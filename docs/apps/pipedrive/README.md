@@ -1,6 +1,6 @@
 # Pipedrive
 
-Connect Pipedrive to memdog to sync deals, contacts, and sales pipeline data.
+Connect Pipedrive to mem-dog to sync deals, contacts, and sales pipeline data.
 
 **Category:** CRM & Sales
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Pipedrive to memdog to sync deals, contacts, and sales pipeline data.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Pipedrive
@@ -18,7 +18,7 @@ Connect Pipedrive to memdog to sync deals, contacts, and sales pipeline data.
 1. In the UI, go to **Settings > Apps**
 2. Find **Pipedrive** under the "CRM & Sales" category
 3. Click **Connect**
-4. Authorize memdog via Pipedrive's OAuth consent screen
+4. Authorize mem-dog via Pipedrive's OAuth consent screen
 5. The Pipedrive card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ For webhooks, configure in **Settings > Webhooks** in Pipedrive.
 - Activities and notes
 - Email tracking
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Pipedrive and store in memdog:
+Pull data from Pipedrive and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

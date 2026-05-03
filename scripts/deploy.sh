@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Deploy memdog (convenience wrapper around manual-deploy.sh)
+# Deploy mem-dog (convenience wrapper around manual-deploy.sh)
 # =============================================================================
 # Runs setup-env, optional setup-postgres/setup-redis/setup-supabase, then deploy-all.
 # Pass -p PROJECT_ID and -e ENVIRONMENT. Optionally set USE_POSTGRES_STORAGE, USE_REDIS_STORAGE,
@@ -70,7 +70,7 @@ if [[ -z "$PROJECT_ID" ]]; then
     exit 1
 fi
 
-echo "Deploying memdog: project=$PROJECT_ID region=$REGION env=$ENVIRONMENT"
+echo "Deploying mem-dog: project=$PROJECT_ID region=$REGION env=$ENVIRONMENT"
 echo ""
 
 if [[ -z "$SKIP_SETUP" ]]; then

@@ -4,11 +4,11 @@ description: "4 skills in detail: bridge, ingest, query, and semantic-search wit
 icon: "wand-magic-sparkles"
 ---
 
-DigiMe has 4 skills, each targeting a specific interaction pattern with the memdog knowledge base.
+DigiMe has 4 skills, each targeting a specific interaction pattern with the mem-dog knowledge base.
 
-## memdog-bridge
+## mem-dog-bridge
 
-Forwards ALL incoming messages to memdog for storage and processing. This is the default "always-on" skill — every message is captured without explicit user action.
+Forwards ALL incoming messages to mem-dog for storage and processing. This is the default "always-on" skill — every message is captured without explicit user action.
 
 ```
 Endpoint: POST /api/v1/data
@@ -33,7 +33,7 @@ Headers:  Authorization: Bearer <user_api_key>
   Bridge mode captures everything passively. It is ideal for building a comprehensive knowledge base from day-to-day conversations.
 </Info>
 
-## memdog-ingest
+## mem-dog-ingest
 
 Stores data explicitly when the user sends a command (e.g., `/remember` or `/save`). Unlike bridge, this only fires on intentional storage requests.
 
@@ -52,7 +52,7 @@ Headers:  Authorization: Bearer <user_api_key>
 }
 ```
 
-## memdog-query
+## mem-dog-query
 
 Handles natural language questions using the RAG chat endpoint. Returns answers with `[1][2]` citation markers.
 
@@ -77,7 +77,7 @@ Sources:
 [1] "Project deadline: April 15, 2026" (saved Mar 27)
 ```
 
-## memdog-semantic-search
+## mem-dog-semantic-search
 
 Performs vector similarity search and returns matching items directly (without LLM answer generation). Useful for browsing related content.
 

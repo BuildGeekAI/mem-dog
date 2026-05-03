@@ -1,6 +1,6 @@
-# Contributing to memdog
+# Contributing to mem-dog
 
-Thank you for your interest in contributing to memdog! This guide will help you get started.
+Thank you for your interest in contributing to mem-dog! This guide will help you get started.
 
 ## Development Setup
 
@@ -15,8 +15,8 @@ Thank you for your interest in contributing to memdog! This guide will help you 
 
 ```bash
 # Clone the repo
-git clone https://github.com/memdog/memdog.git
-cd memdog
+git clone https://github.com/mem-dog/mem-dog.git
+cd mem-dog
 
 # Start the full stack (11 services)
 docker compose up
@@ -101,8 +101,8 @@ npm run lint              # ESLint
 
 ## Reporting Issues
 
-- Use the [bug report template](https://github.com/memdog/memdog/issues/new?template=bug_report.md) for bugs
-- Use the [feature request template](https://github.com/memdog/memdog/issues/new?template=feature_request.md) for ideas
+- Use the [bug report template](https://github.com/mem-dog/mem-dog/issues/new?template=bug_report.md) for bugs
+- Use the [feature request template](https://github.com/mem-dog/mem-dog/issues/new?template=feature_request.md) for ideas
 
 ## License
 

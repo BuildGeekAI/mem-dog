@@ -26,7 +26,7 @@
 #   Auth errors  : missing key, wrong key
 #   Method errors: GET / PUT / DELETE / PATCH
 #   Payload errors: empty body, invalid JSON, JSON array, JSON string
-#   Post-verify  : poll the memdog API for routed data (requires --verify)
+#   Post-verify  : poll the mem-dog API for routed data (requires --verify)
 #
 # Usage:
 #   ./scripts/test-webhook.sh \
@@ -38,10 +38,10 @@
 #
 # Options:
 #   -w, --webhook-url  Full webhook endpoint URL  (required)
-#                      e.g. https://memdog-gw.uc.gateway.dev/webhook
+#                      e.g. https://mem-dog-gw.uc.gateway.dev/webhook
 #   -k, --api-key      x-api-key value            (required)
 #   -a, --api-url      Mem-dog API URL for post-processing verification
-#   -V, --verify       Poll memdog API to confirm each routed entry
+#   -V, --verify       Poll mem-dog API to confirm each routed entry
 #   -v, --verbose      Print full request/response bodies
 #   -h, --help         Show this help
 # =============================================================================
@@ -294,7 +294,7 @@ assert_202 "$(webhook_post "{\"data_type\": \"code\",
   \"language\": \"python\",
   \"filename\": \"ingest.py\",
   \"content\": \"def ingest(payload): return payload\",
-  \"repo\": \"memdog\", \"commit\": \"a1b2c3d\"}")" \
+  \"repo\": \"mem-dog\", \"commit\": \"a1b2c3d\"}")" \
   "code agent"
 
 assert_202 "$(webhook_post "{\"data_type\": \"log_file\",
@@ -726,7 +726,7 @@ sys.exit(1)
   done
 
   if $FOUND; then
-    pass "Routed data items appeared in memdog API (tagged agent_type:*)"
+    pass "Routed data items appeared in mem-dog API (tagged agent_type:*)"
     # Count distinct agent types seen
     SEEN_TYPES=$(curl -s "${API_URL}/api/v1/data?limit=200" 2>/dev/null \
       | python3 -c "
@@ -742,9 +742,9 @@ for t in sorted(types): print(f'  - {t}')
 " 2>/dev/null || echo "(could not parse)")
     info "$SEEN_TYPES"
   else
-    fail "No agent_type-tagged data found in memdog API after ${MAX_WAIT}s"
+    fail "No agent_type-tagged data found in mem-dog API after ${MAX_WAIT}s"
     info "Check processor logs:"
-    info "  gcloud functions logs read memdog-webhook-processor-dev --gen2 --region=us-central1"
+    info "  gcloud functions logs read mem-dog-webhook-processor-dev --gen2 --region=us-central1"
   fi
 fi
 
@@ -774,7 +774,7 @@ else
   echo -e "  Troubleshooting:"
   echo -e "    • Verify gateway URL and API key are correct"
   echo -e "    • Check processor logs:"
-  echo -e "      gcloud functions logs read memdog-webhook-processor-dev \\"
+  echo -e "      gcloud functions logs read mem-dog-webhook-processor-dev \\"
   echo -e "          --gen2 --region=us-central1 --limit=50"
   echo ""
   exit 1

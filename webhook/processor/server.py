@@ -40,7 +40,7 @@ from webhook_agent.router import route_payload
 logger = logging.getLogger("mem_dog.webhook.server")
 
 app = FastAPI(
-    title="memdog Webhook Agent Server",
+    title="mem-dog Webhook Agent Server",
     description="Direct webhook routing server — no LLM orchestration.",
     version="1.0.0",
 )

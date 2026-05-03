@@ -1,7 +1,7 @@
 """Gmail Push Notifications via Google Pub/Sub.
 
 Receives Pub/Sub push messages when new emails arrive, fetches the email
-content via Nango proxy (auto token refresh), and ingests into memdog.
+content via Nango proxy (auto token refresh), and ingests into mem-dog.
 """
 
 import base64

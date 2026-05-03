@@ -132,7 +132,7 @@ class DataDeviceInfo(BaseModel):
     device_type: Optional[str] = None   # desktop, mobile, tablet
     os: Optional[str] = None            # Windows, macOS, Linux, iOS, Android
     browser: Optional[str] = None       # Chrome, Safari, Firefox, Edge
-    app_version: Optional[str] = None   # memdog UI / client app version
+    app_version: Optional[str] = None   # mem-dog UI / client app version
     user_agent: Optional[str] = None    # Raw User-Agent string
     ip_address: Optional[str] = None    # Client IP (if available)
     # Extended fields — collected by the UI via browser APIs
@@ -148,7 +148,7 @@ class DataDeviceInfo(BaseModel):
 
 class ServiceParticipant(BaseModel):
     """Records one service that handled an event in the processing chain."""
-    service_name: str                       # e.g. "memdog-api", "webhook-processor"
+    service_name: str                       # e.g. "mem-dog-api", "webhook-processor"
     service_type: str                       # e.g. "fastapi", "gcp_cloud_function", "gcp_cloud_run_adk"
     service_version: Optional[str] = None  # app/image version
     action: str                             # e.g. "create_data", "route_payload", "write_record"
@@ -443,7 +443,7 @@ class ContextDescriptor(BaseModel):
     trace_id: Optional[str] = None
     memory_ids: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
-    # memdog data_id when content is already stored (avoids duplicate write in pipeline)
+    # mem-dog data_id when content is already stored (avoids duplicate write in pipeline)
     data_id: Optional[str] = None
 
 
@@ -514,7 +514,7 @@ class DataMetadata(BaseModel):
     owner: Optional[DataOwner] = None
     # Rich provenance: user, device, ordered services audit trail
     provenance: Optional[DataProvenance] = None
-    # Which service wrote this data item ("memdog-api", "webhook-agent", ...)
+    # Which service wrote this data item ("mem-dog-api", "webhook-agent", ...)
     source_service: Optional[str] = None
     # Human-readable version label matching the storage path (ver_20250225T143022Z)
     data_version_label: Optional[str] = None

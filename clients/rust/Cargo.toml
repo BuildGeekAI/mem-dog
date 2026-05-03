@@ -2,7 +2,7 @@
 name = "memdog"
 version = "0.2.0"
 edition = "2021"
-description = "Rust SDK for the memdog data ingestion and AI enrichment platform"
+description = "Rust SDK for the mem-dog data ingestion and AI enrichment platform"
 license = "MIT"
 
 [dependencies]

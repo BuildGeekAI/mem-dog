@@ -16,7 +16,7 @@ echo "[memdog-entrypoint] Running configure..."
 cd /opt/openclaw/app
 node /app/scripts/configure.js 2>&1 || true
 
-# Ensure wildcard origins so the memdog UI can connect via WebSocket
+# Ensure wildcard origins so the mem-dog UI can connect via WebSocket
 node -e "
 const fs = require('fs');
 const f = process.env.OPENCLAW_STATE_DIR + '/openclaw.json';

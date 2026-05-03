@@ -1,5 +1,5 @@
 [project]
-name = "memdog-webhook-receiver"
+name = "mem-dog-webhook-receiver"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [

@@ -1,6 +1,6 @@
 # Gmail
 
-Connect Gmail to memdog to ingest emails, attachments, and threads into your knowledge base.
+Connect Gmail to mem-dog to ingest emails, attachments, and threads into your knowledge base.
 
 **Category:** Email
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Gmail to memdog to ingest emails, attachments, and threads into your kno
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Gmail
@@ -18,7 +18,7 @@ Connect Gmail to memdog to ingest emails, attachments, and threads into your kno
 1. In the UI, go to **Settings > Apps**
 2. Find **Gmail** under the "Email" category
 3. Click **Connect**
-4. Authorize memdog to access your Gmail account via Google OAuth
+4. Authorize mem-dog to access your Gmail account via Google OAuth
 5. The Gmail card should now show **Active**
 
 ### 3. Create a Webhook Endpoint

@@ -417,7 +417,7 @@ def _col(text: str, code: str) -> str:
 def print_header() -> None:
     print()
     print(f"{BOLD}{'─' * 72}{RESET}")
-    print(f"{BOLD}  memdog · Agent Routing Test Suite  ({len(TEST_PAYLOADS)} payloads){RESET}")
+    print(f"{BOLD}  mem-dog · Agent Routing Test Suite  ({len(TEST_PAYLOADS)} payloads){RESET}")
     print(f"{BOLD}{'─' * 72}{RESET}")
     print()
 
@@ -561,7 +561,7 @@ def run(args: argparse.Namespace) -> int:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Send test data to all 26 memdog sub-agents.",
+        description="Send test data to all 26 mem-dog sub-agents.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )

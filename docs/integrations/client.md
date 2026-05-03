@@ -1,6 +1,6 @@
 # Client SDKs
 
-memdog has SDKs in 5 languages: Python, TypeScript, Go, Rust, and Ruby.
+mem-dog has SDKs in 5 languages: Python, TypeScript, Go, Rust, and Ruby.
 
 ## Python SDK
 
@@ -100,7 +100,7 @@ result = handle_mem_dog_tool_call(m, call.function.name, args)
 **Directory:** `clients/typescript/`
 
 ```typescript
-import { MemDogClient } from '@memdog/client';
+import { MemDogClient } from '@mem-dog/client';
 
 const client = new MemDogClient({
   baseUrl: 'http://localhost:8080',
@@ -163,6 +163,6 @@ results = client.semantic_search(query: 'project updates', max_results: 5)
 
 **Directory:** `mcp-server/`
 
-Exposes memdog as an MCP server for Claude and MCP-compatible agents.
+Exposes mem-dog as an MCP server for Claude and MCP-compatible agents.
 
 Tools: `search`, `add`, `get`, `delete`, `entities`, `chat`.

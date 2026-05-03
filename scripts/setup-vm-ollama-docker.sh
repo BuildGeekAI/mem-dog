@@ -220,7 +220,7 @@ async def chat_completions(request: ChatRequest):
 WRAPPER_EOF
 
 print_info "Building wrapper image..."
-$DOCKER build -t memdog-ollama-wrapper:latest . 2>/dev/null || sudo docker build -t memdog-ollama-wrapper:latest .
+$DOCKER build -t mem-dog-ollama-wrapper:latest . 2>/dev/null || sudo docker build -t mem-dog-ollama-wrapper:latest .
 
 # Systemd unit for wrapper: use host network so it always reaches Ollama on host port 11434
 # (avoids "name not known" if ollama was ever started without --network ollama-net)
@@ -235,7 +235,7 @@ Type=simple
 ExecStartPre=-/usr/bin/docker stop ollama-wrapper 2>/dev/null
 ExecStartPre=-/usr/bin/docker rm ollama-wrapper 2>/dev/null
 ExecStartPre=/bin/sleep 3
-ExecStart=/usr/bin/docker run --rm --name ollama-wrapper --network host -e OLLAMA_BASE_URL=http://127.0.0.1:11434 memdog-ollama-wrapper:latest
+ExecStart=/usr/bin/docker run --rm --name ollama-wrapper --network host -e OLLAMA_BASE_URL=http://127.0.0.1:11434 mem-dog-ollama-wrapper:latest
 ExecStop=/usr/bin/docker stop ollama-wrapper
 Restart=always
 RestartSec=5
@@ -260,7 +260,7 @@ fi
 print_header "Done"
 
 echo "Ollama:     Docker (ollama/ollama), port 11434, network ollama-net"
-echo "Wrapper:    Docker (memdog-ollama-wrapper), port 8000, network ollama-net"
+echo "Wrapper:    Docker (mem-dog-ollama-wrapper), port 8000, network ollama-net"
 echo ""
 echo "Pull a model:  docker exec ollama ollama pull gemma3:27b"
 echo "List models:   docker exec ollama ollama list"

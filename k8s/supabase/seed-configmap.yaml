@@ -1,4 +1,4 @@
-# SQL seed scripts for memdog tables on Supabase Postgres.
+# SQL seed scripts for mem-dog tables on Supabase Postgres.
 # Sourced from api/supabase/*.sql — keep in sync.
 apiVersion: v1
 kind: ConfigMap
@@ -7,10 +7,10 @@ metadata:
   namespace: supabase
   labels:
     app.kubernetes.io/name: supabase-seed
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: supabase
 data:
-  01-memdog-blobs.sql: |
+  01-mem-dog-blobs.sql: |
     CREATE TABLE IF NOT EXISTS mem_dog_blobs (
         store_name   TEXT        NOT NULL,
         path         TEXT        NOT NULL,
@@ -33,7 +33,7 @@ data:
 
     NOTIFY pgrst, 'reload schema';
 
-  02-memdog-embeddings.sql: |
+  02-mem-dog-embeddings.sql: |
     CREATE EXTENSION IF NOT EXISTS vector;
 
     CREATE TABLE IF NOT EXISTS mem_dog_embeddings (

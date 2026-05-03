@@ -2,9 +2,9 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: mcp-server-routes
-  namespace: memdog
+  namespace: mem-dog
   labels:
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: mcp-server
 spec:
   parentRefs:

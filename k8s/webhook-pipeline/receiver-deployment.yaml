@@ -5,7 +5,7 @@ metadata:
   namespace: webhook-pipeline
   labels:
     app: webhook-receiver
-    app.kubernetes.io/part-of: memdog-webhook-pipeline
+    app.kubernetes.io/part-of: mem-dog-webhook-pipeline
 spec:
   replicas: 1
   selector:

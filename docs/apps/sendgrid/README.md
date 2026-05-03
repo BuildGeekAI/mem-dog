@@ -1,6 +1,6 @@
 # SendGrid
 
-Connect SendGrid to memdog for transactional email sending and delivery tracking.
+Connect SendGrid to mem-dog for transactional email sending and delivery tracking.
 
 **Category:** Email
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect SendGrid to memdog for transactional email sending and delivery tracking
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect SendGrid
@@ -38,9 +38,9 @@ For inbound events, configure SendGrid's **Event Webhook**:
 - Bounce and spam reports
 - Open and click tracking
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from SendGrid and store in memdog:
+Pull data from SendGrid and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

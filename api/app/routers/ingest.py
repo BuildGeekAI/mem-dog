@@ -152,7 +152,7 @@ async def _forward_to_webhook(env: UniversalEnvelope, auth_user_id: str = "") ->
     Acts as a trace origin: creates a per-ingest ``tracing`` memory and sets
     ``trace_memory_id`` in the meta_data payload so downstream services inherit it.
     When ``env.context.data_id`` and/or ``env.payload.is_downloaded`` are set, they
-    are included in telemetry (memdog format) so the pipeline processes only once.
+    are included in telemetry (mem-dog format) so the pipeline processes only once.
     """
     if not config.WEBHOOK_GATEWAY_URL or not config.WEBHOOK_API_KEY:
         raise HTTPException(

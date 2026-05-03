@@ -1,6 +1,6 @@
 # Xero
 
-Connect Xero to memdog to sync invoices, contacts, and accounting data.
+Connect Xero to mem-dog to sync invoices, contacts, and accounting data.
 
 **Category:** Finance
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Xero to memdog to sync invoices, contacts, and accounting data.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Xero
@@ -18,7 +18,7 @@ Connect Xero to memdog to sync invoices, contacts, and accounting data.
 1. In the UI, go to **Settings > Apps**
 2. Find **Xero** under the "Finance" category
 3. Click **Connect**
-4. Authorize memdog via Xero's OAuth consent screen
+4. Authorize mem-dog via Xero's OAuth consent screen
 5. The Xero card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -44,9 +44,9 @@ For webhooks, configure in the Xero Developer portal.
 - Reports and account balances
 - Payroll data
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Xero and store in memdog:
+Pull data from Xero and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

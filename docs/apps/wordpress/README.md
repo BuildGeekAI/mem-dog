@@ -1,6 +1,6 @@
 # WordPress
 
-Connect WordPress to memdog to sync posts, pages, and content data.
+Connect WordPress to mem-dog to sync posts, pages, and content data.
 
 **Category:** Commerce & Content
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect WordPress to memdog to sync posts, pages, and content data.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect WordPress
@@ -18,7 +18,7 @@ Connect WordPress to memdog to sync posts, pages, and content data.
 1. In the UI, go to **Settings > Apps**
 2. Find **WordPress** under the "Commerce & Content" category
 3. Click **Connect**
-4. Authorize memdog via WordPress's OAuth consent screen
+4. Authorize mem-dog via WordPress's OAuth consent screen
 5. The WordPress card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -41,9 +41,9 @@ curl https://<your-api>/api/v1/integrations/proxy/wordpress/wp-json/wp/v2/posts 
 - Media library items
 - Categories and tags
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from WordPress and store in memdog:
+Pull data from WordPress and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

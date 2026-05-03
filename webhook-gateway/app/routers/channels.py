@@ -1,11 +1,11 @@
-"""Channel configuration management — proxy to memdog API.
+"""Channel configuration management — proxy to mem-dog API.
 
 Provides a lightweight facade over the ``/api/v1/channels`` endpoints on
-the memdog API so that channel metadata (webhook URLs, auth config) can
+the mem-dog API so that channel metadata (webhook URLs, auth config) can
 be managed directly through the gateway.
 
 GET operations use direct Supabase reads when available (OC-Read pattern),
-falling back to the memdog API.  Writes always go through the API.
+falling back to the mem-dog API.  Writes always go through the API.
 """
 
 from __future__ import annotations

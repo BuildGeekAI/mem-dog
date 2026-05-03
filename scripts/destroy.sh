@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Destroy memdog resources for an environment
+# Destroy mem-dog resources for an environment
 # =============================================================================
 # Deletes Cloud Run services, Cloud SQL instance, secrets (including Postgres/Redis/Supabase store secrets), and GCS buckets
 # created by setup-env / setup-postgres / setup-redis / setup-supabase / deploy-*.
@@ -95,19 +95,19 @@ fi
 
 echo ""
 echo "========================================="
-echo "  Destroy memdog: $PROJECT_ID / $ENVIRONMENT"
+echo "  Destroy mem-dog: $PROJECT_ID / $ENVIRONMENT"
 echo "========================================="
 echo ""
 
 # Cloud Run services (order: dependents first, then API)
 SERVICES=(
-    "memdog-ui-${ENVIRONMENT}"
-    "memdog-download-server-${ENVIRONMENT}"
-    "memdog-model-server-small-${ENVIRONMENT}"
-    "memdog-model-server-medium-${ENVIRONMENT}"
-    "memdog-model-server-large-${ENVIRONMENT}"
-    "memdog-model-server-very-large-${ENVIRONMENT}"
-    "memdog-api"
+    "mem-dog-ui-${ENVIRONMENT}"
+    "mem-dog-download-server-${ENVIRONMENT}"
+    "mem-dog-model-server-small-${ENVIRONMENT}"
+    "mem-dog-model-server-medium-${ENVIRONMENT}"
+    "mem-dog-model-server-large-${ENVIRONMENT}"
+    "mem-dog-model-server-very-large-${ENVIRONMENT}"
+    "mem-dog-api"
 )
 
 print_info "Deleting Cloud Run services..."
@@ -122,7 +122,7 @@ done
 
 # Cloud SQL instance
 if [[ -z "$KEEP_POSTGRES" ]]; then
-    INSTANCE_NAME="memdog-pg-${ENVIRONMENT}"
+    INSTANCE_NAME="mem-dog-pg-${ENVIRONMENT}"
     print_info "Deleting Cloud SQL instance: $INSTANCE_NAME..."
     if gcloud sql instances describe "$INSTANCE_NAME" --project="$PROJECT_ID" &>/dev/null; then
         gcloud sql instances delete "$INSTANCE_NAME" --project="$PROJECT_ID" --quiet
@@ -134,7 +134,7 @@ fi
 
 # Memorystore Redis instance
 if [[ -z "$KEEP_REDIS" ]]; then
-    REDIS_INSTANCE="memdog-redis-${ENVIRONMENT}"
+    REDIS_INSTANCE="mem-dog-redis-${ENVIRONMENT}"
     print_info "Deleting Memorystore Redis instance: $REDIS_INSTANCE..."
     if gcloud redis instances describe "$REDIS_INSTANCE" --region="$REGION" --project="$PROJECT_ID" &>/dev/null; then
         gcloud redis instances delete "$REDIS_INSTANCE" --region="$REGION" --project="$PROJECT_ID" --quiet
@@ -146,12 +146,12 @@ fi
 
 # Secrets
 SECRETS=(
-    "memdog-postgres-url-${ENVIRONMENT}"
-    "memdog-redis-url-${ENVIRONMENT}"
-    "memdog-redis-vpc-${ENVIRONMENT}"
-    "memdog-supabase-url-${ENVIRONMENT}"
-    "memdog-supabase-key-${ENVIRONMENT}"
-    "memdog-api-key-${ENVIRONMENT}"
+    "mem-dog-postgres-url-${ENVIRONMENT}"
+    "mem-dog-redis-url-${ENVIRONMENT}"
+    "mem-dog-redis-vpc-${ENVIRONMENT}"
+    "mem-dog-supabase-url-${ENVIRONMENT}"
+    "mem-dog-supabase-key-${ENVIRONMENT}"
+    "mem-dog-api-key-${ENVIRONMENT}"
 )
 print_info "Deleting secrets..."
 for SEC in "${SECRETS[@]}"; do
@@ -168,7 +168,7 @@ if [[ -z "$KEEP_BUCKETS" ]]; then
     BUCKET_SUFFIXES=(raw meta memories users prompts embeddings viewpoints aiconfig skills stats sysconfig models)
     print_info "Deleting GCS buckets..."
     for suffix in "${BUCKET_SUFFIXES[@]}"; do
-        BUCKET="${PROJECT_ID}-memdog-${suffix}-${ENVIRONMENT}"
+        BUCKET="${PROJECT_ID}-mem-dog-${suffix}-${ENVIRONMENT}"
         if gcloud storage buckets describe "gs://$BUCKET" --project="$PROJECT_ID" &>/dev/null; then
             gcloud storage rm -r "gs://$BUCKET" --project="$PROJECT_ID" 2>/dev/null || true
             print_success "Deleted bucket: $BUCKET"
@@ -181,16 +181,16 @@ else
 fi
 
 # Pub/Sub topic (optional; may be used by download flow)
-TOPIC="memdog-downloads-${ENVIRONMENT}"
+TOPIC="mem-dog-downloads-${ENVIRONMENT}"
 if gcloud pubsub topics describe "$TOPIC" --project="$PROJECT_ID" &>/dev/null; then
     gcloud pubsub topics delete "$TOPIC" --project="$PROJECT_ID" --quiet
     print_success "Deleted topic: $TOPIC"
 fi
 
 # Service account (optional; leave if other tools use it)
-SA_EMAIL="memdog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
+SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
 print_info "Service account $SA_EMAIL left in place (delete manually if desired)."
-print_info "Artifact Registry repo 'memdog' left in place (delete manually if desired)."
+print_info "Artifact Registry repo 'mem-dog' left in place (delete manually if desired)."
 
 echo ""
 print_success "Destroy complete for $ENVIRONMENT in $PROJECT_ID."

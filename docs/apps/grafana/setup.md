@@ -1,13 +1,13 @@
 # Grafana Integration — Setup Guide
 
-Ingest Grafana alerting events into memdog.
+Ingest Grafana alerting events into mem-dog.
 
 ## Architecture
 
 ```mermaid
 graph LR
     GRAFANA[Grafana] -- "webhook POST" --> GW[Webhook Gateway<br/>/webhooks/grafana]
-    GW --> API[memdog API] --> PIPE[AI Pipeline]
+    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

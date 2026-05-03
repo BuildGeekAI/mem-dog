@@ -1,4 +1,4 @@
-"""Forward built envelopes to the existing memdog webhook API gateway.
+"""Forward built envelopes to the existing mem-dog webhook API gateway.
 
 Sends a POST request with the ``x-api-key`` header.  Retries up to 3
 times with exponential back-off on transient failures.

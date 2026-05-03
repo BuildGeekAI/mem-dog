@@ -1,7 +1,7 @@
 [project]
 name = "webhook-gateway"
 version = "0.1.0"
-description = "Webhook Gateway — channel adapter and webhook forwarder for memdog"
+description = "Webhook Gateway — channel adapter and webhook forwarder for mem-dog"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.109,<1",

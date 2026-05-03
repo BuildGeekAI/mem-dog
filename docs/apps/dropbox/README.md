@@ -1,6 +1,6 @@
 # Dropbox
 
-Connect Dropbox to memdog to sync files and folders into your knowledge base.
+Connect Dropbox to mem-dog to sync files and folders into your knowledge base.
 
 **Category:** Cloud & Storage
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Dropbox to memdog to sync files and folders into your knowledge base.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Dropbox
@@ -18,7 +18,7 @@ Connect Dropbox to memdog to sync files and folders into your knowledge base.
 1. In the UI, go to **Settings > Apps**
 2. Find **Dropbox** under the "Cloud & Storage" category
 3. Click **Connect**
-4. Authorize memdog via Dropbox's OAuth consent screen
+4. Authorize mem-dog via Dropbox's OAuth consent screen
 5. The Dropbox card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/dropbox/2/files/list_f
 - File revision history
 - Team activity
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Dropbox and store in memdog:
+Pull data from Dropbox and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

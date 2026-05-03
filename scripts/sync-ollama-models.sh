@@ -9,7 +9,7 @@ set -e
 ACTION=$1
 PROJECT_ID=${PROJECT_ID:-$(gcloud config get-value project)}
 ENVIRONMENT=${ENVIRONMENT:-dev}
-MODELS_BUCKET="${PROJECT_ID}-memdog-models-${ENVIRONMENT}"
+MODELS_BUCKET="${PROJECT_ID}-mem-dog-models-${ENVIRONMENT}"
 GCS_PATH="gs://${MODELS_BUCKET}/ollama-models/"
 LOCAL_PATH="/var/lib/ollama"
 

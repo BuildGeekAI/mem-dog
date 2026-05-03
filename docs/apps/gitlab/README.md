@@ -1,6 +1,6 @@
 # GitLab
 
-Connect GitLab to memdog to ingest merge requests, issues, and CI/CD events.
+Connect GitLab to mem-dog to ingest merge requests, issues, and CI/CD events.
 
 **Category:** Dev Tools
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect GitLab to memdog to ingest merge requests, issues, and CI/CD events.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect GitLab
@@ -18,7 +18,7 @@ Connect GitLab to memdog to ingest merge requests, issues, and CI/CD events.
 1. In the UI, go to **Settings > Apps**
 2. Find **GitLab** under the "Dev Tools" category
 3. Click **Connect**
-4. Authorize memdog via GitLab's OAuth consent screen
+4. Authorize mem-dog via GitLab's OAuth consent screen
 5. The GitLab card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -59,7 +59,7 @@ GitLab event → Webhook Gateway → normalizes → NATS queue
 - CI/CD pipeline events
 - Wiki and snippet changes
 
-## Ingest into memdog
+## Ingest into mem-dog
 
 Data from GitLab flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

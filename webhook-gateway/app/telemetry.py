@@ -3,12 +3,12 @@
 Dual-mode telemetry:
 
 1. Standard OTEL SDK export when ``OTEL_EXPORTER_OTLP_ENDPOINT`` is set.
-2. Writes spans as tracing memories to the memdog API (same pattern as
+2. Writes spans as tracing memories to the mem-dog API (same pattern as
    ``webhook/receiver/main.py`` ``_write_telemetry_span``).
 
 Both modes can run simultaneously.  Mode 2 always runs when
 ``MEM_DOG_API_URL`` is configured so traces are queryable through the
-memdog telemetry dashboard regardless of collector availability.
+mem-dog telemetry dashboard regardless of collector availability.
 """
 
 from __future__ import annotations
@@ -86,11 +86,11 @@ def get_tracer():
 
 
 # ---------------------------------------------------------------------------
-# memdog API span writes (always-on when API URL is configured)
+# mem-dog API span writes (always-on when API URL is configured)
 # ---------------------------------------------------------------------------
 
 def _api_headers() -> dict[str, str]:
-    """Return auth headers for memdog API calls."""
+    """Return auth headers for mem-dog API calls."""
     h: dict[str, str] = {}
     if config.MEM_DOG_API_KEY:
         h["x-api-key"] = config.MEM_DOG_API_KEY
@@ -158,7 +158,7 @@ def write_span(
     user_id: str | None = None,
     memory_id: str | None = None,
 ) -> None:
-    """Write a single OTel span to the memdog API as a tracing memory entry."""
+    """Write a single OTel span to the mem-dog API as a tracing memory entry."""
     if not config.MEM_DOG_API_URL:
         return
 

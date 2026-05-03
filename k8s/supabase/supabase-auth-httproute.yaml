@@ -9,7 +9,7 @@ metadata:
   name: supabase-auth-routes
   namespace: webhook-gateway
   labels:
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: supabase
 spec:
   parentRefs:

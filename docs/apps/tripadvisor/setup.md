@@ -7,7 +7,7 @@ Ingest TripAdvisor reviews.
 ```mermaid
 graph LR
     SRC[TripAdvisor] -- "API polling" --> GW[Webhook Gateway<br/>/webhooks/tripadvisor]
-    GW --> API[memdog API] --> PIPE[AI Pipeline]
+    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

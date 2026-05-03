@@ -6,9 +6,9 @@
 # Run this script on the VM after creation
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/your-org/memdog/main/scripts/setup-vm-ollama.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/your-org/mem-dog/main/scripts/setup-vm-ollama.sh | bash
 #   OR
-#   wget -O - https://raw.githubusercontent.com/your-org/memdog/main/scripts/setup-vm-ollama.sh | bash
+#   wget -O - https://raw.githubusercontent.com/your-org/mem-dog/main/scripts/setup-vm-ollama.sh | bash
 #   OR
 #   Copy this script to the VM and run: chmod +x setup-vm-ollama.sh && ./setup-vm-ollama.sh
 # ==============================================================================
@@ -370,7 +370,7 @@ echo ""
 echo "Next Steps:"
 echo "  1. Download a model: ollama pull gemma3:27b"
 echo "  2. Test health: curl http://localhost:8000/health"
-echo "  3. Register VM in memdog (from your local machine)"
+echo "  3. Register VM in mem-dog (from your local machine)"
 echo ""
 
 if lspci | grep -i nvidia > /dev/null && ! command -v nvidia-smi &> /dev/null; then

@@ -462,7 +462,7 @@ def analyse_payload(
     Args:
         agent_type: ``AGENT_TYPE`` of the calling sub-agent.
         payload_json: Raw webhook payload as a JSON string.
-        data_id: The memdog data ID returned by ``write_record()``.
+        data_id: The mem-dog data ID returned by ``write_record()``.
             Used to link the viewpoint and embedding to the stored record.
         agent_instance_id: Stable instance ID written into ``meta.json``.
         agent_purpose: Human-readable purpose written into ``meta.json``.
@@ -819,7 +819,7 @@ def analyse_media_payload(
     Args:
         agent_type: ``AGENT_TYPE`` of the calling sub-agent.
         payload_json: Raw webhook payload as a JSON string.
-        data_id: The memdog data ID returned by ``write_record()``.
+        data_id: The mem-dog data ID returned by ``write_record()``.
         agent_instance_id: Stable instance ID written into ``meta.json``.
         agent_purpose: Human-readable purpose written into ``meta.json``.
         group_context: Optional group context forwarded from the router.

@@ -2,10 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ui
-  namespace: memdog
+  namespace: mem-dog
   labels:
     app.kubernetes.io/name: ui
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
 spec:
   replicas: 1
   selector:
@@ -15,11 +15,11 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: ui
-        app.kubernetes.io/part-of: memdog
+        app.kubernetes.io/part-of: mem-dog
     spec:
       containers:
         - name: ui
-          image: memdog-ui
+          image: mem-dog-ui
           ports:
             - containerPort: 8080
               name: http

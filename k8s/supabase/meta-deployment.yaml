@@ -5,7 +5,7 @@ metadata:
   namespace: supabase
   labels:
     app.kubernetes.io/name: supabase-meta
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: supabase
 spec:
   replicas: 1
@@ -16,7 +16,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: supabase-meta
-        app.kubernetes.io/part-of: memdog
+        app.kubernetes.io/part-of: mem-dog
         app.kubernetes.io/component: supabase
     spec:
       containers:

@@ -1011,7 +1011,7 @@ wheels = [
 ]
 
 [[package]]
-name = "memdog-api"
+name = "mem-dog-api"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

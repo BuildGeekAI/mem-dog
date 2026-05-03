@@ -295,7 +295,7 @@ def _call_gemini_url_context(prompt_text: str) -> dict:
     """Low-level Gemini REST call with the ``url_context`` tool enabled.
 
     Uses a plain requests.post (not _session) to avoid sending the
-    memdog ``x-api-key`` header to Gemini.
+    mem-dog ``x-api-key`` header to Gemini.
 
     Returns the parsed JSON response body.  Raises on HTTP or parse errors.
     """

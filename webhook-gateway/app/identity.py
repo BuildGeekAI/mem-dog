@@ -1,9 +1,9 @@
-"""Resolve a channel-specific identity to a memdog ``user_id``.
+"""Resolve a channel-specific identity to a mem-dog ``user_id``.
 
 When Supabase direct-read is configured, queries the ``mem_dog_blobs``
 table directly.  Otherwise falls back to
 ``GET /api/v1/channel-identities/by-channel/{type}/{unique_id}``
-on the memdog API.  Results are cached in-process for 5 minutes.
+on the mem-dog API.  Results are cached in-process for 5 minutes.
 """
 
 from __future__ import annotations
@@ -75,7 +75,7 @@ async def resolve_user_id(
         _cache[key] = (uid, time.monotonic())
         return uid
 
-    # Fallback: memdog API
+    # Fallback: mem-dog API
     if not config.MEM_DOG_API_URL:
         return config.DEFAULT_USER_ID
 

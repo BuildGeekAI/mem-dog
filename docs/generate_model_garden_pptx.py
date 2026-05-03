@@ -381,7 +381,7 @@ card(slide, Inches(7), Inches(2.8), Inches(5.5), Inches(3.5), bc=GREEN)
 txt(slide, Inches(7.4), Inches(3.0), Inches(4.7), Inches(0.5),
     "How It Works", 22, GREEN, True)
 details = [
-    "Managed pods prefixed mdl- and labeled\nmemdog/managed-model=true",
+    "Managed pods prefixed mdl- and labeled\nmem-dog/managed-model=true",
     "K8s RBAC restricts to webhook-pipeline\nnamespace only",
     "Pre-existing pods show as \"infrastructure\"\n(read-only, visible for monitoring)",
     "Metrics via K8s metrics API\n(CPU %, memory usage)",
@@ -478,7 +478,7 @@ txt(slide, Inches(1.5), Inches(6.5), Inches(10), Inches(0.6),
     26, GREEN, True, PP_ALIGN.CENTER)
 
 # ═══════════════════════════════════════════════════════════════════════════
-out = "/Users/paragagarwal/repos/memdog/docs/model-garden.pptx"
+out = "/Users/paragagarwal/repos/mem-dog/docs/model-garden.pptx"
 prs.save(out)
 print(f"Saved: {out}")
 print(f"Slides: {len(prs.slides)}")

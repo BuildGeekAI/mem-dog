@@ -78,7 +78,7 @@
 |----------|-------------|
 | [Overview](digime/overview.mdx) | DigiMe agent intro, 25+ channels |
 | [Channels](digime/channels.mdx) | Supported messaging platforms |
-| [Skills](digime/skills.mdx) | 4 memdog skills, request/response |
+| [Skills](digime/skills.mdx) | 4 mem-dog skills, request/response |
 | [Multi-User](digime/multi-user.mdx) | Identity resolution, data isolation |
 | [Deployment](openclaw-node/README.md) | K8s deployment, config, skills setup |
 

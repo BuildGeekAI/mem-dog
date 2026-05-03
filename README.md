@@ -1,4 +1,4 @@
-# memdog
+# mem-dog
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Docker Compose](https://img.shields.io/badge/Docker_Compose-ready-blue.svg)](docker-compose.yml)
@@ -9,11 +9,11 @@ Ingest data from 300+ apps, enrich it with a 42-agent AI pipeline, store it with
 
 ---
 
-## Why memdog?
+## Why mem-dog?
 
-Most AI memory solutions solve one piece of the puzzle. **memdog solves the whole thing:**
+Most AI memory solutions solve one piece of the puzzle. **mem-dog solves the whole thing:**
 
-| Capability | memdog | mem0 | Zep | Dify.ai | LangMem |
+| Capability | mem-dog | mem0 | Zep | Dify.ai | LangMem |
 |-----------|---------|------|-----|---------|---------|
 | Multi-channel ingestion (300+ apps, Nango-powered) | **Yes** | No | No | No | No |
 | Per-user webhook endpoints (whk_<ulid>) | **Yes** | No | No | No | No |
@@ -28,7 +28,7 @@ Most AI memory solutions solve one piece of the puzzle. **memdog solves the whol
 | Automatic OAuth token refresh (Nango) | **Yes** | No | No | No | No |
 | Self-hosted, free | **Yes** | Open source (limited) | Open source (Graphiti) | Open source | Open source |
 
-**memdog = mem0 (memory) + Zep (knowledge graph) + Nango (integrations) + Dify (AI workflows) in one platform.**
+**mem-dog = mem0 (memory) + Zep (knowledge graph) + Nango (integrations) + Dify (AI workflows) in one platform.**
 
 ---
 
@@ -114,7 +114,7 @@ docker compose up
 
 ## Search: 5 Modes, 4 Rerankers
 
-memdog's search combines pgvector, BM25 full-text, and Graphiti's temporal knowledge graph:
+mem-dog's search combines pgvector, BM25 full-text, and Graphiti's temporal knowledge graph:
 
 | Mode | What it does | Best for |
 |------|-------------|----------|
@@ -214,7 +214,7 @@ Dual-layer: **Postgres** (always active, zero infra) + **Graphiti/Neo4j** (optio
 
 ## Comparisons
 
-| | memdog | mem0 | Zep | Dify.ai | LangMem |
+| | mem-dog | mem0 | Zep | Dify.ai | LangMem |
 |-|---------|------|-----|---------|---------|
 | **Focus** | Private AI system | Memory SDK | Context engine | LLM app builder | LangChain memory |
 | **Ingestion** | 300+ apps (Nango) + webhooks + UI | API only | API only | File upload | API only |
@@ -227,14 +227,14 @@ Dual-layer: **Postgres** (always active, zero infra) + **Graphiti/Neo4j** (optio
 | **Self-hosted** | Free, Docker/GKE | Open source | Open source (Graphiti) | Open source | Open source |
 | **Cost at 10K items/mo** | ~$50-100 (local models) | ~$260-280 (cloud API) | Varies | Varies | Free |
 
-Detailed comparisons: [vs mem0](docs/comparisons/comparison-mem0.md) | [vs Zep](docs/comparisons/comparison-zep.md) | [Nango (used by memdog)](docs/comparisons/comparison-nango.md)
+Detailed comparisons: [vs mem0](docs/comparisons/comparison-mem0.md) | [vs Zep](docs/comparisons/comparison-zep.md) | [Nango (used by mem-dog)](docs/comparisons/comparison-nango.md)
 
 ---
 
 ## Project Structure
 
 ```
-memdog/
+mem-dog/
 ├── api/                  # Core API (FastAPI)
 ├── ui/                   # Web frontend (Next.js 14)
 ├── webhook/              # Data processing pipeline (NATS + 42 agents)

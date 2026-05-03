@@ -1,6 +1,6 @@
-# @memdog/client
+# @mem-dog/client
 
-TypeScript SDK for the [memdog](https://github.com/memdog/memdog) private AI system. Zero runtime dependencies — uses native `fetch`.
+TypeScript SDK for the [mem-dog](https://github.com/mem-dog/mem-dog) private AI system. Zero runtime dependencies — uses native `fetch`.
 
 ## Requirements
 
@@ -9,7 +9,7 @@ TypeScript SDK for the [memdog](https://github.com/memdog/memdog) private AI sys
 ## Install
 
 ```bash
-npm install @memdog/client
+npm install @mem-dog/client
 ```
 
 ## Two Client Layers
@@ -22,7 +22,7 @@ npm install @memdog/client
 ## Quick Start — Simple Facade
 
 ```ts
-import { MemDog } from "@memdog/client";
+import { MemDog } from "@mem-dog/client";
 
 const m = new MemDog({ baseUrl: "http://localhost:8080", apiKey: "my-key", userId: "user_abc" });
 
@@ -38,7 +38,7 @@ const stats = await m.client.getStats();
 ## Quick Start — Full Client
 
 ```ts
-import { MemDogClient } from "@memdog/client";
+import { MemDogClient } from "@mem-dog/client";
 
 const c = new MemDogClient({ baseUrl: "http://localhost:8080", apiKey: "my-key" });
 
@@ -109,7 +109,7 @@ const usage = await c.getTokenUsage("user_123");
 ## Error Handling
 
 ```ts
-import { MemDogError } from "@memdog/client";
+import { MemDogError } from "@mem-dog/client";
 
 try {
   await c.getData("data_nonexistent");

@@ -6,7 +6,7 @@ metadata:
   name: openclaw-node-routes
   namespace: webhook-gateway
   labels:
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: openclaw-node
 spec:
   parentRefs:

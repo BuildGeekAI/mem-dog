@@ -1,6 +1,6 @@
 # Google Meet
 
-Connect Google Meet to memdog to access meeting data and recordings.
+Connect Google Meet to mem-dog to access meeting data and recordings.
 
 **Category:** Video & Meetings
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Google Meet to memdog to access meeting data and recordings.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Google Meet
@@ -18,7 +18,7 @@ Connect Google Meet to memdog to access meeting data and recordings.
 1. In the UI, go to **Settings > Apps**
 2. Find **Google Meet** under the "Video & Meetings" category
 3. Click **Connect**
-4. Authorize memdog via Google Meet's OAuth consent screen
+4. Authorize mem-dog via Google Meet's OAuth consent screen
 5. The Google Meet card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -41,9 +41,9 @@ curl https://<your-api>/api/v1/integrations/proxy/google-meet/calendar/v3/calend
 - Calendar event details
 - Meeting recordings (via Google Drive)
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Google Meet and store in memdog:
+Pull data from Google Meet and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

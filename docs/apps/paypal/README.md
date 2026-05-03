@@ -1,6 +1,6 @@
 # PayPal
 
-Connect PayPal to memdog to sync payment data, transactions, and disputes.
+Connect PayPal to mem-dog to sync payment data, transactions, and disputes.
 
 **Category:** Finance
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect PayPal to memdog to sync payment data, transactions, and disputes.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect PayPal
@@ -18,7 +18,7 @@ Connect PayPal to memdog to sync payment data, transactions, and disputes.
 1. In the UI, go to **Settings > Apps**
 2. Find **PayPal** under the "Finance" category
 3. Click **Connect**
-4. Authorize memdog via PayPal's OAuth consent screen
+4. Authorize mem-dog via PayPal's OAuth consent screen
 5. The PayPal card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -39,9 +39,9 @@ For webhooks:
 - Dispute and refund events
 - Subscription billing events
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from PayPal and store in memdog:
+Pull data from PayPal and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

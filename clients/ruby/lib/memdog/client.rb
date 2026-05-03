@@ -15,7 +15,7 @@ module MemDog
     end
   end
 
-  # Full-coverage memdog API client (~80 methods).
+  # Full-coverage mem-dog API client (~80 methods).
   # For a simpler 7-method facade see MemDog::Simple.
   class Client
     def initialize(base_url:, api_key: nil, user_id: nil, timeout: 30)

@@ -1,7 +1,7 @@
-"""Read-only proxy to the memdog API.
+"""Read-only proxy to the mem-dog API.
 
 Forwards GET requests for users, data, memories, embeddings,
-channel identities, and stats to the upstream memdog API.
+channel identities, and stats to the upstream mem-dog API.
 All endpoints are protected by the gateway's existing auth middleware.
 
 Supports ``?pipeline=gke`` on every endpoint to route to the in-cluster
@@ -26,7 +26,7 @@ _TIMEOUT_S = 15.0
 
 
 async def _proxy_get(path: str, request: Request) -> Any:
-    """Forward a GET request to the memdog API, preserving query params.
+    """Forward a GET request to the mem-dog API, preserving query params.
 
     Supports ``?pipeline=gke`` to route to the GKE API instead of Cloud Run.
     The ``pipeline`` param is stripped before forwarding.

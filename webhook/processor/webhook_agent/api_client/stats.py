@@ -1,6 +1,6 @@
 """Stats API client.
 
-Manages live per-agent-type data counts via the memdog
+Manages live per-agent-type data counts via the mem-dog
 ``/api/v1/stats/agent-types`` endpoints.
 """
 

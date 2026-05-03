@@ -102,7 +102,7 @@ const CONCEPTS = [
   {
     title: 'MCP Server',
     icon: Server,
-    desc: 'Model Context Protocol server exposing memdog as 8 tools (search, add, get, delete, entities, chat, memories, list_data) over SSE transport. Connect Claude Desktop, Cursor, or any MCP-compatible agent to your memdog instance. Per-user auth via md_* API keys — every tool call scopes to the authenticated user. Deployed on GKE in the memdog namespace, proxied via the gateway at /mcp/sse. The MCP server is a thin proxy over the API using the mem_dog_client SDK, so all data access policies and auth apply identically.',
+    desc: 'Model Context Protocol server exposing mem-dog as 8 tools (search, add, get, delete, entities, chat, memories, list_data) over SSE transport. Connect Claude Desktop, Cursor, or any MCP-compatible agent to your mem-dog instance. Per-user auth via md_* API keys — every tool call scopes to the authenticated user. Deployed on GKE in the mem-dog namespace, proxied via the gateway at /mcp/sse. The MCP server is a thin proxy over the API using the mem_dog_client SDK, so all data access policies and auth apply identically.',
   },
 ];
 
@@ -619,7 +619,7 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: 'How is data stored?',
-    a: 'The storage backend is configurable via the STORAGE_BACKEND env var. Three options: local filesystem (~/.memdog) for development — simple file-based storage with directory structure. Google Cloud Storage (GCS) for production — scalable object storage with automatic backups. Supabase for hybrid storage — PostgreSQL for metadata and structured data, pgvector extension for vector embeddings, and optional blob storage for large files.',
+    a: 'The storage backend is configurable via the STORAGE_BACKEND env var. Three options: local filesystem (~/.mem-dog) for development — simple file-based storage with directory structure. Google Cloud Storage (GCS) for production — scalable object storage with automatic backups. Supabase for hybrid storage — PostgreSQL for metadata and structured data, pgvector extension for vector embeddings, and optional blob storage for large files.',
   },
   {
     q: 'How do I authenticate?',

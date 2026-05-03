@@ -1,6 +1,6 @@
 # Twilio Integration — Setup Guide
 
-Ingest SMS and WhatsApp messages into memdog via Twilio webhooks.
+Ingest SMS and WhatsApp messages into mem-dog via Twilio webhooks.
 
 ## Architecture
 
@@ -8,7 +8,7 @@ Ingest SMS and WhatsApp messages into memdog via Twilio webhooks.
 graph LR
     SMS[SMS / WhatsApp] --> TWILIO[Twilio]
     TWILIO -- "webhook POST" --> GW[Webhook Gateway<br/>Twilio adapter]
-    GW --> API[memdog API]
+    GW --> API[mem-dog API]
     API --> PIPE[AI Pipeline]
 ```
 
@@ -50,7 +50,7 @@ For WhatsApp via Twilio:
 
 1. Send an SMS to your Twilio number
 2. Or send a WhatsApp message to your Twilio WhatsApp number
-3. Check memdog Data tab for the message
+3. Check mem-dog Data tab for the message
 
 ```bash
 kubectl logs -n webhook-gateway deployment/webhook-gateway --since=5m | grep -i twilio

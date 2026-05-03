@@ -1,4 +1,4 @@
-"""Download channel attachments and ingest them into memdog.
+"""Download channel attachments and ingest them into mem-dog.
 
 Supports multiple download strategies per channel:
 - **Slack**: Bearer token from Nango (url_private requires bot token)

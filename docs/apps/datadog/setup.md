@@ -1,13 +1,13 @@
 # Datadog Integration — Setup Guide
 
-Ingest Datadog monitor alerts and events into memdog.
+Ingest Datadog monitor alerts and events into mem-dog.
 
 ## Architecture
 
 ```mermaid
 graph LR
     DD[Datadog] -- "webhook POST" --> GW[Webhook Gateway<br/>/webhooks/datadog]
-    GW --> API[memdog API] --> PIPE[AI Pipeline]
+    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested
@@ -20,11 +20,11 @@ graph LR
 ## Setup
 
 1. In Datadog → **Integrations → Webhooks**
-2. **Name**: `memdog`
+2. **Name**: `mem-dog`
 3. **URL**: `http://34.36.80.165/webhooks/datadog`
 4. **Payload**: Use default (JSON with `$EVENT_TITLE`, `$ALERT_STATUS`, etc.)
 5. **Save**
-6. Add `@webhook-memdog` to any monitor's notification message
+6. Add `@webhook-mem-dog` to any monitor's notification message
 
 ## Test
 

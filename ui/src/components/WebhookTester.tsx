@@ -242,7 +242,7 @@ export default function WebhookTester() {
               type="url"
               value={backendUrl}
               onChange={e => setBackendUrl(e.target.value)}
-              placeholder="https://memdog-webhook-gw-dev-2lyzlc04.uc.gateway.dev/webhook"
+              placeholder="https://mem-dog-webhook-gw-dev-2lyzlc04.uc.gateway.dev/webhook"
               className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 font-mono text-sm transition-all"
             />
           </div>

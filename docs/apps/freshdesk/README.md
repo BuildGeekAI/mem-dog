@@ -1,6 +1,6 @@
 # Freshdesk
 
-Connect Freshdesk to memdog to sync support tickets and customer interactions.
+Connect Freshdesk to mem-dog to sync support tickets and customer interactions.
 
 **Category:** Customer Support
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Freshdesk to memdog to sync support tickets and customer interactions.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Freshdesk
@@ -18,7 +18,7 @@ Connect Freshdesk to memdog to sync support tickets and customer interactions.
 1. In the UI, go to **Settings > Apps**
 2. Find **Freshdesk** under the "Customer Support" category
 3. Click **Connect**
-4. Authorize memdog via Freshdesk's OAuth consent screen
+4. Authorize mem-dog via Freshdesk's OAuth consent screen
 5. The Freshdesk card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ For webhooks, create an automation rule in Freshdesk that POSTs to your `inbound
 - Knowledge base articles
 - Canned responses
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Freshdesk and store in memdog:
+Pull data from Freshdesk and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

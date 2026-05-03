@@ -1,6 +1,6 @@
 # Facebook
 
-Connect Facebook to memdog to ingest page posts, comments, and messenger conversations.
+Connect Facebook to mem-dog to ingest page posts, comments, and messenger conversations.
 
 **Category:** Social Media
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Facebook to memdog to ingest page posts, comments, and messenger convers
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Facebook
@@ -18,7 +18,7 @@ Connect Facebook to memdog to ingest page posts, comments, and messenger convers
 1. In the UI, go to **Settings > Apps**
 2. Find **Facebook** under the "Social Media" category
 3. Click **Connect**
-4. Authorize memdog via Facebook's OAuth consent screen
+4. Authorize mem-dog via Facebook's OAuth consent screen
 5. The Facebook card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -58,7 +58,7 @@ Facebook event → Webhook Gateway → normalizes → NATS queue
 - Reactions and shares
 - Page insights and analytics
 
-## Ingest into memdog
+## Ingest into mem-dog
 
 Data from Facebook flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

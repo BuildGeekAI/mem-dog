@@ -1,4 +1,4 @@
-# API Gateway OpenAPI specification for the memdog webhook endpoint.
+# API Gateway OpenAPI specification for the mem-dog webhook endpoint.
 #
 # This spec configures GCP API Gateway to:
 #   1. Route POST /webhook to the receiver Cloud Function
@@ -12,7 +12,7 @@ swagger: "2.0"
 info:
   title: Mem-Dog Webhook API
   description: >
-    Webhook ingestion endpoint for the memdog private AI system.
+    Webhook ingestion endpoint for the mem-dog private AI system.
     Accepts arbitrary JSON payloads and routes them through Pub/Sub
     for asynchronous processing by an ADK agent.
   version: "1.0.0"

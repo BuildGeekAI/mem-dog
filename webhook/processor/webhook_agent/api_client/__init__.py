@@ -1,4 +1,4 @@
-"""API client package for the memdog webhook agent.
+"""API client package for the mem-dog webhook agent.
 
 Exposes module-level singletons so that every part of the agent package
 shares the same client instances (and therefore the same base URL).

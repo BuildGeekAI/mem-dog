@@ -7,7 +7,7 @@ Ingest app reviews from Apple and Google.
 ```mermaid
 graph LR
     SRC[App Store / Play Store] -- "API polling" --> GW[Webhook Gateway<br/>/webhooks/appstore]
-    GW --> API[memdog API] --> PIPE[AI Pipeline]
+    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

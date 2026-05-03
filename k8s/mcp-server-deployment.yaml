@@ -2,10 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mcp-server
-  namespace: memdog
+  namespace: mem-dog
   labels:
     app.kubernetes.io/name: mcp-server
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: mcp-server
 spec:
   replicas: 1
@@ -18,7 +18,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: mcp-server
-        app.kubernetes.io/part-of: memdog
+        app.kubernetes.io/part-of: mem-dog
         app.kubernetes.io/component: mcp-server
     spec:
       containers:

@@ -146,7 +146,7 @@ async def _ingest_to_graphiti(
             name=data_id,
             episode_body=episode_body,
             source=EpisodeType.text,
-            source_description=f"memdog-entity-extraction (user:{user_id})",
+            source_description=f"mem-dog-entity-extraction (user:{user_id})",
             reference_time=datetime.now(timezone.utc),
         )
         logger.info("Graphiti episode created for data_id=%s (%d entities, %d rels)",

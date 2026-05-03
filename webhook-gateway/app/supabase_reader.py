@@ -1,12 +1,12 @@
 """Read-only Supabase client for direct blob reads.
 
 When ``SUPABASE_URL`` and ``SUPABASE_KEY`` are configured, the gateway can
-bypass the memdog API for high-frequency read operations (identity lookups,
+bypass the mem-dog API for high-frequency read operations (identity lookups,
 memory existence checks, channel config).  All writes still go through the
-memdog API to preserve index updates and stats tracking.
+mem-dog API to preserve index updates and stats tracking.
 
 If Supabase is not configured or a query fails, callers fall back to the
-memdog API transparently.
+mem-dog API transparently.
 """
 
 from __future__ import annotations

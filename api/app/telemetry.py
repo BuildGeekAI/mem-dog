@@ -8,7 +8,7 @@ and falls back to console output for local development.
 
 Environment variables consumed (also mirrored in config.py):
     OTEL_ENABLED              - "true" (default) or "false"
-    OTEL_SERVICE_NAME         - defaults to "memdog-api"
+    OTEL_SERVICE_NAME         - defaults to "mem-dog-api"
     OTEL_EXPORTER_OTLP_ENDPOINT - e.g. "http://localhost:4317"
     OTEL_EXPORTER_OTLP_PROTOCOL - "grpc" (default) or "http/protobuf"
     LOG_LEVEL                 - Python log level, defaults to "INFO"

@@ -1,4 +1,4 @@
-"""Simplified memdog client.
+"""Simplified mem-dog client.
 
 Provides a high-level ``MemDog`` facade with four methods —
 ``add()``, ``search()``, ``get()``, ``delete()`` — that orchestrate
@@ -14,7 +14,7 @@ from mem_dog_client.client import MemDogClient
 
 
 class MemDog:
-    """High-level memdog client.
+    """High-level mem-dog client.
 
     Example::
 

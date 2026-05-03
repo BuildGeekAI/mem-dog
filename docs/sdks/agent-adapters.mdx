@@ -1,16 +1,16 @@
 ---
 title: "Agent Adapters"
-description: "LangChain, CrewAI, OpenAI function calling, and MCP integrations for memdog"
+description: "LangChain, CrewAI, OpenAI function calling, and MCP integrations for mem-dog"
 icon: "robot"
 ---
 
-Agent adapters let you use memdog as the memory layer for popular AI agent frameworks.
+Agent adapters let you use mem-dog as the memory layer for popular AI agent frameworks.
 
 ## LangChain
 
 ### ChatMessageHistory
 
-Use memdog as LangChain's conversation memory backend:
+Use mem-dog as LangChain's conversation memory backend:
 
 ```python
 from mem_dog_client.langchain import MemDogChatMessageHistory
@@ -30,7 +30,7 @@ messages = history.messages  # Returns all messages in session
 
 ### Retriever
 
-Use memdog as a LangChain retriever for RAG chains:
+Use mem-dog as a LangChain retriever for RAG chains:
 
 ```python
 from mem_dog_client.langchain import MemDogRetriever
@@ -73,7 +73,7 @@ researcher = Agent(
 
 ## OpenAI Function Calling
 
-Register memdog operations as OpenAI function definitions:
+Register mem-dog operations as OpenAI function definitions:
 
 ```python
 from mem_dog_client.openai import get_mem_dog_tools, handle_tool_call

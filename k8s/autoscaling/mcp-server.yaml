@@ -3,9 +3,9 @@ apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
   name: mcp-server-scaler
-  namespace: memdog
+  namespace: mem-dog
   labels:
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
 spec:
   scaleTargetRef:
     name: mcp-server

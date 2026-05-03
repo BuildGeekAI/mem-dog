@@ -1,6 +1,6 @@
 # WhatsApp Business
 
-Connect WhatsApp Business to memdog to ingest customer conversations and media.
+Connect WhatsApp Business to mem-dog to ingest customer conversations and media.
 
 **Category:** Messaging
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect WhatsApp Business to memdog to ingest customer conversations and media.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect WhatsApp Business
@@ -18,7 +18,7 @@ Connect WhatsApp Business to memdog to ingest customer conversations and media.
 1. In the UI, go to **Settings > Apps**
 2. Find **WhatsApp Business** under the "Messaging" category
 3. Click **Connect**
-4. Authorize memdog via WhatsApp Business's OAuth consent screen
+4. Authorize mem-dog via WhatsApp Business's OAuth consent screen
 5. The WhatsApp Business card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -58,7 +58,7 @@ WhatsApp Business event → Webhook Gateway → normalizes → NATS queue
 - Message status updates (sent, delivered, read)
 - Contact and location messages
 
-## Ingest into memdog
+## Ingest into mem-dog
 
 Data from WhatsApp Business flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

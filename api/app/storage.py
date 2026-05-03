@@ -1915,7 +1915,7 @@ class BaseStorage(ABC):
                 is_downloaded=is_downloaded,
                 owner=final_owner,
                 provenance=provenance,
-                source_service=source_service or "memdog-api",
+                source_service=source_service or "mem-dog-api",
                 data_version_label=version_label,
             )
             self.store_metadata(metadata)
@@ -4098,7 +4098,7 @@ class BaseStorage(ABC):
         key_id = str(uuid.uuid4())[:8]  # Short key ID
         
         # Generate a secure API key
-        raw_key = f"md_{secrets.token_urlsafe(32)}"  # md_ prefix for memdog
+        raw_key = f"md_{secrets.token_urlsafe(32)}"  # md_ prefix for mem-dog
         key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
         
         # Calculate expiry if specified

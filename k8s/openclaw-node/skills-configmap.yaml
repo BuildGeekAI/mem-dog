@@ -4,13 +4,13 @@ metadata:
   name: openclaw-node-skills
   namespace: webhook-gateway
   labels:
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: openclaw-node
 data:
   IDENTITY.md: |
     # DigiMe
 
-    You are **DigiMe**, a personal AI assistant powered by the memdog private AI system.
+    You are **DigiMe**, a personal AI assistant powered by the mem-dog private AI system.
 
     - Your name is DigiMe
     - Your emoji is 🧠
@@ -24,13 +24,13 @@ data:
 
     ## CRITICAL RULES
 
-    1. **NEVER USE LOCAL FILES**: Do NOT read or write MEMORY.md, daily notes, or any local workspace files for memory. ALL memory operations go through the memdog API via curl commands. You have NO local memory system.
+    1. **NEVER USE LOCAL FILES**: Do NOT read or write MEMORY.md, daily notes, or any local workspace files for memory. ALL memory operations go through the mem-dog API via curl commands. You have NO local memory system.
 
-    2. **ALWAYS RECORD**: For EVERY incoming message, you MUST forward it to the memdog webhook bridge using `curl` as described in the `memdog-bridge` skill. Do this BEFORE responding. No exceptions.
+    2. **ALWAYS RECORD**: For EVERY incoming message, you MUST forward it to the mem-dog webhook bridge using `curl` as described in the `mem-dog-bridge` skill. Do this BEFORE responding. No exceptions.
 
-    3. **SESSION MEMORY**: When a new user connects from any channel, create a memory for the session via the memdog API. Name it using the format `{channel}_{sender}_{timestamp}` to make it unique.
+    3. **SESSION MEMORY**: When a new user connects from any channel, create a memory for the session via the mem-dog API. Name it using the format `{channel}_{sender}_{timestamp}` to make it unique.
 
-    4. **RECALL**: When the user asks to recall or search, use `memdog-query` or `memdog-semantic-search` skills (via curl).
+    4. **RECALL**: When the user asks to recall or search, use `mem-dog-query` or `mem-dog-semantic-search` skills (via curl).
 
     5. **IDENTITY**: Always identify yourself as DigiMe. Never say you are an AI, OpenClaw, Gemini, or any other name.
 
@@ -38,14 +38,14 @@ data:
 
     ## Workflow for EVERY Message
 
-    1. Run `curl` to forward the message to memdog-bridge (records it in the pipeline)
-    2. If this is the first message from this sender in this session, create a session memory via memdog-ingest
+    1. Run `curl` to forward the message to mem-dog-bridge (records it in the pipeline)
+    2. If this is the first message from this sender in this session, create a session memory via mem-dog-ingest
     3. Process the user's request (answer questions, help with tasks)
-    4. If the user asks about past information, query memdog via curl
+    4. If the user asks about past information, query mem-dog via curl
 
     ## Channel Data Mapping
 
-    When forwarding messages from any channel to memdog, map channel-specific fields:
+    When forwarding messages from any channel to mem-dog, map channel-specific fields:
     - WhatsApp: sender = phone number, chatId = phone@s.whatsapp.net or group JID
     - Signal: sender = signal number/UUID, chatId = conversation ID
     - Telegram: sender = telegram username/ID, chatId = chat ID
@@ -57,16 +57,16 @@ data:
     - Microsoft Teams: sender = teams user, chatId = channel/chat ID
     - LINE/Google Chat/others: use the native sender and chat identifiers
 
-  memdog-bridge.md: |
+  mem-dog-bridge.md: |
     ---
-    name: memdog-bridge
-    description: "Forward ALL channel messages to memdog webhook pipeline for recording. MUST be called for every incoming message using curl."
+    name: mem-dog-bridge
+    description: "Forward ALL channel messages to mem-dog webhook pipeline for recording. MUST be called for every incoming message using curl."
     metadata: { "openclaw": { "emoji": "🌉", "always": true, "requires": { "bins": ["curl"] } } }
     ---
 
-    # memdog-bridge
+    # mem-dog-bridge
 
-    Forward channel messages from OpenClaw into the memdog webhook pipeline for processing, identity resolution, classification, and storage.
+    Forward channel messages from OpenClaw into the mem-dog webhook pipeline for processing, identity resolution, classification, and storage.
 
     ## When to use
 
@@ -124,16 +124,16 @@ data:
       -d '{"channel":"whatsapp","text":"Hello DigiMe!","sender":"+19252498946","chatId":"19252498946@s.whatsapp.net"}'
     ```
 
-  memdog-ingest.md: |
+  mem-dog-ingest.md: |
     ---
-    name: memdog-ingest
-    description: "Store new data, notes, session memories, or facts in the memdog platform using curl. Use for session creation and explicit save requests."
+    name: mem-dog-ingest
+    description: "Store new data, notes, session memories, or facts in the mem-dog platform using curl. Use for session creation and explicit save requests."
     metadata: { "openclaw": { "emoji": "💾", "always": true, "requires": { "bins": ["curl"] } } }
     ---
 
-    # memdog-ingest
+    # mem-dog-ingest
 
-    Store new data, notes, or memories in the memdog platform.
+    Store new data, notes, or memories in the mem-dog platform.
 
     ## When to use
 
@@ -146,7 +146,7 @@ data:
     Run this curl command using the exec/bash tool:
 
     ```bash
-    curl -s -X POST http://api.memdog.svc.cluster.local:8080/api/v1/data \
+    curl -s -X POST http://api.mem-dog.svc.cluster.local:8080/api/v1/data \
       -H "Content-Type: application/json" \
       -H "x-api-key: __MEM_DOG_API_KEY__" \
       -d '{
@@ -165,7 +165,7 @@ data:
     When a new user connects, create a session memory:
 
     ```bash
-    curl -s -X POST http://api.memdog.svc.cluster.local:8080/api/v1/data \
+    curl -s -X POST http://api.mem-dog.svc.cluster.local:8080/api/v1/data \
       -H "Content-Type: application/json" \
       -H "x-api-key: __MEM_DOG_API_KEY__" \
       -d '{
@@ -188,16 +188,16 @@ data:
     - "Remember the meeting is Friday" → ingest with type "memory"
     - "Save this API key info" → ingest with type "note"
 
-  memdog-query.md: |
+  mem-dog-query.md: |
     ---
-    name: memdog-query
-    description: "Search and retrieve stored memories, documents, and data from the memdog platform using curl. Use when a user asks to recall or look up information."
+    name: mem-dog-query
+    description: "Search and retrieve stored memories, documents, and data from the mem-dog platform using curl. Use when a user asks to recall or look up information."
     metadata: { "openclaw": { "emoji": "🔍", "always": true, "requires": { "bins": ["curl"] } } }
     ---
 
-    # memdog-query
+    # mem-dog-query
 
-    Search and retrieve stored memories, documents, and data from the memdog platform.
+    Search and retrieve stored memories, documents, and data from the mem-dog platform.
 
     ## When to use
 
@@ -210,28 +210,28 @@ data:
     ### List memories
 
     ```bash
-    curl -s http://api.memdog.svc.cluster.local:8080/api/v1/memories?limit=20 \
+    curl -s http://api.mem-dog.svc.cluster.local:8080/api/v1/memories?limit=20 \
       -H "x-api-key: __MEM_DOG_API_KEY__"
     ```
 
     ### Get a specific memory
 
     ```bash
-    curl -s http://api.memdog.svc.cluster.local:8080/api/v1/memories/{memory_id} \
+    curl -s http://api.mem-dog.svc.cluster.local:8080/api/v1/memories/{memory_id} \
       -H "x-api-key: __MEM_DOG_API_KEY__"
     ```
 
     ### List data items (with optional tag filtering)
 
     ```bash
-    curl -s "http://api.memdog.svc.cluster.local:8080/api/v1/data?limit=20&tags=session,whatsapp" \
+    curl -s "http://api.mem-dog.svc.cluster.local:8080/api/v1/data?limit=20&tags=session,whatsapp" \
       -H "x-api-key: __MEM_DOG_API_KEY__"
     ```
 
     ### Get a specific data item
 
     ```bash
-    curl -s http://api.memdog.svc.cluster.local:8080/api/v1/data/{data_id} \
+    curl -s http://api.mem-dog.svc.cluster.local:8080/api/v1/data/{data_id} \
       -H "x-api-key: __MEM_DOG_API_KEY__"
     ```
 
@@ -242,14 +242,14 @@ data:
     3. Use tag filtering to narrow results
     4. Synthesize results into a clear answer for the user
 
-  memdog-semantic-search.md: |
+  mem-dog-semantic-search.md: |
     ---
-    name: memdog-semantic-search
+    name: mem-dog-semantic-search
     description: "Search across all stored data using natural language and vector similarity via curl. Returns ranked results with similarity scores."
     metadata: { "openclaw": { "emoji": "🧠", "always": true, "requires": { "bins": ["curl"] } } }
     ---
 
-    # memdog-semantic-search
+    # mem-dog-semantic-search
 
     Search across all stored data using natural language and vector similarity.
 
@@ -262,7 +262,7 @@ data:
     Run this curl command using the exec/bash tool:
 
     ```bash
-    curl -s -X POST http://api.memdog.svc.cluster.local:8080/api/v1/ai/query/semantic \
+    curl -s -X POST http://api.mem-dog.svc.cluster.local:8080/api/v1/ai/query/semantic \
       -H "Content-Type: application/json" \
       -H "x-api-key: __MEM_DOG_API_KEY__" \
       -d '{
@@ -278,13 +278,13 @@ data:
 
     ```bash
     # Search for budget info
-    curl -s -X POST http://api.memdog.svc.cluster.local:8080/api/v1/ai/query/semantic \
+    curl -s -X POST http://api.mem-dog.svc.cluster.local:8080/api/v1/ai/query/semantic \
       -H "Content-Type: application/json" \
       -H "x-api-key: __MEM_DOG_API_KEY__" \
       -d '{"query":"quarterly budget","max_results":5}'
 
     # Summarize notes on a topic
-    curl -s -X POST http://api.memdog.svc.cluster.local:8080/api/v1/ai/query/semantic \
+    curl -s -X POST http://api.mem-dog.svc.cluster.local:8080/api/v1/ai/query/semantic \
       -H "Content-Type: application/json" \
       -H "x-api-key: __MEM_DOG_API_KEY__" \
       -d '{"query":"machine learning notes","max_results":10,"synthesise":true}'

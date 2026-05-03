@@ -1,4 +1,4 @@
-"""MCP tool implementations backed by the memdog API."""
+"""MCP tool implementations backed by the mem-dog API."""
 
 from __future__ import annotations
 

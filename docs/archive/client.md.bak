@@ -1,6 +1,6 @@
 # Python Client SDK
 
-Synchronous Python client for the memdog REST API.
+Synchronous Python client for the mem-dog REST API.
 
 **Directory:** `client/` · **Package:** `mem_dog_client`
 

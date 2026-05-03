@@ -1,13 +1,13 @@
 # Jira Integration — Setup Guide
 
-Ingest Jira issue events, comments, sprint changes, and attachments into memdog.
+Ingest Jira issue events, comments, sprint changes, and attachments into mem-dog.
 
 ## Architecture
 
 ```mermaid
 graph LR
     JIRA[Jira] -- "webhook POST" --> GW[Webhook Gateway<br/>/webhooks/jira]
-    GW --> API[memdog API] --> PIPE[AI Pipeline]
+    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

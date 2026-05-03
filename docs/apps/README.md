@@ -1,6 +1,6 @@
 # App Integrations
 
-memdog integrates with 86+ applications via [Nango](https://www.nango.dev/) (self-hosted). Each app has a setup guide with authentication details and configuration steps.
+mem-dog integrates with 86+ applications via [Nango](https://www.nango.dev/) (self-hosted). Each app has a setup guide with authentication details and configuration steps.
 
 | App | Category | Link |
 |-----|----------|------|

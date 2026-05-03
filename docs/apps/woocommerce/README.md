@@ -1,6 +1,6 @@
 # WooCommerce
 
-Connect WooCommerce to memdog to sync orders, products, and store data.
+Connect WooCommerce to mem-dog to sync orders, products, and store data.
 
 **Category:** Commerce & Content
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect WooCommerce to memdog to sync orders, products, and store data.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect WooCommerce
@@ -18,7 +18,7 @@ Connect WooCommerce to memdog to sync orders, products, and store data.
 1. In the UI, go to **Settings > Apps**
 2. Find **WooCommerce** under the "Commerce & Content" category
 3. Click **Connect**
-4. Authorize memdog via WooCommerce's OAuth consent screen
+4. Authorize mem-dog via WooCommerce's OAuth consent screen
 5. The WooCommerce card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -43,9 +43,9 @@ For webhooks, go to **WooCommerce > Settings > Advanced > Webhooks** and add you
 - Coupons and tax data
 - Shipping and payment methods
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from WooCommerce and store in memdog:
+Pull data from WooCommerce and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

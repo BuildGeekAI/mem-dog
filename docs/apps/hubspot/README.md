@@ -1,6 +1,6 @@
 # HubSpot
 
-Connect HubSpot to memdog to sync contacts, deals, and CRM activity.
+Connect HubSpot to mem-dog to sync contacts, deals, and CRM activity.
 
 **Category:** CRM & Sales
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect HubSpot to memdog to sync contacts, deals, and CRM activity.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect HubSpot
@@ -18,7 +18,7 @@ Connect HubSpot to memdog to sync contacts, deals, and CRM activity.
 1. In the UI, go to **Settings > Apps**
 2. Find **HubSpot** under the "CRM & Sales" category
 3. Click **Connect**
-4. Authorize memdog via HubSpot's OAuth consent screen
+4. Authorize mem-dog via HubSpot's OAuth consent screen
 5. The HubSpot card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -50,9 +50,9 @@ For real-time updates, configure HubSpot webhooks in your app settings.
 - Tickets and conversations
 - Email tracking and engagement
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from HubSpot and store in memdog:
+Pull data from HubSpot and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

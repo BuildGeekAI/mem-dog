@@ -1,13 +1,13 @@
 # Stripe Integration — Setup Guide
 
-Ingest Stripe payment, invoice, subscription, and customer events into memdog.
+Ingest Stripe payment, invoice, subscription, and customer events into mem-dog.
 
 ## Architecture
 
 ```mermaid
 graph LR
     STRIPE[Stripe] -- "webhook POST" --> GW[Webhook Gateway<br/>/webhooks/stripe]
-    GW --> API[memdog API] --> PIPE[AI Pipeline]
+    GW --> API[mem-dog API] --> PIPE[AI Pipeline]
 ```
 
 ## What Gets Ingested

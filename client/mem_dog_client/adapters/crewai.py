@@ -1,4 +1,4 @@
-"""CrewAI adapter for memdog memory.
+"""CrewAI adapter for mem-dog memory.
 
 Provides ``MemDogCrewMemory`` with ``save()`` and ``search()`` methods
 compatible with CrewAI's memory interface.
@@ -24,7 +24,7 @@ from mem_dog_client.simple import MemDog
 
 
 class MemDogCrewMemory:
-    """CrewAI-compatible memory backed by memdog.
+    """CrewAI-compatible memory backed by mem-dog.
 
     Implements ``save()`` and ``search()`` which map to ``MemDog.add()``
     and ``MemDog.search()`` respectively.
@@ -47,7 +47,7 @@ class MemDogCrewMemory:
         metadata: Optional[dict[str, Any]] = None,
         tags: Optional[list[str]] = None,
     ) -> dict[str, Any]:
-        """Save content to memdog.
+        """Save content to mem-dog.
 
         Args:
             content: Text content to store.
@@ -76,7 +76,7 @@ class MemDogCrewMemory:
         limit: int = 10,
         use_ai: bool = False,
     ) -> list[dict[str, Any]]:
-        """Search memdog memory.
+        """Search mem-dog memory.
 
         Args:
             query: Search query text.
@@ -94,5 +94,5 @@ class MemDogCrewMemory:
         )
 
     def reset(self) -> None:
-        """No-op — memdog doesn't support bulk memory reset."""
+        """No-op — mem-dog doesn't support bulk memory reset."""
         pass

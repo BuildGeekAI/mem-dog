@@ -1,12 +1,12 @@
 # Zoom Integration — Full Setup Guide
 
-Automatically ingest Zoom meeting recordings, transcripts, and chat logs into memdog when a meeting ends.
+Automatically ingest Zoom meeting recordings, transcripts, and chat logs into mem-dog when a meeting ends.
 
 ## Architecture
 
 ```mermaid
 graph LR
-    ZOOM[Zoom] -- "recording.completed" --> API[memdog API<br/>/api/v1/zoom/push]
+    ZOOM[Zoom] -- "recording.completed" --> API[mem-dog API<br/>/api/v1/zoom/push]
     API -- "download" --> NANGO[Nango Proxy<br/>OAuth token refresh]
     NANGO -- "Zoom API" --> ZOOM
     API -- "ingest" --> PG[(Postgres<br/>pgvector)]
@@ -21,7 +21,7 @@ graph LR
 
 ## Prerequisites
 
-- memdog stack running on GKE
+- mem-dog stack running on GKE
 - A Zoom account with Cloud Recording enabled (Pro/Business plan)
 - HTTPS endpoint (ngrok for dev)
 
@@ -30,7 +30,7 @@ graph LR
 1. Go to [marketplace.zoom.us](https://marketplace.zoom.us)
 2. Click **Develop** → **Build App**
 3. Choose **General App** (OAuth)
-4. Fill in app name (e.g. `memdog`)
+4. Fill in app name (e.g. `mem-dog`)
 5. Note the **Client ID** and **Client Secret**
 
 ## Step 2 — Configure OAuth
@@ -67,9 +67,9 @@ In the Zoom app → **Feature** → **Event Subscriptions**:
 
 4. Click **Save**
 
-Zoom will validate the endpoint URL with a challenge-response — memdog handles this automatically.
+Zoom will validate the endpoint URL with a challenge-response — mem-dog handles this automatically.
 
-## Step 4 — Configure in memdog UI
+## Step 4 — Configure in mem-dog UI
 
 1. Go to **Settings → Apps → Zoom**
 2. Click the **gear icon** (Configure)
@@ -82,7 +82,7 @@ After connecting, register the Nango connection so the recording handler can dow
 
 ```bash
 # Find your connection_id
-API_KEY=$(kubectl get secret api-auth-secret -n memdog -o jsonpath='{.data.API_KEY}' | base64 -d)
+API_KEY=$(kubectl get secret api-auth-secret -n mem-dog -o jsonpath='{.data.API_KEY}' | base64 -d)
 
 curl -s -H "x-api-key: $API_KEY" \
   "http://<gateway-ip>/gke-api/api/v1/integrations/connections" | python3 -m json.tool
@@ -103,14 +103,14 @@ curl -X POST "http://<gateway-ip>/gke-api/api/v1/zoom/register" \
 2. Record the meeting (even a short 1-min test)
 3. End the meeting
 4. Wait for Zoom to process the recording (~2-5 minutes)
-5. Check memdog:
+5. Check mem-dog:
    - **Data** tab — search for the meeting topic
    - **Timeline** — should show meeting metadata + transcript
 
 ### CLI verification
 
 ```bash
-kubectl logs -n memdog deployment/api --since=10m | grep -i "zoom\|recording\|ingest"
+kubectl logs -n mem-dog deployment/api --since=10m | grep -i "zoom\|recording\|ingest"
 ```
 
 ## API Endpoints
@@ -148,7 +148,7 @@ Each completed recording produces multiple data items:
 The Zoom webhook validation requires HMAC signing. Set the `ZOOM_WEBHOOK_SECRET` env var on the API:
 
 ```bash
-kubectl -n memdog set env deployment/api \
+kubectl -n mem-dog set env deployment/api \
   ZOOM_WEBHOOK_SECRET="<your-zoom-webhook-secret-token>"
 ```
 
@@ -158,7 +158,7 @@ Find the secret token in your Zoom app → Feature → Event Subscriptions → S
 
 - Verify the Zoom connection is registered: check `/data/zoom_connections.json` in the API pod
 - Check Nango has a valid Zoom connection: `kubectl exec -n nango nango-db-0 -- psql -U nango -d nango -c "SELECT * FROM _nango_connections WHERE provider_config_key='zoom';"`
-- Check API logs: `kubectl logs -n memdog deployment/api --since=10m | grep zoom`
+- Check API logs: `kubectl logs -n mem-dog deployment/api --since=10m | grep zoom`
 
 ### Large recordings skipped
 

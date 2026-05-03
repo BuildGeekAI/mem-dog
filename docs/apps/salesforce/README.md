@@ -1,6 +1,6 @@
 # Salesforce
 
-Connect Salesforce to memdog to sync CRM data -- leads, contacts, opportunities, and custom objects.
+Connect Salesforce to mem-dog to sync CRM data -- leads, contacts, opportunities, and custom objects.
 
 **Category:** CRM & Sales
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Salesforce to memdog to sync CRM data -- leads, contacts, opportunities,
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Salesforce
@@ -18,7 +18,7 @@ Connect Salesforce to memdog to sync CRM data -- leads, contacts, opportunities,
 1. In the UI, go to **Settings > Apps**
 2. Find **Salesforce** under the "CRM & Sales" category
 3. Click **Connect**
-4. Log in to your Salesforce org and authorize memdog
+4. Log in to your Salesforce org and authorize mem-dog
 5. The Salesforce card should now show **Active**
 
 ### 3. Query CRM Data
@@ -41,7 +41,7 @@ curl "https://<your-api>/api/v1/integrations/proxy/salesforce/services/data/v59.
 
 ### 4. Ingest CRM Data
 
-Pull Salesforce records and store them in memdog for AI-powered search:
+Pull Salesforce records and store them in mem-dog for AI-powered search:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \
@@ -72,4 +72,4 @@ curl "https://<your-api>/api/v1/integrations/proxy/salesforce/services/data/v59.
   -H "Authorization: Bearer <your-jwt>"
 ```
 
-Then ingest each record via `POST /api/v1/data` to keep your memdog knowledge base in sync.
+Then ingest each record via `POST /api/v1/data` to keep your mem-dog knowledge base in sync.

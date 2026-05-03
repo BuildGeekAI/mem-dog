@@ -1,14 +1,14 @@
 """AI API client — viewpoints and embeddings.
 
 After a sub-agent stages and analyses a payload, it calls this client to
-persist the results back into the memdog AI layer:
+persist the results back into the mem-dog AI layer:
 
 * :meth:`AIClient.create_viewpoint` — stores the LLM-generated analysis
   text as a versioned viewpoint linked to the ``data_id``.
 * :meth:`AIClient.create_embedding` — triggers the server to generate and
   store a vector embedding for the ``data_id``.
 
-Both methods call the existing memdog ``/api/v1/ai`` endpoints so no new
+Both methods call the existing mem-dog ``/api/v1/ai`` endpoints so no new
 storage infrastructure is required.  Failures are logged and swallowed so
 that an AI-layer outage never prevents data from being stored.
 
@@ -275,7 +275,7 @@ class AIClient:
         and calls the configured AI engine to generate the viewpoint.
 
         Args:
-            data_id: The memdog data ID the viewpoint belongs to.
+            data_id: The mem-dog data ID the viewpoint belongs to.
             name: Human-readable name (unused by API, kept for compat).
             analysis_text: Pre-computed analysis — passed to API to skip
                 redundant LLM call.
@@ -341,7 +341,7 @@ class AIClient:
         """Trigger embedding generation for *data_id*.
 
         Args:
-            data_id: The memdog data ID to embed.
+            data_id: The mem-dog data ID to embed.
             engine_type: AI engine identifier sent to the API.
             model: Embedding model string (e.g.
                 ``"vertex_ai/gemma-3-1b-it"``).

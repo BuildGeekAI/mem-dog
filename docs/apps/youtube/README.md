@@ -1,6 +1,6 @@
 # YouTube
 
-Connect YouTube to memdog to ingest video metadata, comments, and channel activity.
+Connect YouTube to mem-dog to ingest video metadata, comments, and channel activity.
 
 **Category:** Social Media
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect YouTube to memdog to ingest video metadata, comments, and channel activi
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect YouTube
@@ -18,7 +18,7 @@ Connect YouTube to memdog to ingest video metadata, comments, and channel activi
 1. In the UI, go to **Settings > Apps**
 2. Find **YouTube** under the "Social Media" category
 3. Click **Connect**
-4. Authorize memdog via YouTube's OAuth consent screen
+4. Authorize mem-dog via YouTube's OAuth consent screen
 5. The YouTube card should now show **Active**
 
 Credentials are stored encrypted (AES-256-GCM) via Nango with automatic token refresh.
@@ -62,7 +62,7 @@ YouTube event → Webhook Gateway → normalizes → NATS queue
 - Channel activity and subscriptions
 - Playlist contents
 
-## Ingest into memdog
+## Ingest into mem-dog
 
 Data from YouTube flows automatically through the webhook pipeline. Each event is:
 1. Normalized into Universal Envelope format

@@ -1,4 +1,4 @@
-# Deploying memdog on Azure (AKS)
+# Deploying mem-dog on Azure (AKS)
 
 Production deployment on Azure Kubernetes Service with Azure Container Apps for the UI.
 
@@ -10,7 +10,7 @@ graph TD
 
     subgraph AKS ["AKS Cluster"]
         ING[Ingress Controller · NGINX]
-        subgraph ns_memdog ["namespace: memdog"]
+        subgraph ns_memdog ["namespace: mem-dog"]
             API[API · FastAPI]
             MCP[MCP Server · SSE]
         end
@@ -76,7 +76,7 @@ az account set --subscription "<subscription-id>"
 ### Resource Group
 
 ```bash
-RESOURCE_GROUP=memdog-rg
+RESOURCE_GROUP=mem-dog-rg
 LOCATION=eastus
 
 az group create --name $RESOURCE_GROUP --location $LOCATION
@@ -98,7 +98,7 @@ az acr login --name $ACR_NAME
 ### AKS Cluster
 
 ```bash
-AKS_NAME=memdog-aks
+AKS_NAME=mem-dog-aks
 
 az aks create \
   --resource-group $RESOURCE_GROUP \
@@ -140,37 +140,37 @@ Save the `EXTERNAL-IP` — this is your entry point.
 
 ## Step 2 — Build and Push Images
 
-memdog's deploy script targets GKE. On Azure, build and push images manually:
+mem-dog's deploy script targets GKE. On Azure, build and push images manually:
 
 ```bash
 ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query loginServer -o tsv)
 
 # API
-docker build --platform linux/amd64 -t $ACR_LOGIN_SERVER/memdog/api:latest api/
-docker push $ACR_LOGIN_SERVER/memdog/api:latest
+docker build --platform linux/amd64 -t $ACR_LOGIN_SERVER/mem-dog/api:latest api/
+docker push $ACR_LOGIN_SERVER/mem-dog/api:latest
 
 # MCP Server (build context is repo root)
-docker build --platform linux/amd64 -t $ACR_LOGIN_SERVER/memdog/mcp-server:latest -f mcp-server/Dockerfile .
-docker push $ACR_LOGIN_SERVER/memdog/mcp-server:latest
+docker build --platform linux/amd64 -t $ACR_LOGIN_SERVER/mem-dog/mcp-server:latest -f mcp-server/Dockerfile .
+docker push $ACR_LOGIN_SERVER/mem-dog/mcp-server:latest
 
 # Webhook Gateway
-docker build --platform linux/amd64 -t $ACR_LOGIN_SERVER/memdog/webhook-gateway:latest webhook-gateway/
-docker push $ACR_LOGIN_SERVER/memdog/webhook-gateway:latest
+docker build --platform linux/amd64 -t $ACR_LOGIN_SERVER/mem-dog/webhook-gateway:latest webhook-gateway/
+docker push $ACR_LOGIN_SERVER/mem-dog/webhook-gateway:latest
 
 # Webhook Receiver
-docker build --platform linux/amd64 -t $ACR_LOGIN_SERVER/memdog/webhook-receiver:latest -f webhook/receiver/Dockerfile webhook/receiver/
-docker push $ACR_LOGIN_SERVER/memdog/webhook-receiver:latest
+docker build --platform linux/amd64 -t $ACR_LOGIN_SERVER/mem-dog/webhook-receiver:latest -f webhook/receiver/Dockerfile webhook/receiver/
+docker push $ACR_LOGIN_SERVER/mem-dog/webhook-receiver:latest
 
 # Webhook Agent
-docker build --platform linux/amd64 -t $ACR_LOGIN_SERVER/memdog/webhook-agent:latest -f webhook/processor/Dockerfile webhook/processor/
-docker push $ACR_LOGIN_SERVER/memdog/webhook-agent:latest
+docker build --platform linux/amd64 -t $ACR_LOGIN_SERVER/mem-dog/webhook-agent:latest -f webhook/processor/Dockerfile webhook/processor/
+docker push $ACR_LOGIN_SERVER/mem-dog/webhook-agent:latest
 
 # UI
 docker build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_API_URL="" \
   --build-arg API_URL="http://<INGRESS_IP>/api" \
-  -t $ACR_LOGIN_SERVER/memdog/ui:latest ui/
-docker push $ACR_LOGIN_SERVER/memdog/ui:latest
+  -t $ACR_LOGIN_SERVER/mem-dog/ui:latest ui/
+docker push $ACR_LOGIN_SERVER/mem-dog/ui:latest
 ```
 
 ---
@@ -182,7 +182,7 @@ docker push $ACR_LOGIN_SERVER/memdog/ui:latest
 Option A — **Azure Database for PostgreSQL Flexible Server** (managed):
 
 ```bash
-PG_SERVER=memdog-pg
+PG_SERVER=mem-dog-pg
 PG_ADMIN=memdog
 PG_PASSWORD=$(openssl rand -base64 24)
 
@@ -351,7 +351,7 @@ EOF
 ### Create namespaces and config
 
 ```bash
-kubectl create namespace memdog
+kubectl create namespace mem-dog
 kubectl create namespace webhook-pipeline
 kubectl create namespace webhook-gateway
 ```
@@ -361,7 +361,7 @@ kubectl create namespace webhook-gateway
 ```bash
 ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query loginServer -o tsv)
 
-kubectl -n memdog create configmap api-config \
+kubectl -n mem-dog create configmap api-config \
   --from-literal=STORAGE_BACKEND=local \
   --from-literal=POSTGRES_URL="$POSTGRES_URL" \
   --from-literal=NEO4J_URI="bolt://neo4j.data.svc.cluster.local:7687" \
@@ -370,21 +370,21 @@ kubectl -n memdog create configmap api-config \
   --from-literal=ENVIRONMENT=dev
 
 # Patch the k8s manifest image and apply
-sed "s|image: memdog-api|image: $ACR_LOGIN_SERVER/memdog/api:latest|" \
+sed "s|image: mem-dog-api|image: $ACR_LOGIN_SERVER/mem-dog/api:latest|" \
   k8s/api-deployment.yaml | kubectl apply -f -
 kubectl apply -f k8s/api-service.yaml 2>/dev/null || \
-  kubectl expose deployment api -n memdog --port=8080 --type=ClusterIP
+  kubectl expose deployment api -n mem-dog --port=8080 --type=ClusterIP
 ```
 
 ### MCP Server
 
 ```bash
-kubectl -n memdog create configmap mcp-server-config \
-  --from-literal=MEM_DOG_API_URL="http://api.memdog.svc.cluster.local:8080" \
+kubectl -n mem-dog create configmap mcp-server-config \
+  --from-literal=MEM_DOG_API_URL="http://api.mem-dog.svc.cluster.local:8080" \
   --from-literal=LOG_LEVEL=INFO \
   --from-literal=PORT=8080
 
-sed "s|image: mcp-server:latest|image: $ACR_LOGIN_SERVER/memdog/mcp-server:latest|" \
+sed "s|image: mcp-server:latest|image: $ACR_LOGIN_SERVER/mem-dog/mcp-server:latest|" \
   k8s/mcp-server-deployment.yaml | kubectl apply -f -
 kubectl apply -f k8s/mcp-server-service.yaml
 ```
@@ -393,14 +393,14 @@ kubectl apply -f k8s/mcp-server-service.yaml
 
 ```bash
 kubectl -n webhook-gateway create configmap webhook-gateway-config \
-  --from-literal=MEM_DOG_API_URL="http://api.memdog.svc.cluster.local:8080" \
+  --from-literal=MEM_DOG_API_URL="http://api.mem-dog.svc.cluster.local:8080" \
   --from-literal=LLM_PROVIDER=gemini \
   --from-literal=LOG_LEVEL=INFO
 
 kubectl -n webhook-gateway create secret generic webhook-gateway-secrets \
   --from-literal=GEMINI_API_KEY="<your-key>"
 
-sed "s|image: webhook-gateway:latest|image: $ACR_LOGIN_SERVER/memdog/webhook-gateway:latest|" \
+sed "s|image: webhook-gateway:latest|image: $ACR_LOGIN_SERVER/mem-dog/webhook-gateway:latest|" \
   k8s/webhook-gateway/deployment.yaml | kubectl apply -f -
 kubectl apply -f k8s/webhook-gateway/service.yaml
 ```
@@ -414,8 +414,8 @@ kubectl apply -f - <<EOF
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: memdog-ingress
-  namespace: memdog
+  name: mem-dog-ingress
+  namespace: mem-dog
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /\$2
 spec:
@@ -468,15 +468,15 @@ EOF
 
 ```bash
 az containerapp env create \
-  --name memdog-env \
+  --name mem-dog-env \
   --resource-group $RESOURCE_GROUP \
   --location $LOCATION
 
 az containerapp create \
-  --name memdog-ui \
+  --name mem-dog-ui \
   --resource-group $RESOURCE_GROUP \
-  --environment memdog-env \
-  --image $ACR_LOGIN_SERVER/memdog/ui:latest \
+  --environment mem-dog-env \
+  --image $ACR_LOGIN_SERVER/mem-dog/ui:latest \
   --registry-server $ACR_LOGIN_SERVER \
   --target-port 8080 \
   --ingress external \
@@ -490,7 +490,7 @@ az containerapp create \
 ### Option B — Deploy in AKS
 
 ```bash
-sed "s|image: memdog-ui|image: $ACR_LOGIN_SERVER/memdog/ui:latest|" \
+sed "s|image: mem-dog-ui|image: $ACR_LOGIN_SERVER/mem-dog/ui:latest|" \
   k8s/ui-deployment.yaml | kubectl apply -f -
 ```
 
@@ -506,7 +506,7 @@ curl http://$INGRESS_IP/api/health        # API
 curl http://$INGRESS_IP/mcp/health        # MCP Server
 curl http://$INGRESS_IP/webhooks/health   # Gateway
 
-kubectl get pods -n memdog
+kubectl get pods -n mem-dog
 kubectl get pods -n webhook-pipeline
 kubectl get pods -n webhook-gateway
 kubectl get pods -n data
@@ -517,7 +517,7 @@ kubectl get pods -n data
 ```json
 {
   "mcpServers": {
-    "memdog": {
+    "mem-dog": {
       "url": "http://<INGRESS_IP>/mcp/sse",
       "headers": { "x-api-key": "md_your_key" }
     }
@@ -538,8 +538,8 @@ helm install cert-manager jetstack/cert-manager \
 
 # Add TLS to ingress annotations:
 #   cert-manager.io/cluster-issuer: letsencrypt-prod
-#   spec.tls[0].secretName: memdog-tls
-#   spec.tls[0].hosts: [memdog.yourdomain.com]
+#   spec.tls[0].secretName: mem-dog-tls
+#   spec.tls[0].hosts: [mem-dog.yourdomain.com]
 ```
 
 ---

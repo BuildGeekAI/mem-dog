@@ -4,11 +4,11 @@ metadata:
   name: openclaw-node-config
   namespace: webhook-gateway
   labels:
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: openclaw-node
 data:
   GEMINI_MODEL: "gemini-3.1-pro-preview"
-  MEM_DOG_API_URL: "http://api.memdog.svc.cluster.local:8080"
+  MEM_DOG_API_URL: "http://api.mem-dog.svc.cluster.local:8080"
   WEBHOOK_BRIDGE_URL: "http://webhook-gateway.webhook-gateway.svc.cluster.local:8080/webhooks/openclaw"
   LOG_LEVEL: "info"
 ---
@@ -18,7 +18,7 @@ metadata:
   name: openclaw-node-config-file
   namespace: webhook-gateway
   labels:
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
     app.kubernetes.io/component: openclaw-node
 data:
   openclaw.json: |

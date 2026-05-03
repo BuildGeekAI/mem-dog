@@ -1,6 +1,6 @@
 # Snowflake
 
-Connect Snowflake to memdog to query data warehouse tables and views.
+Connect Snowflake to mem-dog to query data warehouse tables and views.
 
 **Category:** Data & AI
 **Auth:** API Key
@@ -8,9 +8,9 @@ Connect Snowflake to memdog to query data warehouse tables and views.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Snowflake
@@ -42,9 +42,9 @@ curl -X POST https://<your-api>/api/v1/integrations/proxy/snowflake/api/v2/state
 - Table and schema metadata
 - Usage and cost data
 
-## Ingest into memdog
+## Ingest into mem-dog
 
-Pull data from Snowflake and store in memdog:
+Pull data from Snowflake and store in mem-dog:
 
 ```bash
 curl -X POST https://<your-api>/api/v1/data \

@@ -1,7 +1,7 @@
 """Self-hostable open-source model catalog.
 
 A curated reference of open-source LLMs that can be deployed on the
-memdog model server (Ollama / Cloud Run B) or via external
+mem-dog model server (Ollama / Cloud Run B) or via external
 inference APIs.
 
 Each entry describes hardware requirements, capabilities, benchmark scores,

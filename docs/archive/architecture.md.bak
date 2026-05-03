@@ -23,7 +23,7 @@ graph TD
 
 | Component | Stack | Deployment | Port |
 |-----------|-------|------------|------|
-| **API** | Python 3.12, FastAPI | GKE (`memdog` ns) | 8080 |
+| **API** | Python 3.12, FastAPI | GKE (`mem-dog` ns) | 8080 |
 | **UI** | Next.js 14, TypeScript | Cloud Run | 3000 |
 | **Webhook Pipeline** | Python 3.12, NATS, FastAPI | GKE (`webhook-pipeline` ns) | 8080 |
 | **Webhook Gateway** | Python 3.12, FastAPI | GKE (`webhook-gateway` ns) | 8080 |
@@ -36,7 +36,7 @@ graph TD
 ### Channel ingestion (e.g. WhatsApp message)
 
 1. Channel delivers message to **Webhook Gateway** (normalized into UniversalEnvelope)
-2. User interacts with **DigiMe agent** (OpenClaw Node) — an AI agent that queries the memdog RAG system, performs semantic search, and ingests data through conversation
+2. User interacts with **DigiMe agent** (OpenClaw Node) — an AI agent that queries the mem-dog RAG system, performs semantic search, and ingests data through conversation
 3. Gateway normalizes into `UniversalEnvelope` (`{data, meta_data}`)
 4. Gateway forwards to **API** via `POST /api/v1/ingest`
 5. API stores raw data, publishes to **Webhook Pipeline** via NATS
@@ -123,7 +123,7 @@ All external traffic enters through the `open-jaws` Gateway (L7 Global External 
 | `/oc/*` | `openclaw-node` (prefix stripped) | 30s |
 | `/webhooks`, `/channels`, `/query`, `/chat`, etc. | `webhook-gateway` | 30s |
 
-Internal service discovery uses Kubernetes DNS (`api.memdog.svc.cluster.local:8080`).
+Internal service discovery uses Kubernetes DNS (`api.mem-dog.svc.cluster.local:8080`).
 
 ## Observability
 

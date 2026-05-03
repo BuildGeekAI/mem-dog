@@ -84,5 +84,5 @@ The client mirrors the Mem-Dog REST API. All methods return `httpx.Response`. Ca
 Pass `api_key` when creating the client. It is sent as `Authorization: Bearer <key>`.
 
 ```python
-client = MemDogClient(api_key="memdog-key-abc123...")
+client = MemDogClient(api_key="mem-dog-key-abc123...")
 ```

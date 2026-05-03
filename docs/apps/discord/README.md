@@ -1,6 +1,6 @@
 # Discord
 
-Connect Discord to memdog to ingest server messages, threads, and events.
+Connect Discord to mem-dog to ingest server messages, threads, and events.
 
 **Category:** Chat
 **Auth:** OAuth2
@@ -8,9 +8,9 @@ Connect Discord to memdog to ingest server messages, threads, and events.
 
 ## Setup
 
-### 1. Login to memdog
+### 1. Login to mem-dog
 
-1. Go to your memdog UI
+1. Go to your mem-dog UI
 2. Click **Sign in with Google** (or use email/password)
 
 ### 2. Connect Discord
@@ -18,7 +18,7 @@ Connect Discord to memdog to ingest server messages, threads, and events.
 1. In the UI, go to **Settings > Apps**
 2. Find **Discord** under the "Chat" category
 3. Click **Connect**
-4. Authorize memdog to access your Discord account
+4. Authorize mem-dog to access your Discord account
 5. The Discord card should now show **Active**
 
 ### 3. Create a Webhook Endpoint
@@ -71,5 +71,5 @@ Send messages via the integration proxy:
 curl -X POST https://<your-api>/api/v1/integrations/proxy/discord/channels/<channel-id>/messages \
   -H "Authorization: Bearer <your-jwt>" \
   -H "Content-Type: application/json" \
-  -d '{"content": "Hello from memdog!"}'
+  -d '{"content": "Hello from mem-dog!"}'
 ```

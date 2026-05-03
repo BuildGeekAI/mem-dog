@@ -11,8 +11,8 @@ icon: "rocket"
 <Steps>
   <Step title="Clone and start">
     ```bash
-    git clone https://github.com/BuildGeekAI/memdog.git
-    cd memdog
+    git clone https://github.com/BuildGeekAI/mem-dog.git
+    cd mem-dog
     docker compose up
     ```
     This starts 11 services: API, UI, Gateway, NATS, 3 Ollama tiers, Redis, PostgreSQL + pgvector, and Neo4j.
@@ -75,7 +75,7 @@ Add to `~/.claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "memdog": {
+    "mem-dog": {
       "url": "http://localhost:8091/mcp/sse"
     }
   }

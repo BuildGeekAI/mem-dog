@@ -2,7 +2,7 @@
 set -e
 
 # =============================================================================
-# memdog System Configuration Manager
+# mem-dog System Configuration Manager
 # =============================================================================
 # Manages platform-config.json stored in the GCS system-config bucket.
 #
@@ -53,7 +53,7 @@ print_info()    { echo -e "${BLUE}ℹ️  $1${NC}"; }
 # =============================================================================
 
 _bucket() {
-    echo "${PROJECT_ID}-memdog-sysconfig-${ENVIRONMENT}"
+    echo "${PROJECT_ID}-mem-dog-sysconfig-${ENVIRONMENT}"
 }
 
 _gcs_path() {
@@ -459,7 +459,7 @@ cmd_apply() {
     _require_jq
     _check_bucket
 
-    print_header "Applying system config secrets to Cloud Run: memdog-api ($ENVIRONMENT)"
+    print_header "Applying system config secrets to Cloud Run: mem-dog-api ($ENVIRONMENT)"
 
     local tmp
     tmp=$(_tmpfile)
@@ -497,8 +497,8 @@ cmd_apply() {
         exit 0
     fi
 
-    print_info "Updating Cloud Run service memdog-api..."
-    gcloud run services update "memdog-api" \
+    print_info "Updating Cloud Run service mem-dog-api..."
+    gcloud run services update "mem-dog-api" \
         --region "$REGION" \
         --project "$PROJECT_ID" \
         --update-env-vars "$update_vars"
@@ -540,16 +540,16 @@ cmd_reset() {
   "environment": "$ENVIRONMENT",
   "gcp_project_id": "$PROJECT_ID",
   "buckets": {
-    "raw":        "${PROJECT_ID}-memdog-raw-${ENVIRONMENT}",
-    "meta":       "${PROJECT_ID}-memdog-meta-${ENVIRONMENT}",
-    "memories":   "${PROJECT_ID}-memdog-memories-${ENVIRONMENT}",
-    "users":      "${PROJECT_ID}-memdog-users-${ENVIRONMENT}",
-    "prompts":    "${PROJECT_ID}-memdog-prompts-${ENVIRONMENT}",
-    "embeddings": "${PROJECT_ID}-memdog-embeddings-${ENVIRONMENT}",
-    "viewpoints": "${PROJECT_ID}-memdog-viewpoints-${ENVIRONMENT}",
-    "ai_config":  "${PROJECT_ID}-memdog-aiconfig-${ENVIRONMENT}",
-    "skills":     "${PROJECT_ID}-memdog-skills-${ENVIRONMENT}",
-    "stats":      "${PROJECT_ID}-memdog-stats-${ENVIRONMENT}"
+    "raw":        "${PROJECT_ID}-mem-dog-raw-${ENVIRONMENT}",
+    "meta":       "${PROJECT_ID}-mem-dog-meta-${ENVIRONMENT}",
+    "memories":   "${PROJECT_ID}-mem-dog-memories-${ENVIRONMENT}",
+    "users":      "${PROJECT_ID}-mem-dog-users-${ENVIRONMENT}",
+    "prompts":    "${PROJECT_ID}-mem-dog-prompts-${ENVIRONMENT}",
+    "embeddings": "${PROJECT_ID}-mem-dog-embeddings-${ENVIRONMENT}",
+    "viewpoints": "${PROJECT_ID}-mem-dog-viewpoints-${ENVIRONMENT}",
+    "ai_config":  "${PROJECT_ID}-mem-dog-aiconfig-${ENVIRONMENT}",
+    "skills":     "${PROJECT_ID}-mem-dog-skills-${ENVIRONMENT}",
+    "stats":      "${PROJECT_ID}-mem-dog-stats-${ENVIRONMENT}"
   },
   "ai": {
     "system_gemini_api_key":          "$existing_gemini_key",
@@ -559,7 +559,7 @@ cmd_reset() {
   },
   "telemetry": {
     "otel_enabled":                    true,
-    "otel_service_name":               "memdog-api",
+    "otel_service_name":               "mem-dog-api",
     "otel_exporter_otlp_endpoint":     "",
     "otel_exporter_otlp_protocol":     "grpc"
   },

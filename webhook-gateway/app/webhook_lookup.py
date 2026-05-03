@@ -62,7 +62,7 @@ async def get_webhook(webhook_id: str) -> dict[str, Any] | None:
         _cache[webhook_id] = (record, time.monotonic())
         return record
 
-    # Fallback: memdog API
+    # Fallback: mem-dog API
     if not config.MEM_DOG_API_URL:
         return None
     url = f"{config.MEM_DOG_API_URL}/api/v1/webhooks/{webhook_id}"

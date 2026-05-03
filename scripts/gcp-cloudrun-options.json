@@ -54,7 +54,7 @@
       "cost_per_hour": 0.04,
       "inference_backend": ["llama.cpp", "LocalAI"],
       "suitable_for": ["router", "classifier", "leaf"],
-      "note": "Matches memdog-model-server-small (deploy-model-servers). < 4 GB models.",
+      "note": "Matches mem-dog-model-server-small (deploy-model-servers). < 4 GB models.",
       "models": [
         { "model": "Llama-3.2-1B", "catalog_model_id": "llama-3.2-1b", "params": "1B", "quantization": "Q4_K_M", "ram_required_gb": 1.5, "use_case": "edge inference, classification", "inference_speed_tokens_sec": 200, "recommended": true },
         { "model": "Llama-3.2-3B", "catalog_model_id": "llama-3.2-3b", "params": "3B", "quantization": "Q4_K_M", "ram_required_gb": 3, "use_case": "data parsing, simple extraction", "inference_speed_tokens_sec": 150, "recommended": true },
@@ -78,7 +78,7 @@
       "cost_per_hour": 0.06,
       "inference_backend": ["llama.cpp", "LocalAI"],
       "suitable_for": ["mid-tier", "extractor", "summarization"],
-      "note": "Matches memdog-model-server-medium. 4–10 GB models.",
+      "note": "Matches mem-dog-model-server-medium. 4–10 GB models.",
       "models": [
         { "model": "Mistral-7B-Instruct", "catalog_model_id": "mistral-7b", "params": "7B", "quantization": "Q4_K_M", "ram_required_gb": 6, "use_case": "general reasoning, data extraction", "inference_speed_tokens_sec": 80, "recommended": true },
         { "model": "Mistral-Nemo-12B", "catalog_model_id": "mistral-nemo-12b", "params": "12B", "quantization": "Q4_K_M", "ram_required_gb": 10, "use_case": "multi-step reasoning", "inference_speed_tokens_sec": 55, "recommended": true },
@@ -107,7 +107,7 @@
       "cost_per_hour": 0.12,
       "inference_backend": ["llama.cpp", "LocalAI"],
       "suitable_for": ["orchestrator", "complex reasoning"],
-      "note": "Matches memdog-model-server-large. 10–20 GB models.",
+      "note": "Matches mem-dog-model-server-large. 10–20 GB models.",
       "models": [
         { "model": "Gemma-2-27B", "catalog_model_id": "gemma-2-27b", "params": "27B", "quantization": "Q4_K_M", "ram_required_gb": 20, "use_case": "complex reasoning, agentic workflows", "inference_speed_tokens_sec": 30, "recommended": true },
         { "model": "Gemma-3-27B", "catalog_model_id": "gemma-3-27b", "params": "27B", "quantization": "Q4_K_M", "ram_required_gb": 20, "use_case": "vision, reasoning, synthesis", "inference_speed_tokens_sec": 30, "recommended": true },
@@ -127,7 +127,7 @@
       "cost_per_hour": 0.35,
       "inference_backend": ["llama.cpp", "LocalAI"],
       "suitable_for": ["orchestrator", "complex reasoning", "70B models"],
-      "note": "Matches memdog-model-server-very-large. 20 vCPU + 80 GB required by Cloud Run. > 20 GB models.",
+      "note": "Matches mem-dog-model-server-very-large. 20 vCPU + 80 GB required by Cloud Run. > 20 GB models.",
       "models": [
         { "model": "Llama-3.3-70B", "catalog_model_id": "llama-3.3-70b", "params": "70B", "quantization": "Q4_K_M", "ram_required_gb": 48, "use_case": "orchestration, complex reasoning", "inference_speed_tokens_sec": 25, "recommended": true },
         { "model": "Mixtral-8x7B", "catalog_model_id": "mixtral-8x7b", "params": "47B", "quantization": "Q4_K_M", "ram_required_gb": 26, "use_case": "MoE, complex reasoning", "inference_speed_tokens_sec": 45, "recommended": true },

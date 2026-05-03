@@ -4,22 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-memdog is a multi-channel data ingestion and AI enrichment platform. Data flows from external channels through a gateway, gets stored via the API, and optionally processed by a 42-agent webhook pipeline for classification, analysis, and embedding generation.
+mem-dog is a multi-channel data ingestion and AI enrichment platform. Data flows from external channels through a gateway, gets stored via the API, and optionally processed by a 42-agent webhook pipeline for classification, analysis, and embedding generation.
 
 ## Architecture
 
-**Data flow:** Channels → webhook-gateway → API (ingest) + Webhook Pipeline (NATS). The pipeline writes enriched results back to the API, which dual-writes entities to both Postgres and Neo4j (Graphiti). DigiMe (openclaw-node) is a separate AI agent that communicates with the memdog RAG system.
+**Data flow:** Channels → webhook-gateway → API (ingest) + Webhook Pipeline (NATS). The pipeline writes enriched results back to the API, which dual-writes entities to both Postgres and Neo4j (Graphiti). DigiMe (openclaw-node) is a separate AI agent that communicates with the mem-dog RAG system.
 
 - **api/** — FastAPI (Python 3.12, `pyproject.toml`) backend. Entry: `api/main.py`. Storage abstraction supports local filesystem, GCS, and Supabase backends (controlled by `STORAGE_BACKEND` env var). Supabase SQL migrations in `api/supabase/`. Neo4j/Graphiti integration for temporal knowledge graph.
 - **ui/** — Next.js 14 (TypeScript) frontend. Talks to the API via proxy rewrites in `ui/next.config.js` (`/api/v1/*` → API, `/auth/v1/*` → GoTrue). `NEXT_PUBLIC_*` env vars are baked at Docker **build time**, not runtime.
 - **webhook/processor/** — NATS pull worker + ADK agent with 42 typed sub-agents for AI enrichment. Requires Python ≥3.12 and `uv` for dependency management. Sub-agent routing uses 6-layer data type detection (see `webhook/processor/webhook_agent/router.py`). Agent registry in `webhook/processor/webhook_agent/sub_agents/__init__.py`.
 - **webhook/receiver/** — HTTP receiver that publishes to NATS.
 - **webhook-gateway/** — FastAPI (Python ≥3.11, `pyproject.toml`) service that normalizes channel messages into UniversalEnvelope format. Supports multiple LLM providers via litellm, channel policies, rate limiting, and credential-injecting integration proxy. CLI entry point: `wgw`.
-- **mcp-server/** — FastMCP server (Python 3.12) exposing 8 tools over SSE for Claude Desktop, Cursor, and other MCP clients. Uses `memdog-client` internally. Auth via `x-api-key` header.
-- **openclaw-node/** — DigiMe AI agent (OpenClaw runtime) that communicates with the memdog RAG system to answer queries, search, and ingest data through conversation. Separate from the webhook pipeline.
+- **openclaw-node/** — DigiMe AI agent (OpenClaw runtime) that communicates with the mem-dog RAG system to answer queries, search, and ingest data through conversation. Separate from the webhook pipeline.
 - **client/** — Python SDK (`mem_dog_client`) using httpx. Mirrors REST API with 70+ methods.
 - **clients/** — Multi-language SDKs: TypeScript (native fetch), Go (stdlib), Rust (async tokio), Ruby.
-- **k8s/** — Kubernetes manifests for GKE + Supabase. Namespaces: `memdog` (API), `webhook-pipeline`, `webhook-gateway` (gateway + openclaw-node), `supabase`.
+- **k8s/** — Kubernetes manifests for GKE + Supabase. Namespaces: `mem-dog` (API), `webhook-pipeline`, `webhook-gateway` (gateway + openclaw-node), `supabase`.
 - **testing/** — Test configs live here, separate from app code. `testing/ui/` has Jest + Playwright configs; `testing/api/` has pytest fixtures with mock storage.
 
 ## Common Commands
@@ -30,8 +29,6 @@ memdog is a multi-channel data ingestion and AI enrichment platform. Data flows 
 docker compose up                    # Start full stack (10 services)
 # UI: localhost:3000, API: localhost:8080, Gateway: localhost:8070
 # Neo4j: localhost:7474 (browser), bolt://localhost:7687
-# Postgres: localhost:5432 (memdog/memdog/memdog)
-# Redis: localhost:6379
 # Includes 3 Ollama instances (small/medium/large tiers), Redis, PostgreSQL 16 + pgvector, Neo4j
 ```
 
@@ -70,20 +67,6 @@ make list-apps        # List available apps
 # GPU support: N_GPU_LAYERS=99 make model-server (Apple Metal)
 ```
 
-### Webhook Gateway (from webhook-gateway/)
-
-```bash
-uv run wgw                           # Start gateway (port 8070)
-pytest                               # All tests (uses pytest-asyncio + respx)
-```
-
-### MCP Server (from mcp-server/)
-
-```bash
-uvicorn app.main:app --reload --port 8090    # Dev server
-pytest                                        # Tests
-```
-
 ### Deployment
 
 ```bash
@@ -115,7 +98,7 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 - **10 memory types**: timeline, session, conversation, user, organizational, factual, episodic, semantic, custom, tracing — grouped into **4 Mem0 categories**: conversation, session, user, organizational
 - **Memory access levels**: private (default), shared, public, restricted — with `shared_with` user list for shared/restricted
 - **Memory expiry**: Default TTL per type (conversation=1h, session=24h, timeline=7d, tracing=3d, long-term=never). Override with `ttl_hours` or `no_expiry=true`
-- **Storage backends**: local (default, `~/.memdog`), GCS (production), Supabase (hybrid with pgvector). Auto-detection priority: explicit `STORAGE_BACKEND` → `GCP_PROJECT_ID` → `SYSTEM_CONFIG_BUCKET` → `local`. Supabase hybrid mode stores raw binary in GCS and all structured data (metadata, memories, embeddings) in Postgres.
+- **Storage backends**: local (default, `~/.mem-dog`), GCS (production), Supabase (hybrid with pgvector). Auto-detection priority: explicit `STORAGE_BACKEND` → `GCP_PROJECT_ID` → `SYSTEM_CONFIG_BUCKET` → `local`. Supabase hybrid mode stores raw binary in GCS and all structured data (metadata, memories, embeddings) in Postgres.
 - **Authentication**: JWT from Supabase (`sub` claim, auto-creates user profile on first login via `ensure_jwt_user_profile`) + per-user API keys (`md_*` prefix, O(1) Supabase lookup). Auth middleware sets `request.state.user_id` and `request.state.auth_type`.
 - **Encryption**: Nango AES-256-GCM for integration credentials; Fernet (`api/app/crypto.py`) for AI provider API keys.
 - **AI models**: Tiered by data complexity — small (Gemma3:4b), medium (12b), large (27b), multimodal (Qwen3-VL), omni (Qwen3.5). Config in `config/ai.env`. Model Garden supports 10+ providers with per-user/per-type routing and fallback chains (Ollama → Ollama Cloud → Gemini).

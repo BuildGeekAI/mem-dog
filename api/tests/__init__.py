@@ -1,1 +1,1 @@
-# Tests for memdog API
+# Tests for mem-dog API

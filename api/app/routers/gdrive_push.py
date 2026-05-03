@@ -1,7 +1,7 @@
 """Google Drive Push Notifications via Changes API.
 
 Receives webhook notifications when files are created/modified in the user's
-Google Drive, fetches the file content via Nango proxy, and ingests into memdog.
+Google Drive, fetches the file content via Nango proxy, and ingests into mem-dog.
 """
 
 import base64

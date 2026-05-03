@@ -1,12 +1,12 @@
 # Allow HTTPRoutes in the webhook-gateway namespace to reference
-# Services in the memdog namespace (cross-namespace backend refs).
+# Services in the mem-dog namespace (cross-namespace backend refs).
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:
   name: allow-webhook-gateway
-  namespace: memdog
+  namespace: mem-dog
   labels:
-    app.kubernetes.io/part-of: memdog
+    app.kubernetes.io/part-of: mem-dog
 spec:
   from:
     - group: gateway.networking.k8s.io
