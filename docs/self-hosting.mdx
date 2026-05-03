@@ -1,0 +1,61 @@
+---
+title: "Self-Hosting"
+description: "Deploy Mem-Dog on your own hardware"
+icon: "server"
+---
+
+# Self-Hosting
+
+Mem-Dog runs entirely on your infrastructure. Three deployment options:
+
+## Deployment Options
+
+<CardGroup cols={3}>
+  <Card title="Docker Compose" icon="docker" href="/deployment/local-dev">
+    Single command, 11 services. Best for development and personal use.
+  </Card>
+  <Card title="Mac Mini" icon="apple" href="/deployment/mac-mini">
+    Full production stack on Apple Silicon. Complete data sovereignty.
+  </Card>
+  <Card title="GKE" icon="cloud" href="/deployment/gke-setup-mac">
+    Production-grade on Google Kubernetes Engine.
+  </Card>
+</CardGroup>
+
+## Resource Requirements
+
+Run the preflight check before deploying:
+
+```bash
+./scripts/preflight-check.sh                     # Check local resources
+./scripts/preflight-check.sh --profile standard   # Specific profile
+./scripts/preflight-check.sh --gke                # Check GKE cluster
+```
+
+| Profile | Components | Min RAM | Min CPU | Best for |
+|---------|-----------|---------|---------|----------|
+| **minimal** | 3 (API, UI, Postgres) | 4 GB | 2 cores | Dev/testing, no AI |
+| **standard** | 16 (+ gateway, pipeline, Supabase) | 12 GB | 4 cores | Full stack, cloud LLMs |
+| **full** | 23 (+ Ollama x3, Neo4j, Nango) | 24 GB | 8 cores | Everything + local models |
+
+## Mac Mini Recommendations
+
+| Mac Mini | RAM | Profile | Notes |
+|----------|-----|---------|-------|
+| M2 16GB | 16 GB | standard | Full stack, use Gemini for AI |
+| M4 Pro 48GB | 48 GB | full | Everything + gemma3:4b locally |
+| M4 Pro/Max 64GB | 64 GB | full | All models including 27b |
+
+## Quick Start
+
+```bash
+git clone https://github.com/BuildGeekAI/mem-dog.git
+cd mem-dog
+docker compose up
+```
+
+Services available at:
+- **UI**: http://localhost:3000
+- **API**: http://localhost:8080/docs
+- **Neo4j**: http://localhost:7474
+- **Gateway**: http://localhost:8070

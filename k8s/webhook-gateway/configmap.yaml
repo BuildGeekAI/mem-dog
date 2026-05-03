@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webhook-gateway-config
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: webhook-gateway
+data:
+  LLM_PROVIDER: "gemini"
+  LLM_MODEL: ""
+  LLM_API_BASE: ""
+  GEMINI_MODEL: "gemini-3.1-pro-preview"
+  OTEL_ENABLED: "true"
+  OTEL_SERVICE_NAME: "webhook-gateway"
+  OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+  LOG_LEVEL: "INFO"
+  DEFAULT_USER_ID: "00000000-0000-0000-0000-000000000001"
+  PORT: "8080"
+  MAX_PAYLOAD_BYTES: "10485760"
+  # Security — uncomment and set for production:
+  # WGW_RATE_LIMIT: "60"
+  # WGW_ALLOWED_IPS: ""
+  # WGW_CORS_ORIGINS: "https://your-ui-domain.com"

@@ -1,0 +1,46 @@
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+httpx>=0.27.0
+# google-cloud-storage is only needed when STORAGE_BACKEND=gcs (GCS mode).
+# Local-mode installations do not require this dependency.
+google-cloud-storage==2.14.0
+pydantic==2.5.0
+python-multipart==0.0.6
+python-dotenv==1.0.0
+
+# Store layer (Redis + Postgres + Supabase for testing CRUD API)
+redis>=5.0.0
+psycopg2-binary>=2.9.0
+supabase>=2.0.0
+
+# OpenTelemetry - Core
+opentelemetry-api==1.27.0
+opentelemetry-sdk==1.27.0
+
+# OpenTelemetry - Instrumentation
+opentelemetry-instrumentation-fastapi==0.48b0
+opentelemetry-instrumentation-logging==0.48b0
+
+# OpenTelemetry - Exporters
+opentelemetry-exporter-otlp==1.27.0
+
+# OpenTelemetry - Logging bridge
+opentelemetry-exporter-otlp-proto-grpc==1.27.0
+
+# Model management (activation)
+docker>=7.0.0              # Docker SDK — restart local model-server containers
+google-cloud-run>=0.10.0   # Cloud Run Admin API — update service env vars
+
+# ULID for lexicographically sortable unique IDs (data_, mem_<type>)
+python-ulid>=2.0.0
+
+# Encryption for API keys
+cryptography>=42.0.0       # Fernet symmetric encryption for public LLM API keys
+
+# LiteLLM for public LLM integrations
+litellm>=1.30.0            # Unified API for Gemini, Anthropic, OpenAI, etc.
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0

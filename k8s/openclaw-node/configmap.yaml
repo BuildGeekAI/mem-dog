@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-node-config
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: openclaw-node
+data:
+  GEMINI_MODEL: "gemini-3.1-pro-preview"
+  MEM_DOG_API_URL: "http://api.mem-dog.svc.cluster.local:8080"
+  WEBHOOK_BRIDGE_URL: "http://webhook-gateway.webhook-gateway.svc.cluster.local:8080/webhooks/openclaw"
+  LOG_LEVEL: "info"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-node-config-file
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: openclaw-node
+data:
+  openclaw.json: |
+    {
+      "agents": {
+        "defaults": {
+          "model": {
+            "primary": "google/gemini-3.1-pro-preview"
+          }
+        }
+      },
+      "tools": {
+        "allow": ["exec", "web_fetch", "web_search", "message", "memory_search", "memory_get", "sessions_list", "sessions_history", "sessions_send", "session_status", "read", "write", "image"]
+      },
+      "skills": {
+        "allowBundled": ["healthcheck"],
+        "load": {
+          "extraDirs": ["/home/node/.openclaw/skills"]
+        }
+      },
+      "gateway": {
+        "port": 18789,
+        "bind": "lan",
+        "auth": {
+          "mode": "token",
+          "token": "__OPENCLAW_GATEWAY_TOKEN__"
+        },
+        "controlUi": {
+          "allowedOrigins": ["*"],
+          "allowInsecureAuth": true
+        }
+      },
+      "channels": {
+        "whatsapp": {
+          "enabled": true,
+          "dmPolicy": "open",
+          "allowFrom": ["*"],
+          "groupPolicy": "open",
+          "groupAllowFrom": ["*"],
+          "mediaMaxMb": 50,
+          "accounts": {
+            "default": {
+              "enabled": true,
+              "dmPolicy": "open",
+              "allowFrom": ["*"],
+              "groupPolicy": "open",
+              "groupAllowFrom": ["*"],
+              "debounceMs": 0
+            }
+          }
+        }
+      },
+      "browser": {
+        "ssrfPolicy": {
+          "dangerouslyAllowPrivateNetwork": true
+        }
+      },
+      "models": {
+        "providers": {
+          "google": {
+            "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+            "apiKey": "__GEMINI_API_KEY__",
+            "api": "google-generative-ai",
+            "models": [
+              { "id": "gemini-3.1-pro-preview", "name": "Gemini 3.1 Pro Preview" }
+            ]
+          }
+        }
+      }
+    }

@@ -1,0 +1,77 @@
+---
+title: "Memory Types"
+description: "10 memory types across 4 categories with TTL and access control"
+icon: "brain"
+---
+
+# Memory Types
+
+Mem-Dog provides 10 distinct memory types grouped into 4 categories, designed for diverse data lifecycles — from ephemeral conversation context to permanent organizational knowledge.
+
+## Categories & Types
+
+| Category | Type | Default TTL | Purpose |
+|----------|------|-------------|---------|
+| **Conversation** | `conversation` | 1 hour | Multi-turn dialogue context |
+| **Session** | `session` | 24 hours | Bounded interaction state |
+| | `timeline` | 7 days | Chronological activity log |
+| | `tracing` | 3 days | OpenTelemetry distributed traces |
+| **User** | `user` | Never | Profile facts, preferences |
+| | `factual` | Never | Verified, canonical facts |
+| | `episodic` | Temporary | Event-based memories |
+| | `semantic` | Never | Conceptual knowledge, abstractions |
+| | `custom` | Varies | User-defined memory types |
+| **Organizational** | `organizational` | Never | Org-level facts, policies, decisions |
+
+## Create a Memory
+
+<CodeGroup>
+```bash cURL
+curl -X POST http://localhost:8080/api/v1/memories \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Q3 Planning Session",
+    "memory_type": "session",
+    "description": "Product roadmap discussion",
+    "access_level": "shared",
+    "shared_with": ["user_id_1"]
+  }'
+```
+
+```python Python
+m.add("Q3 Planning Session notes...", memory_type="session", tags=["planning"])
+```
+</CodeGroup>
+
+## TTL & Expiry
+
+- Each type has a **default TTL** (see table above)
+- Override with `ttl_hours` or set `no_expiry=true`
+- Expired memories are automatically cleaned up
+
+```json
+{
+  "memory_type": "conversation",
+  "ttl_hours": 48,
+  "no_expiry": false
+}
+```
+
+## Memory Compression
+
+LLM-powered summarization compresses verbose memories into structured summaries:
+
+```python
+m.compress("mem_conv_xyz", archive_originals=True)
+```
+
+- Archives original data items
+- Keeps key facts, entities, and action items
+- Auto-triggers at configurable thresholds
+
+## ID Format
+
+All memory IDs follow the pattern `mem_<type>_<ulid>`:
+- `mem_conv_01JQXYZ` — conversation memory
+- `mem_user_01JQABC` — user memory
+- `mem_org_01JQDEF` — organizational memory

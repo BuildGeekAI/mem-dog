@@ -1,0 +1,26 @@
+# HTTPRoute that exposes Supabase Auth (GoTrue) through the open-jaws Gateway.
+# External path: /auth/v1/*  ->  supabase-kong:8000 in supabase namespace.
+#
+# Requires the ReferenceGrant in referencegrant-from-gateway.yaml to be applied first
+# (cross-namespace backend reference from webhook-gateway -> supabase).
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: supabase-auth-routes
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: supabase
+spec:
+  parentRefs:
+    - name: open-jaws
+      namespace: webhook-gateway
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /auth/v1/
+      backendRefs:
+        - name: supabase-kong
+          namespace: supabase
+          port: 8000

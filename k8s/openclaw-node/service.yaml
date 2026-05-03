@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: openclaw-node
+  namespace: webhook-gateway
+  labels:
+    app: openclaw-node
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: openclaw-node
+spec:
+  type: ClusterIP
+  selector:
+    app: openclaw-node
+  ports:
+    - port: 18789
+      targetPort: http
+      protocol: TCP
+      name: http

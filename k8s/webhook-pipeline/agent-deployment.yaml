@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-agent
+  namespace: webhook-pipeline
+  labels:
+    app: webhook-agent
+    app.kubernetes.io/part-of: mem-dog-webhook-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-agent
+  template:
+    metadata:
+      labels:
+        app: webhook-agent
+    spec:
+      serviceAccountName: webhook-pipeline-sa
+      containers:
+        - name: agent
+          image: webhook-agent
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: webhook-pipeline-config
+            - secretRef:
+                name: webhook-pipeline-secrets
+                optional: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30

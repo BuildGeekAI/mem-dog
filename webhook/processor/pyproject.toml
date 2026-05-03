@@ -1,0 +1,9 @@
+[project]
+name = "mem-dog-webhook-processor"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "functions-framework==3.*",
+    "google-auth>=2.0",
+    "requests>=2.31",
+]

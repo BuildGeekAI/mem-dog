@@ -1,0 +1,116 @@
+# Python Client SDK
+
+Synchronous Python client for the mem-dog REST API.
+
+**Directory:** `client/` · **Package:** `mem_dog_client`
+
+## Installation
+
+```bash
+cd client
+pip install -e .
+
+# With agent framework adapters:
+pip install -e ".[langchain]"   # LangChain
+pip install -e ".[crewai]"      # CrewAI
+pip install -e ".[openai]"      # OpenAI function calling
+```
+
+## Simple SDK (MemDog)
+
+High-level facade with 8 methods — covers 90% of use cases.
+
+```python
+from mem_dog_client import MemDog
+
+m = MemDog("http://localhost:8080", api_key="...", user_id="user1")
+
+# Store data (auto-creates daily memory if memory_type set)
+result = m.add("Meeting notes", tags=["work"], memory_type="session")
+# → {"data_id": "data_...", "memory_id": "mem_session_..."}
+
+# Search — metadata or AI-powered RAG
+results = m.search("meeting", limit=10)
+results = m.search("what was decided?", use_ai=True)
+
+# Retrieve and delete
+item = m.get("data_...")   # → {"data_id", "content", "tags", ...}
+m.delete("data_...")
+
+# Graph memory — entities and relationships
+entities = m.entities("Google")              # search entities
+linked = m.related("data_...")               # entities for a data item
+
+# Memory compression
+m.compress("mem_conv_xyz", archive_originals=True)
+```
+
+## Low-Level Client (MemDogClient)
+
+Full REST client with 70+ methods. Returns raw `httpx.Response`.
+
+```python
+from mem_dog_client import MemDogClient
+
+client = MemDogClient(
+    base_url="http://localhost:8080",
+    api_key="your-api-key"  # optional
+)
+
+# Create data
+data = client.create_data(content="Hello world", name="greeting", tags=["test"])
+
+# AI query
+result = client.ai_query(query="What do I know about X?")
+
+# Semantic search
+results = client.semantic_search(query="similar content", limit=5)
+```
+
+## Methods
+
+| Group | Methods |
+|-------|---------|
+| **Health** | `root()`, `health()` |
+| **Data** | `create_data()`, `list_data()`, `get_data()`, `get_metadata()`, `update_data()`, `delete_data()` |
+| **Access** | `get_access()`, `update_access()`, `check_access()` |
+| **Tags** | `get_tags()`, `update_tags()`, `add_tags()`, `remove_tags()`, `list_tags()`, `search_tags()` |
+| **Versions** | `list_versions()` |
+| **Memories** | `create_memory()`, `list_memories()`, `get_memory()`, `update_memory()`, `delete_memory()`, `add_data_to_memory()`, `compress_memory()` |
+| **Bulk** | `bulk_delete_data()`, `bulk_delete_memories()` |
+| **Users** | `list_users()`, `create_user()`, `list_api_keys()`, `create_api_key()` |
+| **AI** | `get_ai_engines_available()`, `ai_query()`, `create_embedding()`, `list_prompts()`, `list_viewpoints()`, `list_skills()` |
+| **Graph** | `search_entities()`, `get_entity()`, `get_entity_relationships()`, `get_data_entities()`, `batch_create_entities()` |
+| **Stats** | `get_stats()`, `get_user_stats()` |
+
+## Agent Framework Adapters
+
+### LangChain
+
+```python
+from mem_dog_client.adapters.langchain import MemDogChatMessageHistory, MemDogRetriever
+
+history = MemDogChatMessageHistory(m, memory_id="mem_conversation_abc")
+retriever = MemDogRetriever(mem_dog=m, search_kwargs={"limit": 5, "use_ai": True})
+```
+
+### CrewAI
+
+```python
+from mem_dog_client.adapters.crewai import MemDogCrewMemory
+
+memory = MemDogCrewMemory(m)
+memory.save("Important fact", metadata={"topic": "finance"})
+results = memory.search("finance")
+```
+
+### OpenAI Function Calling
+
+```python
+from mem_dog_client.adapters.openai import get_mem_dog_tools, handle_mem_dog_tool_call
+
+tools = get_mem_dog_tools()  # pass to chat.completions.create(tools=tools)
+result = handle_mem_dog_tool_call(m, call.function.name, args)
+```
+
+Uses `Authorization: Bearer <api_key>` header. Depends on `httpx`.

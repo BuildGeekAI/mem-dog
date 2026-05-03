@@ -1,0 +1,42 @@
+{
+  "name": "@mem-dog/client",
+  "version": "0.2.0",
+  "description": "TypeScript SDK for the mem-dog private AI system",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mem-dog/mem-dog",
+    "directory": "clients/typescript"
+  },
+  "keywords": [
+    "mem-dog",
+    "memory",
+    "ai",
+    "sdk",
+    "knowledge-graph",
+    "rag"
+  ]
+}

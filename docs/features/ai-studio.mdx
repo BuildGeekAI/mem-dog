@@ -1,0 +1,51 @@
+---
+title: "AI Studio"
+description: "Unified control center for managing AI models, routing, agents, and infrastructure"
+icon: "brain-circuit"
+---
+
+AI Studio is the central hub for configuring every aspect of mem-dog's AI pipeline. Access it from the sidebar to manage models, routing rules, agent behavior, and infrastructure — all from a single interface.
+
+## Sub-tabs
+
+<CardGroup cols={2}>
+  <Card title="Search & Chat" icon="magnifying-glass">
+    Test your RAG pipeline interactively. Run searches across all 5 modes (vector, FTS, hybrid, graph, full), chat with citations, and tune reranker settings in real time.
+  </Card>
+  <Card title="Models" icon="microchip">
+    Connect 16+ AI providers, manage encrypted API keys, discover available models, and monitor usage. See [Model Garden](/features/model-garden) for details.
+  </Card>
+  <Card title="Routing" icon="route">
+    Configure 5-tier model routing (small through omni), set fallback chains, and assign models per agent type or data type. See [Smart Routing](/features/smart-routing).
+  </Card>
+  <Card title="Agents" icon="robot">
+    Enable or disable processing per data type, customize system prompts, override output schemas, and select model tiers for each of the 40 sub-agents. See [Agent Configs](/features/agent-configs).
+  </Card>
+  <Card title="Infrastructure" icon="server">
+    Manage Kubernetes pods directly from the browser. Scale Ollama instances, monitor resource usage, and control the compute layer. See [Pod Management](/features/pod-management).
+  </Card>
+</CardGroup>
+
+## How It Fits Together
+
+<Steps>
+  <Step title="Connect providers">
+    Add API keys for your preferred AI providers in the **Models** tab. Keys are encrypted with AES-256-GCM at rest.
+  </Step>
+  <Step title="Configure routing">
+    In the **Routing** tab, assign models to tiers (small, medium, large, multimodal, omni) and set fallback chains.
+  </Step>
+  <Step title="Tune agents">
+    Use the **Agents** tab to enable processing flags, customize prompts, and override schemas for specific data types.
+  </Step>
+  <Step title="Scale infrastructure">
+    From the **Infrastructure** tab, spin up Ollama pods or scale existing ones to match your workload.
+  </Step>
+  <Step title="Test everything">
+    Use **Search & Chat** to validate your configuration end-to-end with real queries.
+  </Step>
+</Steps>
+
+<Tip>
+  AI Studio changes take effect immediately — no redeployment required. Model routing and agent configs are stored in the database and picked up by the webhook pipeline on the next request.
+</Tip>

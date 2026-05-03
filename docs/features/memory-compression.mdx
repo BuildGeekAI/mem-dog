@@ -1,0 +1,84 @@
+---
+title: "Memory Compression"
+description: "LLM-powered summarization with automatic thresholds, fact extraction, and archive management"
+icon: "compress"
+---
+
+Memory compression reduces storage and improves search quality by summarizing groups of related memories into concise representations while preserving key facts, entities, and action items.
+
+## How It Works
+
+<Steps>
+  <Step title="Threshold triggered">
+    Compression activates when a memory group (e.g., a conversation session) exceeds the configured item count or token threshold.
+  </Step>
+  <Step title="LLM summarization">
+    The compression agent reads all items in the group and generates a structured summary.
+  </Step>
+  <Step title="Extraction">
+    Key facts, named entities, and action items are extracted and stored as first-class fields on the compressed memory.
+  </Step>
+  <Step title="Archive originals">
+    Original memories are marked as archived. They remain searchable but are excluded from default queries.
+  </Step>
+</Steps>
+
+## What Gets Extracted
+
+| Field | Description |
+|-------|-------------|
+| **Summary** | Concise narrative of the original content |
+| **Key facts** | Standalone factual statements |
+| **Entities** | People, organizations, locations, dates |
+| **Action items** | Tasks with optional assignee and due date |
+| **Topics** | Tag-level topic labels |
+
+## Auto-Trigger Thresholds
+
+Configure when compression fires automatically:
+
+```json
+{
+  "compression": {
+    "auto_trigger": true,
+    "min_items": 10,
+    "max_tokens": 8000,
+    "memory_types": ["conversation", "session", "timeline"]
+  }
+}
+```
+
+<Info>
+  Long-term memory types (`factual`, `semantic`, `organizational`) are not compressed by default since they already represent distilled knowledge.
+</Info>
+
+## Manual Compression
+
+Trigger compression on demand via the API or UI:
+
+<CodeGroup>
+```bash cURL
+curl -X POST /api/v1/memories/compress \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "memory_type": "conversation",
+    "session_id": "sess_01J...",
+    "preserve_action_items": true
+  }'
+```
+
+```python Python
+result = client.compress(
+    memory_type="conversation",
+    session_id="sess_01J...",
+    preserve_action_items=True
+)
+print(f"Compressed {result.original_count} items into 1 summary")
+```
+</CodeGroup>
+
+## Archived Originals
+
+<Tip>
+  Archived memories are not deleted. Set `include_archived=true` on any search or list query to include them. This is useful for auditing or when you need the full uncompressed history.
+</Tip>

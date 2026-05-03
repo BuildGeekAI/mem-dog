@@ -1,0 +1,12 @@
+[project]
+name = "mem-dog-testing-api"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "pytest==8.0.0",
+    "pytest-asyncio==0.23.3",
+    "pytest-cov==4.1.0",
+    "httpx==0.26.0",
+    "respx==0.20.2",
+    "factory-boy==3.3.0",
+]

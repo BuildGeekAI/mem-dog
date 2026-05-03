@@ -1,0 +1,45 @@
+---
+title: "TypeScript SDK"
+description: "Native fetch-based TypeScript client for Mem-Dog"
+icon: "js"
+---
+
+# TypeScript SDK
+
+Type-safe client using native `fetch`. Zero external dependencies.
+
+## Installation
+
+```bash
+npm install mem-dog-client
+# or
+yarn add mem-dog-client
+```
+
+## Usage
+
+```typescript
+import { MemDogClient } from 'mem-dog-client';
+
+const client = new MemDogClient({
+  baseUrl: 'http://localhost:8080',
+  apiKey: 'md_your_key',
+});
+
+// Store data
+await client.createData({
+  content: 'Meeting notes from standup',
+  metadata: { tags: ['standup'] },
+});
+
+// Search
+const results = await client.semanticSearch({
+  query: 'what happened in standup?',
+  maxResults: 10,
+});
+
+// List data
+const items = await client.listData({ limit: 20, tags: ['standup'] });
+```
+
+Full API coverage with TypeScript types for all request/response payloads.

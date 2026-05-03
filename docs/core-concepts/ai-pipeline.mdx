@@ -1,0 +1,73 @@
+---
+title: "AI Pipeline"
+description: "40 agents, 6-layer classification, 5-tier model routing"
+icon: "microchip"
+---
+
+# AI Pipeline
+
+Every piece of data that enters Mem-Dog goes through a multi-stage enrichment pipeline powered by 40 specialized AI agents.
+
+## Processing Flow
+
+```
+Ingest → Stage → Classify (6-layer) → Route → Analyze (LLM) → Viewpoint → Embedding → Entity Extraction → Graph Write
+```
+
+## 6-Layer Classification
+
+LLM is the **last resort** — most data is classified deterministically:
+
+| Layer | Method | Example |
+|-------|--------|---------|
+| 1 | Channel message detection | WhatsApp → `chat_message` |
+| 2 | Source type field | `source_type: "pdf"` → `document_pdf` |
+| 3 | Explicit `data_type` field | Direct from caller |
+| 4 | Payload heuristic | Has `latitude`/`longitude` → `sensor_gps` |
+| 5 | MIME registry | `application/json` → `structured_json` |
+| 6 | URL extension | `.csv` → `structured_csv` |
+| 7 | LLM classifier (fallback) | Gemma3:4b classifies ambiguous content |
+
+<Info>
+  Layers 1-6 handle ~80% of data without any LLM call — saving cost and latency.
+</Info>
+
+## 40 Agent Types
+
+| Category | Agents | Examples |
+|----------|--------|---------|
+| **Documents** (8) | PDF, Word, Spreadsheet, Markdown, LaTeX, eBook | Text extraction, structure analysis |
+| **Media** (4) | Image, Audio, Video, 3D Model | Captioning, transcription, scene analysis |
+| **Communication** (6) | Chat, Email, Social Post, Review, Comment | Sentiment, intent, entity extraction |
+| **Structured** (6) | JSON, CSV, YAML, XML, Database Record | Schema inference, anomaly detection |
+| **Code & Logs** (4) | Source Code, Log Entry, Config, Script | Language detection, error classification |
+| **Sensor** (5) | GPS, Biometric, Weather, Industrial | Time-series, geofencing |
+| **Spatial** (2) | Geospatial, Map/Route | Coordinate analysis, region classification |
+| **Specialized** (3) | Medical/DICOM, Legal, Financial | Domain-specific extraction |
+| **Binary** (2) | Binary Blob, Archive | Format detection |
+
+## 5-Tier Smart Routing
+
+| Tier | Default Model | Used for | Cost |
+|------|--------------|----------|------|
+| **Small** | Gemma3:4b | JSON, CSV, IoT, simple text | Free (local) |
+| **Medium** | Gemma3:12b | Code, email, chat, financial | Free (local) |
+| **Large** | Gemma3:27b | PDFs, Office docs, complex docs | Free (local) |
+| **Multimodal** | Qwen3-VL | Images, visual PDFs | Free (local) |
+| **Omni** | Qwen3.5 | Audio, video, multi-format | Free (local) |
+
+## Fallback Chains
+
+If a local model is unavailable:
+
+```
+User's configured engine → Ollama Cloud → Gemini → self-hosted Ollama
+```
+
+## Per-Agent Configuration
+
+Each agent is configurable per user via **AI Studio > Agents**:
+- Custom system prompts
+- Output schema overrides
+- Model tier selection
+- Processing flags (enable/disable)

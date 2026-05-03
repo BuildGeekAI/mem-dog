@@ -1,0 +1,64 @@
+---
+title: "Knowledge Graph"
+description: "Dual-layer temporal knowledge graph with entity tracking"
+icon: "diagram-project"
+---
+
+# Knowledge Graph
+
+Mem-Dog maintains a **dual-layer knowledge graph** that tracks entities, relationships, and how facts change over time.
+
+## Layer 1: Postgres (Always Active)
+
+Zero additional infrastructure — uses the same Postgres that stores everything else.
+
+| Table | Contents |
+|-------|----------|
+| `mem_dog_entities` | 8 types: person, organization, product, location, date, URL, concept, event |
+| `mem_dog_relationships` | Directed edges (e.g., "works_at", "located_in") |
+| `mem_dog_entity_data_mapping` | Links entities back to source data items |
+
+- Deduplicated via canonical form unique index
+- Queryable via `/api/v1/graph/entities` and `/api/v1/graph/relationships`
+
+## Layer 2: Graphiti + Neo4j (Optional, Temporal)
+
+When `NEO4J_URI` is configured, Mem-Dog enables temporal capabilities powered by [Graphiti](https://github.com/getzep/graphiti):
+
+- **Temporal facts**: Every fact gets `valid_at` and `invalid_at` timestamps
+- **Point-in-time queries**: "Who was the CEO of Acme Corp on June 1, 2025?"
+- **Entity resolution**: LLM-powered deduplication merges "John Smith", "J. Smith", and "John"
+- **Community detection**: Label propagation identifies clusters of related entities
+
+## Dual-Write Flow
+
+```
+Pipeline extracts entities
+    ├──> POST /api/v1/graph/entities/batch  → Postgres (instant)
+    └──> Graphiti episode ingestion         → Neo4j (async, LLM-powered)
+              ├── Entity resolution
+              ├── Fact extraction (with temporal bounds)
+              └── Community detection
+```
+
+## Entity-Aware RAG
+
+When a user searches:
+1. Query terms matched against known entities
+2. BFS traversal finds related entities
+3. Entity context injected into LLM system prompt
+4. Answers enriched with structured knowledge, not just raw text chunks
+
+## Query Examples
+
+```bash
+# List entities matching a name
+curl http://localhost:8080/api/v1/graph/entities?q=Acme
+
+# Get relationships for an entity
+curl http://localhost:8080/api/v1/graph/relationships?entity_id=ent_01ABC
+
+# Temporal query (via Graphiti)
+curl -X POST http://localhost:8080/api/v1/ai/query/chat \
+  -d '{"query": "Who was CEO of Acme in 2024?", "search_mode": "graph"}'
+```

@@ -1,0 +1,22 @@
+# API — scale to 0 after 15 min with no HTTP traffic
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: api-scaler
+  namespace: mem-dog
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+spec:
+  scaleTargetRef:
+    name: api
+  minReplicaCount: 0
+  maxReplicaCount: 3
+  cooldownPeriod: 900        # 15 min idle
+  pollingInterval: 30
+  triggers:
+    - type: cron
+      metadata:
+        timezone: "America/Chicago"
+        start: "0 7 * * 1-5"
+        end: "0 23 * * 1-5"
+        desiredReplicas: "1"

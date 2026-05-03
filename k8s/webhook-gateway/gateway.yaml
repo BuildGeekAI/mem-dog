@@ -1,0 +1,32 @@
+# GKE Gateway named "open-jaws" — exposes the Webhook Gateway externally.
+# Requires the Gateway API CRDs and GKE Gateway Controller.
+#
+# For HTTPS, create a Google-managed certificate and uncomment the https listener:
+#   gcloud certificate-manager certificates create webhook-gateway-cert \
+#     --domains="YOUR_DOMAIN" --project=PROJECT_ID
+#   gcloud certificate-manager maps create webhook-gateway-certmap --project=PROJECT_ID
+#   gcloud certificate-manager maps entries create webhook-gateway-certmap-entry \
+#     --map=webhook-gateway-certmap --certificates=webhook-gateway-cert \
+#     --hostname="YOUR_DOMAIN" --project=PROJECT_ID
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: open-jaws
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: webhook-gateway
+spec:
+  gatewayClassName: gke-l7-global-external-managed
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: openclaw-tls

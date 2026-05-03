@@ -1,0 +1,231 @@
+# API
+
+Python 3.12 FastAPI application. Core data store and query engine.
+
+**Entry point:** `api/main.py` · **Port:** 8080
+
+## Data Model
+
+| Entity | ID Format | Description |
+|--------|-----------|-------------|
+| **Data** | `data_<ULID>` | Any stored content — text, files, URLs. Versioned. |
+| **Memory** | `mem_<type>_<ULID>` | Container grouping data items. 10 types. |
+| **User** | UUID | User identity with username, email, roles. |
+| **Embedding** | UUID | Vector embedding chunk (pgvector). |
+| **Viewpoint** | UUID | AI-generated analysis of a data item. Versioned. |
+| **Prompt** | UUID | Reusable prompt template. |
+| **Skill** | UUID | AI agent role definition. |
+
+### Memory types
+
+| Type | Duration | Purpose |
+|------|----------|---------|
+| `timeline` | permanent | Chronological activity log |
+| `session` | temporary | Bounded interaction session |
+| `conversation` | temporary | Multi-turn dialogue |
+| `user` | permanent | User profile facts |
+| `organizational` | permanent | Org-level knowledge |
+| `factual` | permanent | Verified facts |
+| `episodic` | temporary | Event memories |
+| `semantic` | permanent | Conceptual knowledge |
+| `custom` | varies | User-defined |
+| `tracing` | temporary | OTel trace spans |
+
+| **Organization** | `org_<ULID>` | Team or company container. |
+| **Project** | `proj_<ULID>` | App-level scope within an org. |
+
+### Storage tables (Supabase)
+
+- **`mem_dog_blobs`** — General blob store keyed by `(store_name, path)`, with optional `user_id`, `org_id`, `project_id` scoping
+- **`mem_dog_embeddings`** — pgvector embeddings with `data_id`, `chunk_text`, `vector`, `ai_signature`, optional `org_id`/`project_id`
+- **`organizations`** — Org hierarchy: `org_id`, `name`, `owner_user_id`, `status`
+- **`projects`** — Projects within orgs: `project_id`, `org_id` (FK), `name`, `status`
+- **`org_members`** — Membership: `(org_id, user_id)` composite PK, `role` (owner/admin/member/viewer)
+- **`mem_dog_entities`** — Knowledge graph entities with `entity_type`, `canonical_form`, dedup index
+- **`mem_dog_relationships`** — Directed relationships between entities
+- **`mem_dog_entity_data_mapping`** — Entity-to-data-item links
+- **`agent_configs`** — Per-agent-type pipeline configs scoped by `(agent_type, user_id)`. `NULL` user_id = system default.
+
+## Authentication
+
+Dual-path auth via `X-API-Key` header:
+
+| Auth type | Key format | Scope |
+|-----------|-----------|-------|
+| Global | Any string (set via `API_KEY` env) | Full access, no user scope |
+| Per-user | `md_<token>` (44 chars) | Scoped to `user_id` |
+
+Public paths (`/`, `/health`, `/docs`, `/redoc`, `/openapi.json`) never require a key. If `API_KEY` env is unset (local dev), all requests pass through.
+
+Per-user keys are managed via `POST /api/v1/users/{id}/api-keys` (returned once), listed via `GET`, and revoked via `DELETE`.
+
+## Endpoints
+
+### Health & Info
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/` | Service info |
+| GET | `/health` | Health probe |
+
+### Data (`/api/v1/data`)
+
+CRUD for data items: create (file upload, URL, inline), list, get (raw content or metadata), update (creates new version), delete. Per-item access control via `/data/{id}/access`.
+
+### Tags (`/api/v1`)
+
+Tag operations on data items: get, replace, add, remove. Global: list all tags, search by tags (ANY/ALL mode).
+
+### Versions (`/api/v1/versions`)
+
+List version history and retrieve content at specific versions.
+
+### Memories (`/api/v1/memories`)
+
+CRUD for memory containers. Associate/disassociate data items. Bulk delete.
+
+**Mem0 Categories** — 10 granular types grouped into 4 Mem0-aligned categories:
+
+| Memory Type | Category | Default TTL |
+|------------|----------|-------------|
+| conversation | conversation | 1 hour |
+| timeline | session | 7 days |
+| session | session | 24 hours |
+| tracing | session | 3 days |
+| user, factual, episodic, semantic, custom | user | never |
+| organizational | organizational | never |
+
+**Access Levels** — `private` (default), `shared`, `public`, `restricted`. Use `shared_with` to specify user IDs for shared/restricted access.
+
+**Expiry** — All types support `ttl_hours` and `no_expiry`. Expired memories are hidden by default; use `include_expired=true` to include them.
+
+**New Query Params** (GET `/api/v1/memories`):
+- `access_level` — Filter by access level
+- `category` — Filter by Mem0 category
+- `include_expired` — Include expired memories (default false)
+
+**New Create Fields** (`POST /api/v1/memories`):
+- `access_level` — Access level (default: private)
+- `shared_with` — List of user IDs
+- `no_expiry` — Override default TTL (boolean)
+
+**New Update Fields** (`PUT /api/v1/memories/{id}`):
+- `access_level`, `shared_with`, `expires_at` — Update access/expiry directly
+
+### Organizations & Projects (`/api/v1/organizations`, `/api/v1/projects`)
+
+Org/project hierarchy for multi-tenant scoping. See [Organizations](organizations.md) for full details.
+
+- **Orgs**: CRUD + membership management (owner/admin/member/viewer roles)
+- **Projects**: CRUD nested under orgs
+- **Scoping**: Pass `?project_id=proj_...` on data, memories, and embeddings endpoints to scope queries
+
+### Users (`/api/v1/users`)
+
+User CRUD, per-user data upload/listing, username lookup, API key management.
+
+### AI Config (`/api/v1/ai`)
+
+System AI config, model catalog, pipeline models, agent processing defaults, per-user engine configs and preferences, Ollama Cloud model cards, smart routing config and suggestions.
+
+### AI Query (`/api/v1/ai/query`)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/ai/query` | Natural language query (RAG) |
+| POST | `/ai/query/timeline` | Timeline-scoped RAG |
+| POST | `/ai/query/semantic` | Vector similarity search |
+| POST | `/ai/query/chat` | Conversational RAG with inline citations |
+
+### AI Resources
+
+Prompts, Embeddings, Viewpoints, Skills, Agent Configs, Analysis Templates — all CRUD.
+
+### Graph Memory (`/api/v1/graph`)
+
+Entity/relationship knowledge graph. Entities are auto-extracted by the webhook pipeline.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/graph/entities?q=&user_id=` | Search entities by name |
+| GET | `/graph/entities/{id}` | Entity detail |
+| GET | `/graph/entities/{id}/relationships` | Entity relationships |
+| GET | `/graph/data/{data_id}/entities` | Entities in a data item |
+| POST | `/graph/entities/batch` | Batch create entities + relationships |
+| DELETE | `/graph/entities/{id}` | Delete entity (cascades) |
+| DELETE | `/graph/data/{data_id}/entities` | Delete all entities for data item |
+
+Entity types: `person`, `organization`, `product`, `location`, `date`, `url`, `concept`, `event`.
+
+See [Graph Memory](graph-memory.md) for schema details.
+
+### Memory Compression (`/api/v1/memories/{id}/compress`)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/memories/{id}/compress` | LLM-summarize memory into compressed data item |
+
+Request body: `{"archive_originals": false, "max_summary_length": 2000}`
+
+Auto-compression triggers when a memory exceeds `AUTO_COMPRESS_THRESHOLD` items (default 50, env-configurable).
+
+### Other
+
+- **Statistics** (`/stats`) — Global/per-user stats, token usage tracking
+- **Channels & Identities** — Channel→user bindings, channel config
+- **Ingest** (`/ingest`) — Universal envelope ingestion (`direct=true` stores, `direct=false` forwards to pipeline)
+- **Public LLMs** — User LLM configs with encrypted API keys, Ollama model control
+- **Bulk Delete** — Delete multiple data items, all data for user, all data in memory
+
+## Key Modules
+
+| Module | Purpose |
+|--------|---------|
+| `storage.py` | Storage abstraction (local/GCS/Supabase) |
+| `config.py` | Config resolution (env > GCS system config > defaults) |
+| `smart_routing.py` | Model routing — single source of truth |
+| `auth.py` | Auth helpers (`get_authenticated_user_id`, `get_effective_user_id`) |
+| `crypto.py` | Fernet encryption for API keys at rest |
+| `webhook_events.py` | Dispatches `data.uploaded` to webhook pipeline |
+| `telemetry.py` | OpenTelemetry setup |
+
+## Configuration
+
+### Core
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `STORAGE_BACKEND` | auto-detect | `local`, `gcs`, or `supabase` |
+| `API_KEY` | (empty) | Global API auth key |
+| `MASTER_ENCRYPTION_KEY` | (empty) | Fernet key for encrypting credentials |
+| `DEFAULT_USER_ID` | `00000000-...0001` | Default user |
+
+### AI / Model Servers
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SYSTEM_GEMINI_API_KEY` | — | Gemini key (chat fallback + embeddings) |
+| `MODEL_SERVER_URL` | — | Local Ollama (chat primary) |
+| `CHAT_COMPLETION_TIMEOUT_S` | `15` | Local Ollama timeout before Gemini fallback |
+| `OLLAMA_CLOUD_API_KEY` | — | Ollama Cloud API key |
+| `OLLAMA_CLOUD_MODEL_SMALL` | `ollama/gemma3:4b` | Smart routing small tier |
+| `OLLAMA_CLOUD_MODEL_MEDIUM` | `ollama/gemma3:12b` | Smart routing medium tier |
+| `OLLAMA_CLOUD_MODEL_LARGE` | `ollama/gemma3:27b` | Smart routing large tier |
+| `OLLAMA_CLOUD_MODEL_MULTIMODAL` | `ollama/qwen3-vl:235b-cloud` | Vision tier |
+| `OLLAMA_CLOUD_MODEL_OMNI` | `ollama/qwen3.5:cloud` | Audio/video tier |
+| `DATA_PIPELINE_AI_FALLBACK_MODEL` | `gemini/gemini-3.1-pro-preview` | Fallback for all types |
+
+### Storage
+
+| Variable | Description |
+|----------|-------------|
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase auth key |
+| `RAW_BUCKET` | GCS bucket for raw binary files |
+
+### Webhook
+
+| Variable | Description |
+|----------|-------------|
+| `WEBHOOK_GATEWAY_URL` | Webhook pipeline gateway URL |
+| `WEBHOOK_API_KEY` | Webhook gateway auth key |

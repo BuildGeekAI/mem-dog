@@ -1,0 +1,42 @@
+[project]
+name = "mem-dog-api"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.27.0",
+    "google-cloud-storage>=2.14.0",
+    "pydantic>=2.11.5",
+    "python-multipart>=0.0.6",
+    "python-dotenv>=1.0.1",
+    "httpx>=0.28.1,<1.0.0",
+    "setuptools>=69.0",
+    # OpenTelemetry
+    "opentelemetry-api>=1.27.0",
+    "opentelemetry-sdk>=1.27.0",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "opentelemetry-instrumentation-logging>=0.48b0",
+    "opentelemetry-exporter-otlp>=1.27.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.27.0",
+    # Model management
+    "huggingface_hub>=0.24.0",
+    "docker>=7.0.0",
+    "google-cloud-run>=0.10.0",
+    "google-cloud-pubsub>=2.0.0",
+    # ULID for data/memory IDs (data_<ulid>, mem_<type>_<ulid>)
+    "python-ulid>=2.0.0",
+    # Store backends (Redis, Postgres, Supabase)
+    "redis>=5.0.0",
+    "psycopg2-binary>=2.9.0",
+    "supabase>=2.0.0",
+    # Graphiti — temporal knowledge graph (Zep open-source engine)
+    "graphiti-core[google-genai]>=0.5.0",
+    # Kubernetes client for model pod management
+    "kubernetes>=28.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.23.0",
+]

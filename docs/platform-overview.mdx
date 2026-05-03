@@ -1,0 +1,84 @@
+---
+title: "Platform Overview"
+description: "How Mem-Dog works — architecture, data flow, and components"
+icon: "map"
+---
+
+# Platform Overview
+
+Mem-Dog is a private AI system with four pillars:
+
+| Pillar | What it means |
+|--------|--------------|
+| **Private by Design** | Data never leaves your network. Full offline/air-gapped capability. Zero trust boundaries in local mode. |
+| **Fast Locally** | 6-layer deterministic classification. 80% of AI workload runs on the free 4b model. |
+| **Cost Efficient** | $0/month on a Mac Mini. No per-token fees. No per-seat licensing. |
+| **Genuinely Smart** | 40 agents, temporal knowledge graph, 5 search modes, RAG chat with citations. |
+
+## Architecture
+
+```
+  300+ Apps (Nango)          Users
+  Slack, WhatsApp,           Web UI (Next.js 14)
+  Telegram, email...              |
+       |                          v
+       v                    ┌─────────────────┐
+  Webhook Gateway           │  API (FastAPI)   │
+  per-user endpoints        │  70+ endpoints   │
+  (whk_<ulid>)              │  Python 3.12     │
+  normalize → Universal     └──┬──┬──┬──┬──────┘
+  Envelope format              │  │  │  │
+       │                       │  │  │  └──> Nango (300+ providers)
+       v                       │  │  │
+  ┌────────────────┐           │  │  └──> GCS (raw binary)
+  │ Webhook Pipeline│          │  │
+  │ NATS JetStream  │         │  └──> Neo4j + Graphiti
+  │ 40 AI Agents    │         │       temporal knowledge graph
+  │ classify→embed  │         v
+  └────────┬────────┘   Supabase (Postgres 16)
+           │            ├── mem_dog_blobs
+           │            ├── mem_dog_embeddings (pgvector)
+           │            ├── mem_dog_entities
+           └── results →└── mem_dog_relationships
+                              │
+                    ┌─────────v─────────────┐
+                    │  Multi-Signal Search   │
+                    │  5 modes + 4 rerankers │
+                    │  RAG Chat with [1][2]  │
+                    └───────────────────────┘
+```
+
+## Components
+
+| Component | Stack | Description |
+|-----------|-------|-------------|
+| **API** | Python 3.12, FastAPI | 70+ REST endpoints, storage abstraction, auth |
+| **UI** | Next.js 14, TypeScript | Dashboard, AI Studio, Playground, Settings |
+| **Webhook Pipeline** | NATS JetStream, ADK | 40 AI agents for enrichment |
+| **Webhook Gateway** | FastAPI, LiteLLM | Channel normalization, identity resolution |
+| **DigiMe** | OpenClaw runtime | Conversational AI agent on 25+ channels |
+| **MCP Server** | Python, SSE | 8 tools for Claude Desktop / Cursor |
+| **Neo4j** | Neo4j 5.26 + Graphiti | Temporal knowledge graph |
+| **Supabase** | Postgres 16 + pgvector | Structured data, embeddings, auth |
+| **Nango** | Self-hosted | OAuth2 for 300+ providers |
+| **Ollama** | 3 tiers | Gemma3 4b/12b/27b, embeddinggemma |
+
+## Data Flow
+
+1. Data arrives via **channels** (WhatsApp, Slack, etc.), **integrations** (Gmail, Salesforce), **API**, or **DigiMe** conversation
+2. **Webhook Gateway** normalizes into `UniversalEnvelope` format, resolves user identity
+3. **API** stores raw data, creates tracing memory, publishes to NATS
+4. **Pipeline** runs 6-layer classification → routes to typed sub-agent → LLM analysis → viewpoint + embedding + entity extraction
+5. Results written to **Postgres** (instant) and **Neo4j/Graphiti** (async, temporal)
+6. User searches via **5 modes** with **4 rerankers**, gets **RAG chat with citations**
+
+## Privacy Model
+
+```
+User → DigiMe → Gateway → Pipeline → Ollama (LOCAL)
+                                        ↓
+                              Postgres + Neo4j (LOCAL)
+
+Data never leaves your infrastructure.
+Third parties who see your data: 0.
+```

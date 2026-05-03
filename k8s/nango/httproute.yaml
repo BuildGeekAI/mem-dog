@@ -1,0 +1,37 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: nango-routes
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: nango
+spec:
+  parentRefs:
+    - name: open-jaws
+      namespace: webhook-gateway
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /oauth
+      backendRefs:
+        - name: nango-server
+          namespace: nango
+          port: 3003
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /connection
+      backendRefs:
+        - name: nango-server
+          namespace: nango
+          port: 3003
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /config
+      backendRefs:
+        - name: nango-server
+          namespace: nango
+          port: 3003

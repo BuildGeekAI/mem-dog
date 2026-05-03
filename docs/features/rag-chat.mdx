@@ -1,0 +1,81 @@
+---
+title: "RAG Chat"
+description: "Conversational AI with cited answers, 5 search modes, and 4 rerankers"
+icon: "comments"
+---
+
+RAG Chat provides conversational answers grounded in your stored data. Every claim is backed by numbered citations like `[1][2]` that link back to source documents.
+
+## How It Works
+
+<Steps>
+  <Step title="Query">
+    Send a natural language question to the chat endpoint.
+  </Step>
+  <Step title="Retrieve">
+    mem-dog searches across your data using the configured search mode and returns candidate results.
+  </Step>
+  <Step title="Rerank">
+    Results are reranked using the selected strategy to surface the most relevant content.
+  </Step>
+  <Step title="Generate">
+    The LLM generates an answer grounded in the retrieved context, inserting `[1][2]` citation markers.
+  </Step>
+</Steps>
+
+## 5 Search Modes
+
+| Mode | Engine | Best For |
+|------|--------|----------|
+| **vector** | pgvector (cosine similarity) | Semantic meaning, concept matching |
+| **fts** | BM25 keyword search | Exact terms, names, codes |
+| **hybrid** | Vector + BM25 via RRF | General-purpose (recommended default) |
+| **graph** | Graphiti BFS on Neo4j | Relationship traversal, temporal facts |
+| **full** | All signals merged | Maximum recall, complex questions |
+
+## 4 Rerankers
+
+| Reranker | Description |
+|----------|-------------|
+| **none** | Return results as-is from the search engine |
+| **rrf** | Reciprocal Rank Fusion — merge rankings from multiple sources |
+| **mmr** | Maximal Marginal Relevance — boost diversity, reduce redundancy |
+| **cross-encoder** | LLM-scored relevance — highest quality, highest latency |
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST /api/v1/ai/query/chat \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "query": "What decisions were made in last week meeting?",
+    "search_mode": "hybrid",
+    "reranker": "mmr",
+    "memory_types": ["conversation", "episodic"],
+    "time_range": {"start": "2026-03-20", "end": "2026-03-27"}
+  }'
+```
+
+```python Python
+response = client.chat(
+    query="What decisions were made in last week's meeting?",
+    search_mode="hybrid",
+    reranker="mmr",
+    memory_types=["conversation", "episodic"]
+)
+print(response.answer)    # "The team decided to... [1][2]"
+print(response.citations) # [{index: 1, source_id: "data_01J..."}, ...]
+```
+</CodeGroup>
+
+## Scoping & Filtering
+
+<Info>
+  Narrow results by memory type, time range, tags, or access level. Scoping reduces noise and improves answer quality — especially useful when you have a large knowledge base.
+</Info>
+
+- **Memory types**: Filter to specific types (conversation, factual, episodic, etc.)
+- **Temporal filtering**: `time_range` with `start` and `end` dates
+- **Tags**: Include or exclude specific tags
+- **Access level**: Respect private/shared/public/restricted boundaries

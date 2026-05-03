@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openclaw-node
+  namespace: webhook-gateway
+  labels:
+    app: openclaw-node
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: openclaw-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openclaw-node
+  template:
+    metadata:
+      labels:
+        app: openclaw-node
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: copy-config
+          image: busybox:1.36
+          command: ["sh", "-c"]
+          args:
+            - |
+              chown -R 1000:1000 /home/node/.openclaw
+              mkdir -p /home/node/.openclaw/workspace
+              cp /skills-src/IDENTITY.md /home/node/.openclaw/workspace/IDENTITY.md
+              cp /skills-src/SOUL.md /home/node/.openclaw/workspace/SOUL.md
+              mkdir -p /home/node/.openclaw/skills/mem-dog-query
+              mkdir -p /home/node/.openclaw/skills/mem-dog-ingest
+              mkdir -p /home/node/.openclaw/skills/mem-dog-bridge
+              mkdir -p /home/node/.openclaw/skills/mem-dog-semantic-search
+              cp /config-src/openclaw.json /home/node/.openclaw/openclaw.json
+              sed -i "s|__GEMINI_API_KEY__|${GEMINI_API_KEY}|g" /home/node/.openclaw/openclaw.json
+              sed -i "s|__OPENCLAW_GATEWAY_TOKEN__|${OPENCLAW_GATEWAY_TOKEN}|g" /home/node/.openclaw/openclaw.json
+              cp /skills-src/mem-dog-query.md /home/node/.openclaw/skills/mem-dog-query/SKILL.md
+              cp /skills-src/mem-dog-ingest.md /home/node/.openclaw/skills/mem-dog-ingest/SKILL.md
+              cp /skills-src/mem-dog-bridge.md /home/node/.openclaw/skills/mem-dog-bridge/SKILL.md
+              cp /skills-src/mem-dog-semantic-search.md /home/node/.openclaw/skills/mem-dog-semantic-search/SKILL.md
+              sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/mem-dog-query/SKILL.md
+              sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/mem-dog-ingest/SKILL.md
+              sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/mem-dog-semantic-search/SKILL.md
+          env:
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-node-secrets
+                  key: GEMINI_API_KEY
+            - name: OPENCLAW_GATEWAY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-node-secrets
+                  key: OPENCLAW_GATEWAY_TOKEN
+            - name: MEM_DOG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-node-secrets
+                  key: MEM_DOG_API_KEY
+          volumeMounts:
+            - name: config-src
+              mountPath: /config-src
+              readOnly: true
+            - name: skills-src
+              mountPath: /skills-src
+              readOnly: true
+            - name: openclaw-home
+              mountPath: /home/node/.openclaw
+            - name: workspace
+              mountPath: /home/node/.openclaw/workspace
+      containers:
+        - name: openclaw-node
+          image: ghcr.io/openclaw/openclaw:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 18789
+              protocol: TCP
+          env:
+            - name: OPENCLAW_GATEWAY_BIND
+              value: "lan"
+          envFrom:
+            - configMapRef:
+                name: openclaw-node-config
+            - secretRef:
+                name: openclaw-node-secrets
+          resources:
+            requests:
+              cpu: 50m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: openclaw-home
+              mountPath: /home/node/.openclaw
+            - name: workspace
+              mountPath: /home/node/.openclaw/workspace
+      volumes:
+        - name: config-src
+          configMap:
+            name: openclaw-node-config-file
+        - name: skills-src
+          configMap:
+            name: openclaw-node-skills
+        - name: openclaw-home
+          persistentVolumeClaim:
+            claimName: openclaw-home
+        - name: workspace
+          emptyDir: {}

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-gateway
+  namespace: webhook-gateway
+  labels:
+    app: webhook-gateway
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: webhook-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-gateway
+  template:
+    metadata:
+      labels:
+        app: webhook-gateway
+    spec:
+      containers:
+        - name: webhook-gateway
+          image: webhook-gateway:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: webhook-gateway-config
+            - secretRef:
+                name: webhook-gateway-secrets
+            # Direct Supabase read access (created by deploy-supabase-gke).
+            # Uncomment after deploying Supabase:
+            # - secretRef:
+            #     name: ocg-supabase-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10

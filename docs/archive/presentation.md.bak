@@ -1,0 +1,556 @@
+# mem-dog: The AI Memory Platform
+
+**A complete data memory layer with multi-channel ingestion, 40-agent AI enrichment, knowledge graph, and conversational RAG.**
+
+---
+
+## Slide 1 — What is mem-dog?
+
+### Your data. Your AI. Your memory.
+
+mem-dog is a self-hosted memory platform that:
+
+- **Ingests** from 25+ channels (WhatsApp, Telegram, Slack, Discord, Signal, email, and more)
+- **Enriches** every piece of data through a 40-agent AI pipeline
+- **Stores** with versioning, access control, and 10 memory types
+- **Queries** via conversational RAG with inline citations and entity-aware search
+
+> One platform to capture, understand, and recall anything.
+
+---
+
+## Slide 2 — Architecture
+
+```mermaid
+flowchart TB
+    subgraph Channels ["External Channels"]
+        WA[WhatsApp]
+        TG[Telegram]
+        SL[Slack]
+        EM[Email]
+        DC[Discord]
+        SG[Signal]
+        MT[Matrix]
+        MORE["15+ more"]
+    end
+
+    subgraph Users ["Users"]
+        UI["Web UI\nNext.js 14"]
+        SDK["Python SDK\nhttpx"]
+    end
+
+    subgraph GKE ["GKE Cluster"]
+        GW["Webhook Gateway\nFastAPI"]
+        DN["DigiMe Agent\nOpenClaw Node"]
+        NATS[("NATS\nJetStream")]
+        PIPE["Webhook Pipeline\n40 typed sub-agents"]
+        OL["Ollama\ngemma3 4b/12b/27b"]
+        API["API\nFastAPI · 60+ endpoints"]
+    end
+
+    subgraph Storage ["Storage"]
+        SB[("Supabase\nPostgres + pgvector")]
+        GCS["GCS\nRaw binary blobs"]
+    end
+
+    subgraph CR ["Cloud Run"]
+        UICR["UI\nNext.js SSR"]
+    end
+
+    Channels -->|"webhook"| GW
+    GW --> DN
+    DN -->|"forwarding"| API
+    GW -->|"UniversalEnvelope"| NATS
+    NATS -->|"pull consumer"| PIPE
+    PIPE -->|"analyse"| OL
+    PIPE -->|"store results"| API
+    UI --> UICR --> API
+    SDK --> API
+    API --> SB
+    API --> GCS
+```
+
+| Component | Stack | Deployment |
+|-----------|-------|------------|
+| **API** | Python 3.12, FastAPI, 60+ endpoints | GKE |
+| **UI** | Next.js 14, React 18, TypeScript | Cloud Run |
+| **Webhook Pipeline** | Python 3.12, NATS, ADK, 40 sub-agents | GKE |
+| **Webhook Gateway** | Python 3.12, FastAPI | GKE |
+| **DigiMe Agent** | Node.js, OpenClaw runtime | GKE |
+| **Ollama** | gemma3:4b, Ollama Cloud | GKE |
+| **Python SDK** | httpx, 70+ methods | pip install |
+
+---
+
+## Slide 3 — Data Flow: Ingest to Memory
+
+```mermaid
+sequenceDiagram
+    participant Chan as Channel / UI
+    participant GW as Gateway
+    participant NATS as NATS
+    participant Pipe as Pipeline (40 agents)
+    participant LLM as Ollama / Gemini
+    participant API as API
+    participant DB as Supabase
+
+    Chan->>GW: Webhook / upload
+    GW->>API: Store raw data
+    API->>DB: data_<ULID> created
+    GW->>NATS: Publish UniversalEnvelope
+
+    NATS->>Pipe: Pull consumer delivers
+    Pipe->>Pipe: 6-layer classification
+    Pipe->>LLM: Analyse (typed agent)
+    LLM-->>Pipe: JSON: summary, entities, keywords
+    Pipe->>API: Create viewpoint
+    Pipe->>API: Auto-tag (category, entity, keyword)
+    Pipe->>API: Generate embedding (pgvector)
+    Pipe->>API: Batch create graph entities
+```
+
+**Key:** Raw data is stored before AI processing starts. Pipeline failures never lose data.
+
+---
+
+## Slide 4 — AI Pipeline: 40 Agents, 6-Layer Classification
+
+### How data gets classified
+
+No LLM needed for routing in most cases — 6 deterministic layers run first:
+
+```mermaid
+flowchart LR
+    Data["Inbound Data"] --> L1["1. Channel message\ndetection"]
+    L1 -->|miss| L2["2. Source type\nfield"]
+    L2 -->|miss| L3["3. Explicit\ndata_type"]
+    L3 -->|miss| L4["4. Payload field\nheuristic"]
+    L4 -->|miss| L5["5. MIME\nregistry"]
+    L5 -->|miss| L6["6. URL extension\nsniff"]
+    L6 -->|miss| LLM["LLM Classifier\ngemma3:4b"]
+
+    L1 & L2 & L3 & L4 & L5 & L6 & LLM -->|matched| Agent["Typed Sub-Agent"]
+```
+
+### 40+ specialized agents
+
+| Category | Agent Types |
+|----------|------------|
+| **Documents** | PDF, Word, Excel, PowerPoint, HTML, Markdown, plain text |
+| **Media** | Image, video (URL + stream), audio (URL + stream), image batch |
+| **Communications** | Chat message, email, web page, calendar, RSS/Atom |
+| **Structured** | CSV, JSON, XML, YAML |
+| **Code** | Source code, log files, log streams |
+| **Binary** | Archives, medical imaging (DICOM), time series |
+| **Spatial** | LiDAR, geospatial (GeoJSON/KML/GPX), 3D models |
+| **Sensor/IoT** | GPS, biometric, weather, industrial telemetry |
+| **Scientific** | HDF5, NetCDF, FITS datasets |
+
+### Tiered model routing
+
+| Tier | Model | Used For |
+|------|-------|----------|
+| Small | gemma3:4b | Classification, simple structured data (JSON, CSV, XML) |
+| Medium | gemma3:12b | Documents, code, communications |
+| Large | gemma3:27b | Complex PDFs, Office docs, medical |
+| Multimodal | Qwen3-VL | Images, video with visual content |
+| Omni | Qwen3.5 | Audio, video with narration |
+| Fallback | Gemini | When self-hosted models fail |
+
+---
+
+## Slide 5 — Knowledge Graph
+
+### Automatic entity extraction into Postgres
+
+The AI pipeline extracts typed entities and relationships from every piece of data — no manual setup.
+
+```mermaid
+erDiagram
+    mem_dog_entities {
+        text entity_id PK
+        text entity_type
+        text entity_name
+        text canonical_form
+        float confidence
+        jsonb metadata
+    }
+    mem_dog_relationships {
+        text rel_id PK
+        text source_entity_id FK
+        text target_entity_id FK
+        text rel_type
+        float strength
+    }
+    mem_dog_entity_data_mapping {
+        text mapping_id PK
+        text entity_id FK
+        text data_id
+    }
+
+    mem_dog_entities ||--o{ mem_dog_relationships : "source/target"
+    mem_dog_entities ||--o{ mem_dog_entity_data_mapping : "appears in"
+```
+
+**Entity types:** person, organization, product, location, date, url, concept, event
+
+**Entity-aware RAG:** When you ask a question, the chat endpoint:
+1. Runs standard pgvector similarity search
+2. Matches entity names from your query against the graph
+3. Adds "Known entities" context to the LLM system prompt
+4. Result: better answers when queries reference specific people, orgs, or concepts
+
+---
+
+## Slide 6 — Memory System
+
+### 10 types, 4 categories, built-in expiry
+
+| Type | Category | Default TTL | Purpose |
+|------|----------|-------------|---------|
+| conversation | conversation | 1 hour | Multi-turn dialogue |
+| timeline | session | 7 days | Chronological activity log |
+| session | session | 24 hours | Bounded interaction |
+| tracing | session | 3 days | OTel trace spans |
+| user | user | never | User profile facts |
+| factual | user | never | Verified facts |
+| episodic | user | temporary | Event memories |
+| semantic | user | never | Conceptual knowledge |
+| organizational | organizational | never | Org-level knowledge |
+| custom | user | varies | User-defined |
+
+**Access levels:** private (default), shared, public, restricted — with `shared_with` user list
+
+**Memory compression:** LLM-powered summarization compresses verbose memories into structured summaries with key facts, entities, timeline, and action items. Auto-triggers at configurable thresholds (default: 50 items).
+
+```python
+m.compress("mem_conv_xyz", archive_originals=True)
+# → {"summary_data_id": "data_...", "original_count": 47, "summary_length": 1823}
+```
+
+---
+
+## Slide 7 — RAG Chat with Citations
+
+### Conversational search across all stored data
+
+```mermaid
+flowchart LR
+    Q["User question"] --> EMB["Generate\nquery embedding"]
+    EMB --> SIM["pgvector\nsimilarity search"]
+    SIM --> ENT["Entity-aware\nboost"]
+    ENT --> CTX["Build numbered\ncontext"]
+    CTX --> LLM["LLM with\nsystem prompt"]
+    LLM --> ANS["Answer with\n[1] [2] citations"]
+```
+
+4 query modes:
+
+| Endpoint | Use Case |
+|----------|----------|
+| `POST /ai/query` | Simple RAG query |
+| `POST /ai/query/timeline` | Timeline-scoped query |
+| `POST /ai/query/semantic` | Vector similarity search |
+| `POST /ai/query/chat` | Conversational RAG with citations + history |
+
+---
+
+## Slide 8 — Developer Experience
+
+### Simple SDK — 8 methods for 90% of use cases
+
+```python
+from mem_dog_client import MemDog
+
+m = MemDog("http://localhost:8080", api_key="...", user_id="user1")
+
+# Store
+result = m.add("Meeting notes about Q1 results",
+               tags=["work", "finance"],
+               memory_type="session")
+
+# Search
+results = m.search("Q1 results")                    # metadata
+results = m.search("what were the Q1 numbers?",     # RAG
+                    use_ai=True)
+
+# Graph
+entities = m.entities("Google")
+linked = m.related("data_01ABC...")
+
+# Retrieve / delete / compress
+item = m.get("data_01ABC...")
+m.delete("data_01ABC...")
+m.compress("mem_session_xyz")
+```
+
+### Agent framework adapters
+
+| Framework | Adapter | Install |
+|-----------|---------|---------|
+| **LangChain** | `MemDogChatMessageHistory` + `MemDogRetriever` | `pip install mem-dog-client[langchain]` |
+| **CrewAI** | `MemDogCrewMemory` (save/search) | `pip install mem-dog-client[crewai]` |
+| **OpenAI** | Function calling tools + handler | `pip install mem-dog-client[openai]` |
+
+```python
+# LangChain
+from mem_dog_client.adapters.langchain import MemDogChatMessageHistory
+history = MemDogChatMessageHistory(m, memory_id="mem_conversation_abc")
+
+# CrewAI
+from mem_dog_client.adapters.crewai import MemDogCrewMemory
+memory = MemDogCrewMemory(m)
+memory.save("Important fact", metadata={"topic": "finance"})
+
+# OpenAI
+from mem_dog_client.adapters.openai import get_mem_dog_tools
+tools = get_mem_dog_tools()  # → pass to chat.completions.create()
+```
+
+---
+
+## Slide 9 — Multi-Channel Ingestion
+
+### 25+ channels through DigiMe
+
+DigiMe is an OpenClaw-powered AI agent that lives inside messaging apps — it communicates with the mem-dog RAG system to answer queries, perform semantic search, and ingest data through natural conversation.
+
+| Channel Type | Channels |
+|-------------|----------|
+| **Messaging** | WhatsApp, Telegram, Signal, iMessage |
+| **Team Chat** | Slack, Discord, Matrix, MS Teams |
+| **Email** | Gmail, Outlook, IMAP |
+| **Social** | Twitter/X, Facebook, Instagram, Reddit |
+| **Dev Tools** | GitHub, GitLab, Jira |
+| **Cloud Storage** | Google Drive, Dropbox, OneDrive |
+| **Other** | RSS, Calendar, Webhooks, REST API |
+
+### 300+ integration platform
+
+OAuth2 and API-key connections to CRM, dev tools, cloud storage, and more — with Fernet-encrypted credentials at rest and a credential-injecting API proxy.
+
+---
+
+## Slide 10 — Web UI
+
+### 7 tabs, full platform control
+
+| Tab | What it does |
+|-----|-------------|
+| **Data** | Browse, search, filter all stored data with tag-based faceting |
+| **Memories** | Create, browse, manage memory containers. Bulk operations. |
+| **Chat** | RAG-powered conversational search with inline citations |
+| **Insert** | 6 input modes: text, file upload, URL, camera, voice, video |
+| **Testing** | Simulate webhook messages across 10+ channel types |
+| **AI Settings** | Model garden, smart routing, agent configs, prompt templates |
+| **Insights** | Stats dashboard with token usage, embedding counts, OTel traces |
+
+---
+
+## Slide 11 — Model Garden
+
+### Bring your own AI providers
+
+Connect any AI provider — models are auto-discovered and available for smart routing.
+
+| Provider | Auth | Models |
+|----------|------|--------|
+| Ollama (self-hosted) | None | Any pulled model |
+| Ollama Cloud | API key | Tiered catalog |
+| Google Gemini | API key | gemini-pro, gemini-flash |
+| OpenAI | API key | GPT-4o, GPT-4o-mini |
+| Anthropic | API key | Claude Sonnet, Haiku |
+| Any OpenAI-compatible | API key + base URL | Custom |
+
+- Encrypted API key storage (Fernet AES-256)
+- One-click connectivity tests
+- Automatic model discovery
+- Per-user, per-data-type smart routing overrides
+
+---
+
+## Slide 12 — Infrastructure
+
+### Deploy anywhere
+
+```mermaid
+flowchart LR
+    subgraph Local ["Local / On-Prem"]
+        DC["Docker Compose\n9 services\nOne command"]
+        MM["Mac Mini\nGKE + Ollama\nApple Silicon GPU"]
+    end
+
+    subgraph Cloud ["Google Cloud"]
+        GKE2["GKE\nAPI + Pipeline\n+ Gateway"]
+        CR["Cloud Run\nUI"]
+        SB2["Supabase\nPostgres + pgvector"]
+    end
+```
+
+| Mode | What runs | Command |
+|------|-----------|---------|
+| **Local dev** | All 9 services | `docker compose up` |
+| **Mac Mini** | GKE + self-hosted Supabase + Ollama | Full deploy scripts |
+| **Google Cloud** | API + Pipeline on GKE, UI on Cloud Run | `./scripts/manual-deploy.sh` |
+
+### Platform numbers
+
+| Metric | Value |
+|--------|-------|
+| Channels | 25+ |
+| AI Agents | 40+ |
+| Integrations | 300+ |
+| Model Tiers | 5 |
+| Memory Types | 10 |
+| API Endpoints | 60+ |
+| Storage Backends | 3 (local, GCS, Supabase) |
+
+---
+
+## Slide 13 — Storage Architecture
+
+### Three backends, one abstraction
+
+```mermaid
+flowchart TB
+    API["API"] --> SA["Storage Abstraction\nBaseStorage"]
+    SA --> Local["LocalStorage\n~/.mem-dog"]
+    SA --> GCS2["GCSStorage\nGoogle Cloud Storage"]
+    SA --> Supa["SupabaseStorage\nPostgres + GCS hybrid"]
+
+    Supa --> BlobT["mem_dog_blobs\nstructured data"]
+    Supa --> EmbT["mem_dog_embeddings\npgvector"]
+    Supa --> EntT["mem_dog_entities\nknowledge graph"]
+    Supa --> RelT["mem_dog_relationships\nentity links"]
+    Supa --> GCS3["GCS\nraw binary blobs"]
+```
+
+**Supabase (production):**
+- All metadata, memories, tags, versions in `mem_dog_blobs`
+- Vector embeddings in `mem_dog_embeddings` (pgvector with cosine similarity)
+- Knowledge graph in `mem_dog_entities` + `mem_dog_relationships`
+- Raw binary files in GCS (images, PDFs, audio, video)
+- Per-user scoping on every table and query
+
+---
+
+## Slide 14 — Security & Observability
+
+### Security
+
+| Layer | Implementation |
+|-------|---------------|
+| **Authentication** | Supabase Auth (email + Google OAuth) + per-user API keys |
+| **Authorization** | Per-item ACLs, per-user scoping on every query |
+| **Encryption** | Fernet AES-256 for all stored credentials |
+| **API Auth** | Dual-path: global API key or per-user `md_<token>` |
+| **Channel Security** | Per-channel signature verification (Slack, Telegram, etc.) |
+| **Data Isolation** | user_id scoping on storage, embeddings, graph, memories |
+
+### Observability
+
+| Feature | Implementation |
+|---------|---------------|
+| **Distributed Tracing** | OpenTelemetry across all components |
+| **Span Viewer** | Waterfall UI in the Insights tab |
+| **Token Tracking** | Per-user, per-model, per-agent token usage |
+| **Stats Dashboard** | Data counts, embedding counts, memory usage |
+
+---
+
+## Slide 15 — Sustainable AI Design
+
+### Efficiency at every layer
+
+| Strategy | Implementation | Saving |
+|----------|---------------|--------|
+| **Model routing** | 6-layer deterministic classifier + tiered agents | 50-95% cost |
+| **Small models** | gemma3:4b default, 12b/27b only when needed | ~90% energy vs frontier |
+| **Async pipeline** | NATS queue, non-realtime enrichment | 30-50% energy |
+| **Context optimization** | Content truncation, typed prompts, max_tokens limits | 20-60% cost |
+| **Caching** | Routing config, model catalog, stats | 30-80% cost |
+| **Self-hosting** | In-cluster Ollama, Ollama Cloud, Gemini fallback only | 70-90% cost |
+
+No frontier model in the default pipeline. Gemini serves only as fallback.
+
+---
+
+## Slide 16 — How mem-dog Compares
+
+### vs. mem0 and other memory platforms
+
+| Feature | mem-dog | mem0 |
+|---------|---------|------|
+| Multi-channel ingest | 25+ channels + DigiMe agent | API only |
+| AI enrichment pipeline | 40 typed agents, auto on ingest | Basic extraction |
+| Data type coverage | 60+ types (media, spatial, IoT, medical) | Text-focused |
+| Knowledge graph | Postgres (auto-extracted entities) | Neo4j (separate infra) |
+| Simple SDK | `MemDog` with 8 methods | `Memory` with add/search/get |
+| Agent adapters | LangChain, CrewAI, OpenAI | LangChain, CrewAI, others |
+| Memory compression | LLM summarization + archive | Not available |
+| Storage backends | Local, GCS, Supabase | Cloud-only |
+| Self-hosting | Docker Compose or GKE, Mac Mini | Cloud service |
+| Model flexibility | 5 tiers, Model Garden, BYO provider | Single model |
+| Web UI | Full management + RAG chat | Dashboard |
+| Versioning | Every mutation tracked | Not available |
+| Integration platform | 300+ providers, OAuth2, encrypted creds | Limited |
+
+---
+
+## Slide 17 — Getting Started
+
+### Local (30 seconds)
+
+```bash
+docker compose up
+# UI:  http://localhost:3000
+# API: http://localhost:8080/docs
+```
+
+### Python SDK
+
+```bash
+pip install -e client/
+
+# Optional adapters
+pip install -e "client/[langchain]"
+```
+
+```python
+from mem_dog_client import MemDog
+
+m = MemDog("http://localhost:8080", user_id="user1")
+m.add("Remember this important fact", tags=["notes"])
+results = m.search("important", use_ai=True)
+```
+
+### Production (GKE)
+
+```bash
+# API
+GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
+  ./scripts/manual-deploy.sh deploy-api-gke -p memdog-dev -e dev
+
+# UI
+./scripts/manual-deploy.sh deploy-ui -p memdog-dev -e dev
+
+# Webhook Pipeline
+GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
+  ./scripts/manual-deploy.sh deploy-webhook-pipeline-gke -p memdog-dev -e dev
+```
+
+---
+
+## Slide 18 — Summary
+
+### mem-dog is a complete AI memory platform
+
+- **Ingest** from 25+ channels or direct upload (text, files, camera, voice, video)
+- **Enrich** with 40 AI agents, 6-layer classification, 5 model tiers
+- **Store** with versioning, 10 memory types, knowledge graph, per-user scoping
+- **Query** via RAG chat with citations, entity-aware search, semantic similarity
+- **Compress** verbose memories into structured summaries
+- **Integrate** with LangChain, CrewAI, OpenAI via drop-in adapters
+- **Deploy** anywhere: Docker Compose, GKE, Cloud Run, Mac Mini
+
+> **Your data memory, powered by AI.**

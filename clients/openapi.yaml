@@ -1,0 +1,3173 @@
+openapi: 3.1.0
+info:
+  title: mem-dog API
+  version: 4.0.0
+  description: >
+    Private AI system for multi-channel data ingestion, AI enrichment,
+    temporal knowledge graph, and multi-signal semantic search.
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+  - url: https://api.example.com
+    description: Production
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Health
+  - name: Data
+  - name: Versions
+  - name: List
+  - name: Tags
+  - name: Access
+  - name: Bulk
+  - name: Memories
+  - name: Users
+  - name: Organizations
+  - name: Projects
+  - name: AI
+  - name: Search
+  - name: Embeddings
+  - name: Viewpoints
+  - name: Skills
+  - name: AgentConfigs
+  - name: AnalysisTemplates
+  - name: Prompts
+  - name: Graph
+  - name: Webhooks
+  - name: Integrations
+  - name: Stats
+  - name: Store
+  - name: Ingest
+  - name: Auth
+  - name: Channels
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: API key (md_*), JWT, or global API key
+
+  schemas:
+    MemoryType:
+      type: string
+      enum: [timeline, session, conversation, user, organizational, factual, episodic, semantic, custom, tracing]
+
+    MemoryCategory:
+      type: string
+      enum: [conversation, session, user, organizational]
+
+    AccessLevel:
+      type: string
+      enum: [private, shared, public, restricted]
+
+    SearchMode:
+      type: string
+      enum: [vector, fts, hybrid, graph, full]
+
+    Reranker:
+      type: string
+      enum: [none, rrf, mmr, cross_encoder]
+
+    EntityType:
+      type: string
+      enum: [person, organization, product, location, date, url, concept, event]
+
+    OrgRole:
+      type: string
+      enum: [owner, admin, member, viewer]
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+
+    DataItem:
+      type: object
+      properties:
+        data_id:
+          type: string
+          example: data_01HXYZ
+        name:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        user_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+
+    Memory:
+      type: object
+      properties:
+        memory_id:
+          type: string
+          example: mem_conv_01HXYZ
+        memory_type:
+          $ref: '#/components/schemas/MemoryType'
+        name:
+          type: string
+        user_id:
+          type: string
+        access_level:
+          $ref: '#/components/schemas/AccessLevel'
+        ttl_hours:
+          type: number
+          nullable: true
+        no_expiry:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Entity:
+      type: object
+      properties:
+        entity_id:
+          type: string
+        name:
+          type: string
+        entity_type:
+          $ref: '#/components/schemas/EntityType'
+        canonical_name:
+          type: string
+        user_id:
+          type: string
+
+    Webhook:
+      type: object
+      properties:
+        webhook_id:
+          type: string
+          example: whk_01HXYZ
+        name:
+          type: string
+        channel_type:
+          type: string
+        status:
+          type: string
+          enum: [active, paused, deleted]
+        hmac_secret:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Organization:
+      type: object
+      properties:
+        org_id:
+          type: string
+          example: org_01HXYZ
+        name:
+          type: string
+        description:
+          type: string
+
+    Project:
+      type: object
+      properties:
+        project_id:
+          type: string
+          example: proj_01HXYZ
+        org_id:
+          type: string
+        name:
+          type: string
+
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  /:
+    get:
+      tags: [Health]
+      summary: API root
+      operationId: root
+      security: []
+      responses:
+        '200':
+          description: Service info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                  version:
+                    type: string
+
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: Healthy
+
+  # ---------- Auth ----------
+  /api/v1/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get authenticated user profile
+      operationId: getMe
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # ---------- Data ----------
+  /api/v1/data:
+    post:
+      tags: [Data]
+      summary: Create data item
+      operationId: createData
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                content:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                tags:
+                  type: string
+                  description: Comma-separated tags
+                memory_ids:
+                  type: string
+                  description: Comma-separated memory IDs
+                forward_to_webhook:
+                  type: boolean
+                url:
+                  type: string
+                mime_type:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data_id:
+                    type: string
+    get:
+      tags: [Data]
+      summary: List data items
+      operationId: listData
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: tags
+          in: query
+          schema:
+            type: string
+        - name: match_all
+          in: query
+          schema:
+            type: boolean
+        - name: project_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Data items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataItem'
+
+  /api/v1/data/{data_id}:
+    get:
+      tags: [Data]
+      summary: Get data content
+      operationId: getData
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: query
+          schema:
+            type: integer
+        - name: user_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Data content
+    put:
+      tags: [Data]
+      summary: Update data (creates new version)
+      operationId: updateData
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Data]
+      summary: Delete data item
+      operationId: deleteData
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/data/{data_id}/metadata:
+    get:
+      tags: [Data]
+      summary: Get data metadata
+      operationId: getMetadata
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataItem'
+
+  /api/v1/data/{data_id}/info:
+    get:
+      tags: [Data]
+      summary: Get name and description
+      operationId: getInfo
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Info
+    put:
+      tags: [Data]
+      summary: Update name and description
+      operationId: updateInfo
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Updated
+
+  # ---------- Versions ----------
+  /api/v1/versions/{data_id}:
+    get:
+      tags: [Versions]
+      summary: List versions for data item
+      operationId: listVersions
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Version list
+
+  /api/v1/versions/{data_id}/{version}:
+    get:
+      tags: [Versions]
+      summary: Get specific version
+      operationId: getVersion
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Version data
+
+  # ---------- List ----------
+  /api/v1/list:
+    get:
+      tags: [List]
+      summary: List user data
+      operationId: listUserData
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [meta, raw]
+            default: meta
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: User data
+
+  /api/v1/list/{data_id}:
+    get:
+      tags: [List]
+      summary: Get single data item
+      operationId: listUserDataItem
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user
+          in: query
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [meta, raw]
+      responses:
+        '200':
+          description: Data item
+
+  # ---------- Tags ----------
+  /api/v1/data/{data_id}/tags:
+    get:
+      tags: [Tags]
+      summary: Get tags for data item
+      operationId: getTags
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tags
+    put:
+      tags: [Tags]
+      summary: Replace all tags
+      operationId: updateTags
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+              required: [tags]
+      responses:
+        '200':
+          description: Updated
+
+  /api/v1/data/{data_id}/tags/add:
+    post:
+      tags: [Tags]
+      summary: Add tags (merge)
+      operationId: addTags
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+              required: [tags]
+      responses:
+        '200':
+          description: Tags added
+
+  /api/v1/data/{data_id}/tags/remove:
+    post:
+      tags: [Tags]
+      summary: Remove tags
+      operationId: removeTags
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+              required: [tags]
+      responses:
+        '200':
+          description: Tags removed
+
+  /api/v1/tags:
+    get:
+      tags: [Tags]
+      summary: List all unique tags
+      operationId: listAllTags
+      responses:
+        '200':
+          description: All tags
+
+  /api/v1/tags/search:
+    get:
+      tags: [Tags]
+      summary: Search by tags
+      operationId: searchByTags
+      parameters:
+        - name: tags
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: match_all
+          in: query
+          schema:
+            type: boolean
+        - name: user_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching items
+
+  # ---------- Access Control ----------
+  /api/v1/data/{data_id}/access:
+    get:
+      tags: [Access]
+      summary: Get access settings
+      operationId: getAccess
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Access settings
+    put:
+      tags: [Access]
+      summary: Update access control
+      operationId: updateAccess
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_level:
+                  $ref: '#/components/schemas/AccessLevel'
+                shared_with:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Updated
+
+  /api/v1/data/{data_id}/access/check:
+    get:
+      tags: [Access]
+      summary: Check user access
+      operationId: checkAccess
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Access check result
+
+  # ---------- Bulk ----------
+  /api/v1/bulk/data/delete:
+    post:
+      tags: [Bulk]
+      summary: Delete multiple data items
+      operationId: bulkDeleteData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data_ids:
+                  type: array
+                  items:
+                    type: string
+                user_id:
+                  type: string
+              required: [data_ids]
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/bulk/data/user/{user}:
+    delete:
+      tags: [Bulk]
+      summary: Delete all user data
+      operationId: bulkDeleteUserData
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/bulk/data/memory/{memory_id}:
+    delete:
+      tags: [Bulk]
+      summary: Delete memory's data
+      operationId: bulkDeleteMemoryData
+      parameters:
+        - name: memory_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/bulk/memories/delete:
+    post:
+      tags: [Bulk]
+      summary: Delete multiple memories
+      operationId: bulkDeleteMemories
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                memory_ids:
+                  type: array
+                  items:
+                    type: string
+                delete_data:
+                  type: boolean
+                  default: false
+                memory_type:
+                  $ref: '#/components/schemas/MemoryType'
+              required: [memory_ids]
+      responses:
+        '200':
+          description: Deleted
+
+  # ---------- Memories ----------
+  /api/v1/memories:
+    post:
+      tags: [Memories]
+      summary: Create memory
+      operationId: createMemory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                memory_type:
+                  $ref: '#/components/schemas/MemoryType'
+                name:
+                  type: string
+                user_id:
+                  type: string
+                ttl_hours:
+                  type: number
+                no_expiry:
+                  type: boolean
+                access_level:
+                  $ref: '#/components/schemas/AccessLevel'
+              required: [memory_type, name]
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Memory'
+    get:
+      tags: [Memories]
+      summary: List memories
+      operationId: listMemories
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: memory_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/MemoryType'
+        - name: duration
+          in: query
+          schema:
+            type: string
+        - name: active
+          in: query
+          schema:
+            type: boolean
+        - name: access_level
+          in: query
+          schema:
+            $ref: '#/components/schemas/AccessLevel'
+        - name: category
+          in: query
+          schema:
+            $ref: '#/components/schemas/MemoryCategory'
+        - name: include_expired
+          in: query
+          schema:
+            type: boolean
+        - name: project_id
+          in: query
+          schema:
+            type: string
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Memory list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Memory'
+
+  /api/v1/memories/{memory_id}:
+    get:
+      tags: [Memories]
+      summary: Get memory
+      operationId: getMemory
+      parameters:
+        - name: memory_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Memory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Memory'
+    put:
+      tags: [Memories]
+      summary: Update memory
+      operationId: updateMemory
+      parameters:
+        - name: memory_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Memories]
+      summary: Delete memory
+      operationId: deleteMemory
+      parameters:
+        - name: memory_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: delete_data
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/memories/{memory_id}/data:
+    post:
+      tags: [Memories]
+      summary: Add data to memory
+      operationId: addDataToMemory
+      parameters:
+        - name: memory_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data_ids:
+                  type: array
+                  items:
+                    type: string
+              required: [data_ids]
+      responses:
+        '200':
+          description: Data added
+    get:
+      tags: [Memories]
+      summary: Get memory's data items
+      operationId: getMemoryData
+      parameters:
+        - name: memory_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Data items
+
+  /api/v1/memories/{memory_id}/entries:
+    get:
+      tags: [Memories]
+      summary: Get memory data entries
+      operationId: getMemoryEntries
+      parameters:
+        - name: memory_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entries
+
+  /api/v1/memories/{memory_id}/data/{data_id}:
+    delete:
+      tags: [Memories]
+      summary: Remove data from memory
+      operationId: removeDataFromMemory
+      parameters:
+        - name: memory_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Removed
+
+  /api/v1/memories/{memory_id}/compress:
+    post:
+      tags: [Memories]
+      summary: Compress memory into summary
+      operationId: compressMemory
+      parameters:
+        - name: memory_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                archive_originals:
+                  type: boolean
+                  default: false
+                max_summary_length:
+                  type: integer
+                  default: 2000
+      responses:
+        '200':
+          description: Compression result
+
+  # ---------- Users ----------
+  /api/v1/users:
+    get:
+      tags: [Users]
+      summary: List users
+      operationId: listUsers
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User list
+    post:
+      tags: [Users]
+      summary: Create user
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/users/dump:
+    get:
+      tags: [Users]
+      summary: Dump all user-owned data
+      operationId: dumpUserData
+      responses:
+        '200':
+          description: All user data
+
+  /api/v1/users/{user_id}:
+    get:
+      tags: [Users]
+      summary: Get user
+      operationId: getUser
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User
+    put:
+      tags: [Users]
+      summary: Update user
+      operationId: updateUser
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Users]
+      summary: Delete user
+      operationId: deleteUser
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/users/{user_id}/data:
+    get:
+      tags: [Users]
+      summary: Get user's data
+      operationId: getUserData
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Data items
+    post:
+      tags: [Users]
+      summary: Create data for user
+      operationId: createUserData
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                content:
+                  type: string
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/users/username/{username}:
+    get:
+      tags: [Users]
+      summary: Get user by username
+      operationId: getUserByUsername
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User
+
+  /api/v1/users/{user_id}/api-keys:
+    get:
+      tags: [Users]
+      summary: List API keys
+      operationId: listApiKeys
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: API keys
+    post:
+      tags: [Users]
+      summary: Create API key
+      operationId: createApiKey
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required: [name]
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/users/{user_id}/api-keys/{key_id}:
+    delete:
+      tags: [Users]
+      summary: Revoke API key
+      operationId: deleteApiKey
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Revoked
+
+  # ---------- Channel Identities ----------
+  /api/v1/channel-identities:
+    post:
+      tags: [Channels]
+      summary: Create or upsert channel identity
+      operationId: createChannelIdentity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/channel-identities/by-channel:
+    get:
+      tags: [Channels]
+      summary: Get identity by channel
+      operationId: getChannelIdentity
+      parameters:
+        - name: channel_type
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_unique_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Identity
+    patch:
+      tags: [Channels]
+      summary: Update channel identity
+      operationId: updateChannelIdentity
+      parameters:
+        - name: channel_type
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_unique_id
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Channels]
+      summary: Delete channel identity
+      operationId: deleteChannelIdentity
+      parameters:
+        - name: channel_type
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_unique_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/channel-identities/by-user/{user_id}:
+    get:
+      tags: [Channels]
+      summary: List identities for user
+      operationId: listUserChannelIdentities
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Identities
+
+  # ---------- Channels ----------
+  /api/v1/channels:
+    get:
+      tags: [Channels]
+      summary: List all channel metadata
+      operationId: listChannels
+      responses:
+        '200':
+          description: Channels
+
+  /api/v1/channels/{channel_type}:
+    get:
+      tags: [Channels]
+      summary: Get channel metadata
+      operationId: getChannel
+      parameters:
+        - name: channel_type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Channel
+    put:
+      tags: [Channels]
+      summary: Create or update channel
+      operationId: updateChannel
+      parameters:
+        - name: channel_type
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Channels]
+      summary: Delete channel
+      operationId: deleteChannel
+      parameters:
+        - name: channel_type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  # ---------- AI Config ----------
+  /api/v1/ai/system-config:
+    get:
+      tags: [AI]
+      summary: Get system AI configuration
+      operationId: getSystemConfig
+      responses:
+        '200':
+          description: AI config
+
+  /api/v1/ai/model-catalog:
+    get:
+      tags: [AI]
+      summary: Get self-hostable model catalog
+      operationId: getModelCatalog
+      parameters:
+        - name: family
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: max_memory_gb
+          in: query
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Model catalog
+
+  /api/v1/ai/model-catalog/{model_id}:
+    get:
+      tags: [AI]
+      summary: Get model details
+      operationId: getModelDetails
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Model
+
+  # ---------- Prompts ----------
+  /api/v1/ai/prompts:
+    get:
+      tags: [Prompts]
+      summary: List prompts
+      operationId: listPrompts
+      parameters:
+        - name: data_id
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Prompts
+    post:
+      tags: [Prompts]
+      summary: Create prompt
+      operationId: createPrompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/ai/prompts/{prompt_id}:
+    get:
+      tags: [Prompts]
+      summary: Get prompt
+      operationId: getPrompt
+      parameters:
+        - name: prompt_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Prompt
+    put:
+      tags: [Prompts]
+      summary: Update prompt
+      operationId: updatePrompt
+      parameters:
+        - name: prompt_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Prompts]
+      summary: Delete prompt
+      operationId: deletePrompt
+      parameters:
+        - name: prompt_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  # ---------- Embeddings ----------
+  /api/v1/ai/embeddings:
+    get:
+      tags: [Embeddings]
+      summary: List embeddings
+      operationId: listEmbeddings
+      parameters:
+        - name: data_id
+          in: query
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: project_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Embeddings
+    post:
+      tags: [Embeddings]
+      summary: Create embedding
+      operationId: createEmbedding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data_id:
+                  type: string
+                engine_type:
+                  type: string
+                model:
+                  type: string
+              required: [data_id]
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/ai/embeddings/bulk-delete:
+    post:
+      tags: [Embeddings]
+      summary: Bulk delete embeddings
+      operationId: bulkDeleteEmbeddings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/ai/embeddings/data/{data_id}:
+    get:
+      tags: [Embeddings]
+      summary: Get data's embeddings
+      operationId: getDataEmbeddings
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Embeddings
+    delete:
+      tags: [Embeddings]
+      summary: Delete data's embeddings
+      operationId: deleteDataEmbeddings
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/ai/embeddings/{embedding_id}:
+    get:
+      tags: [Embeddings]
+      summary: Get embedding
+      operationId: getEmbedding
+      parameters:
+        - name: embedding_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Embedding
+    delete:
+      tags: [Embeddings]
+      summary: Delete embedding
+      operationId: deleteEmbedding
+      parameters:
+        - name: embedding_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  # ---------- Viewpoints ----------
+  /api/v1/ai/viewpoints:
+    get:
+      tags: [Viewpoints]
+      summary: List viewpoints
+      operationId: listViewpoints
+      parameters:
+        - name: data_id
+          in: query
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Viewpoints
+    post:
+      tags: [Viewpoints]
+      summary: Create viewpoint
+      operationId: createViewpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/ai/viewpoints/bulk-delete:
+    post:
+      tags: [Viewpoints]
+      summary: Bulk delete viewpoints
+      operationId: bulkDeleteViewpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/ai/viewpoints/data/{data_id}:
+    get:
+      tags: [Viewpoints]
+      summary: Get data's viewpoints
+      operationId: getDataViewpoints
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Viewpoints
+
+  /api/v1/ai/viewpoints/{viewpoint_id}:
+    get:
+      tags: [Viewpoints]
+      summary: Get viewpoint
+      operationId: getViewpoint
+      parameters:
+        - name: viewpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Viewpoint
+    put:
+      tags: [Viewpoints]
+      summary: Update viewpoint
+      operationId: updateViewpoint
+      parameters:
+        - name: viewpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Viewpoints]
+      summary: Delete viewpoint
+      operationId: deleteViewpoint
+      parameters:
+        - name: viewpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/ai/viewpoints/{viewpoint_id}/history:
+    get:
+      tags: [Viewpoints]
+      summary: Get viewpoint version history
+      operationId: getViewpointHistory
+      parameters:
+        - name: viewpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Version history
+
+  # ---------- Skills ----------
+  /api/v1/ai/skills:
+    get:
+      tags: [Skills]
+      summary: List skills
+      operationId: listSkills
+      parameters:
+        - name: data_id
+          in: query
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: tag
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Skills
+    post:
+      tags: [Skills]
+      summary: Create skill
+      operationId: createSkill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/ai/skills/{skill_id}:
+    get:
+      tags: [Skills]
+      summary: Get skill
+      operationId: getSkill
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Skill
+    put:
+      tags: [Skills]
+      summary: Update skill
+      operationId: updateSkill
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Skills]
+      summary: Delete skill
+      operationId: deleteSkill
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  # ---------- Analysis Templates ----------
+  /api/v1/ai/analysis-templates:
+    get:
+      tags: [AnalysisTemplates]
+      summary: List analysis templates
+      operationId: listAnalysisTemplates
+      parameters:
+        - name: data_type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Templates
+    post:
+      tags: [AnalysisTemplates]
+      summary: Create template
+      operationId: createAnalysisTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/ai/analysis-templates/seed:
+    post:
+      tags: [AnalysisTemplates]
+      summary: Seed default templates
+      operationId: seedAnalysisTemplates
+      responses:
+        '200':
+          description: Seeded
+
+  /api/v1/ai/analysis-templates/{template_id}:
+    get:
+      tags: [AnalysisTemplates]
+      summary: Get template
+      operationId: getAnalysisTemplate
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template
+    put:
+      tags: [AnalysisTemplates]
+      summary: Update template
+      operationId: updateAnalysisTemplate
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [AnalysisTemplates]
+      summary: Delete template
+      operationId: deleteAnalysisTemplate
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  # ---------- Agent Configs ----------
+  /api/v1/ai/agent-configs:
+    get:
+      tags: [AgentConfigs]
+      summary: List agent configs
+      operationId: listAgentConfigs
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: agent_type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Configs
+    post:
+      tags: [AgentConfigs]
+      summary: Create agent config
+      operationId: createAgentConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/ai/agent-configs/resolve/{agent_type}:
+    get:
+      tags: [AgentConfigs]
+      summary: Resolve effective config for agent type
+      operationId: resolveAgentConfig
+      parameters:
+        - name: agent_type
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resolved config
+
+  /api/v1/ai/agent-configs/{config_id}:
+    get:
+      tags: [AgentConfigs]
+      summary: Get agent config
+      operationId: getAgentConfig
+      parameters:
+        - name: config_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Config
+    put:
+      tags: [AgentConfigs]
+      summary: Update agent config
+      operationId: updateAgentConfig
+      parameters:
+        - name: config_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [AgentConfigs]
+      summary: Delete agent config
+      operationId: deleteAgentConfig
+      parameters:
+        - name: config_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  # ---------- AI Query / Search ----------
+  /api/v1/ai/query:
+    post:
+      tags: [Search]
+      summary: NLP query with AI
+      operationId: aiQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                data_ids:
+                  type: array
+                  items:
+                    type: string
+                memory_ids:
+                  type: array
+                  items:
+                    type: string
+              required: [query]
+      responses:
+        '200':
+          description: AI response
+
+  /api/v1/ai/query/semantic:
+    post:
+      tags: [Search]
+      summary: Semantic search (5 modes + 4 rerankers)
+      operationId: semanticSearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                search_mode:
+                  $ref: '#/components/schemas/SearchMode'
+                reranker:
+                  $ref: '#/components/schemas/Reranker'
+                limit:
+                  type: integer
+                  default: 10
+                user_id:
+                  type: string
+                memory_type:
+                  $ref: '#/components/schemas/MemoryType'
+                temporal_filter:
+                  type: string
+                  description: ISO date for point-in-time graph queries
+              required: [query]
+      responses:
+        '200':
+          description: Search results
+
+  /api/v1/ai/query/chat:
+    post:
+      tags: [Search]
+      summary: RAG chat with inline citations
+      operationId: chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                search_mode:
+                  $ref: '#/components/schemas/SearchMode'
+                reranker:
+                  $ref: '#/components/schemas/Reranker'
+                conversation_history:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        enum: [user, assistant]
+                      content:
+                        type: string
+                memory_type:
+                  $ref: '#/components/schemas/MemoryType'
+              required: [query]
+      responses:
+        '200':
+          description: Chat response with [1][2] citations
+
+  /api/v1/ai/query/timeline:
+    post:
+      tags: [Search]
+      summary: Query timeline data
+      operationId: timelineQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Timeline results
+
+  /api/v1/ai/query/test:
+    get:
+      tags: [Search]
+      summary: AI config status probe
+      operationId: aiQueryTest
+      responses:
+        '200':
+          description: Config status
+
+  # ---------- Statistics ----------
+  /api/v1/stats:
+    get:
+      tags: [Stats]
+      summary: Get global stats
+      operationId: getStats
+      responses:
+        '200':
+          description: Stats
+
+  /api/v1/stats/data:
+    get:
+      tags: [Stats]
+      summary: Data statistics
+      operationId: getDataStats
+      responses:
+        '200':
+          description: Data stats
+
+  /api/v1/stats/memories:
+    get:
+      tags: [Stats]
+      summary: Memory statistics
+      operationId: getMemoryStats
+      responses:
+        '200':
+          description: Memory stats
+
+  /api/v1/stats/embeddings:
+    get:
+      tags: [Stats]
+      summary: Embedding statistics
+      operationId: getEmbeddingStats
+      responses:
+        '200':
+          description: Embedding stats
+
+  /api/v1/stats/viewpoints:
+    get:
+      tags: [Stats]
+      summary: Viewpoint statistics
+      operationId: getViewpointStats
+      responses:
+        '200':
+          description: Viewpoint stats
+
+  /api/v1/stats/users/{user_id}:
+    get:
+      tags: [Stats]
+      summary: Per-user stats
+      operationId: getUserStats
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User stats
+
+  /api/v1/stats/refresh:
+    post:
+      tags: [Stats]
+      summary: Refresh all stats
+      operationId: refreshStats
+      responses:
+        '200':
+          description: Refreshed
+
+  /api/v1/stats/refresh/users/{user_id}:
+    post:
+      tags: [Stats]
+      summary: Refresh user stats
+      operationId: refreshUserStats
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Refreshed
+
+  /api/v1/stats/agent-types:
+    get:
+      tags: [Stats]
+      summary: Get agent type counts
+      operationId: getAgentTypeCounts
+      responses:
+        '200':
+          description: Agent type counts
+
+  /api/v1/stats/agent-types/{agent_type}/increment:
+    post:
+      tags: [Stats]
+      summary: Increment agent type count
+      operationId: incrementAgentType
+      parameters:
+        - name: agent_type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Incremented
+
+  /api/v1/stats/agent-types/{agent_type}/decrement:
+    post:
+      tags: [Stats]
+      summary: Decrement agent type count
+      operationId: decrementAgentType
+      parameters:
+        - name: agent_type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Decremented
+
+  /api/v1/stats/token-usage:
+    post:
+      tags: [Stats]
+      summary: Record token usage
+      operationId: recordTokenUsage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Recorded
+
+  /api/v1/stats/token-usage/{user_id}:
+    get:
+      tags: [Stats]
+      summary: Get token usage
+      operationId: getTokenUsage
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token usage
+    delete:
+      tags: [Stats]
+      summary: Delete token usage
+      operationId: deleteTokenUsage
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  # ---------- Store ----------
+  /api/v1/store:
+    get:
+      tags: [Store]
+      summary: List keys
+      operationId: listStoreKeys
+      parameters:
+        - name: prefix
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Keys
+
+  /api/v1/store/{key}:
+    get:
+      tags: [Store]
+      summary: Get value by key
+      operationId: getStoreValue
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Value
+    put:
+      tags: [Store]
+      summary: Set value
+      operationId: setStoreValue
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Set
+    delete:
+      tags: [Store]
+      summary: Delete key
+      operationId: deleteStoreValue
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  # ---------- Ingest ----------
+  /api/v1/ingest:
+    post:
+      tags: [Ingest]
+      summary: Ingest Universal Envelope
+      operationId: ingest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                envelope:
+                  type: object
+                  description: Universal Envelope from webhook gateway
+                direct:
+                  type: boolean
+                  default: false
+                  description: Store directly (true) or forward to webhook pipeline (false)
+      responses:
+        '200':
+          description: Ingested
+
+  # ---------- Integrations ----------
+  /api/v1/integrations/config:
+    get:
+      tags: [Integrations]
+      summary: List provider configurations
+      operationId: listProviders
+      responses:
+        '200':
+          description: Provider configs
+
+  /api/v1/integrations/config/{provider_key}:
+    get:
+      tags: [Integrations]
+      summary: Get provider configuration
+      operationId: getProvider
+      parameters:
+        - name: provider_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Provider config
+
+  /api/v1/integrations/connections:
+    get:
+      tags: [Integrations]
+      summary: List user connections
+      operationId: listConnections
+      responses:
+        '200':
+          description: Connections
+    post:
+      tags: [Integrations]
+      summary: Create connection
+      operationId: createConnection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/integrations/connections/{connection_id}:
+    get:
+      tags: [Integrations]
+      summary: Get connection
+      operationId: getConnection
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Connection
+    patch:
+      tags: [Integrations]
+      summary: Update connection
+      operationId: updateConnection
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Integrations]
+      summary: Delete connection
+      operationId: deleteConnection
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/integrations/oauth/authorize:
+    get:
+      tags: [Integrations]
+      summary: Get OAuth authorization URL
+      operationId: getOAuthUrl
+      parameters:
+        - name: provider_key
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OAuth URL
+
+  /api/v1/integrations/oauth/callback:
+    post:
+      tags: [Integrations]
+      summary: Handle OAuth callback
+      operationId: oauthCallback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                state:
+                  type: string
+              required: [code, state]
+      responses:
+        '200':
+          description: Connection created
+
+  # ---------- Graph ----------
+  /api/v1/graph/entities:
+    get:
+      tags: [Graph]
+      summary: Search entities
+      operationId: searchEntities
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: entity_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/EntityType'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Entities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entity'
+
+  /api/v1/graph/entities/batch:
+    post:
+      tags: [Graph]
+      summary: Batch create entities
+      operationId: batchCreateEntities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Created
+
+  /api/v1/graph/entities/{entity_id}:
+    get:
+      tags: [Graph]
+      summary: Get entity
+      operationId: getEntity
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+    delete:
+      tags: [Graph]
+      summary: Delete entity
+      operationId: deleteEntity
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/graph/entities/{entity_id}/relationships:
+    get:
+      tags: [Graph]
+      summary: Get entity relationships
+      operationId: getEntityRelationships
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Relationships
+
+  /api/v1/graph/data/{data_id}/entities:
+    get:
+      tags: [Graph]
+      summary: Get entities extracted from data item
+      operationId: getDataEntities
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entities
+    delete:
+      tags: [Graph]
+      summary: Delete data's entities
+      operationId: deleteDataEntities
+      parameters:
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/graph/facts:
+    get:
+      tags: [Graph]
+      summary: Query temporal facts (Graphiti)
+      operationId: queryFacts
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: entity_id
+          in: query
+          schema:
+            type: string
+        - name: at
+          in: query
+          schema:
+            type: string
+            format: date-time
+            description: Point-in-time filter
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Facts
+
+  /api/v1/graph/facts/timeline:
+    get:
+      tags: [Graph]
+      summary: Get fact history for entity
+      operationId: getFactTimeline
+      parameters:
+        - name: entity_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fact timeline
+
+  # ---------- Organizations ----------
+  /api/v1/organizations:
+    post:
+      tags: [Organizations]
+      summary: Create organization
+      operationId: createOrganization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+              required: [name]
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+    get:
+      tags: [Organizations]
+      summary: List caller's organizations
+      operationId: listOrganizations
+      responses:
+        '200':
+          description: Organizations
+
+  /api/v1/organizations/{org_id}:
+    get:
+      tags: [Organizations]
+      summary: Get organization
+      operationId: getOrganization
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Organization
+    put:
+      tags: [Organizations]
+      summary: Update organization
+      operationId: updateOrganization
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Organizations]
+      summary: Delete organization
+      operationId: deleteOrganization
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/organizations/{org_id}/members:
+    post:
+      tags: [Organizations]
+      summary: Add member
+      operationId: addOrgMember
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                role:
+                  $ref: '#/components/schemas/OrgRole'
+              required: [user_id]
+      responses:
+        '200':
+          description: Added
+    get:
+      tags: [Organizations]
+      summary: List members
+      operationId: listOrgMembers
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Members
+
+  /api/v1/organizations/{org_id}/members/{user_id}:
+    put:
+      tags: [Organizations]
+      summary: Update member role
+      operationId: updateOrgMember
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  $ref: '#/components/schemas/OrgRole'
+              required: [role]
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Organizations]
+      summary: Remove member
+      operationId: removeOrgMember
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Removed
+
+  # ---------- Projects ----------
+  /api/v1/organizations/{org_id}/projects:
+    post:
+      tags: [Projects]
+      summary: Create project
+      operationId: createProject
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required: [name]
+      responses:
+        '201':
+          description: Created
+    get:
+      tags: [Projects]
+      summary: List projects
+      operationId: listProjects
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Projects
+
+  /api/v1/projects/{project_id}:
+    get:
+      tags: [Projects]
+      summary: Get project
+      operationId: getProject
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project
+    put:
+      tags: [Projects]
+      summary: Update project
+      operationId: updateProject
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Projects]
+      summary: Delete project
+      operationId: deleteProject
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  # ---------- Webhooks ----------
+  /api/v1/webhooks:
+    post:
+      tags: [Webhooks]
+      summary: Create webhook endpoint
+      operationId: createWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                channel_type:
+                  type: string
+                config:
+                  type: object
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+    get:
+      tags: [Webhooks]
+      summary: List webhooks
+      operationId: listWebhooks
+      parameters:
+        - name: channel_type
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, paused, deleted]
+      responses:
+        '200':
+          description: Webhooks
+
+  /api/v1/webhooks/{webhook_id}:
+    get:
+      tags: [Webhooks]
+      summary: Get webhook
+      operationId: getWebhook
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook
+    patch:
+      tags: [Webhooks]
+      summary: Update webhook
+      operationId: updateWebhook
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Webhooks]
+      summary: Soft-delete webhook
+      operationId: deleteWebhook
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/webhooks/{webhook_id}/rotate-secret:
+    post:
+      tags: [Webhooks]
+      summary: Rotate HMAC secret
+      operationId: rotateWebhookSecret
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: New secret generated
+
+  /api/v1/webhooks/{webhook_id}/events:
+    get:
+      tags: [Webhooks]
+      summary: List webhook events
+      operationId: listWebhookEvents
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Events
+
+  /api/v1/webhooks/{webhook_id}/stats:
+    get:
+      tags: [Webhooks]
+      summary: Get webhook stats
+      operationId: getWebhookStats
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1h, 24h, 7d, 30d]
+      responses:
+        '200':
+          description: Stats

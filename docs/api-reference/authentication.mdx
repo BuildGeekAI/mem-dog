@@ -1,0 +1,116 @@
+---
+title: "Authentication"
+description: "3 authentication methods: Supabase JWT, per-user API keys, and global API key"
+icon: "lock"
+---
+
+mem-dog supports three authentication methods. All are passed via the `Authorization` header as Bearer tokens.
+
+## Method 1: Supabase JWT
+
+Issued by Supabase Auth (GoTrue) after login. The `sub` claim in the JWT identifies the user.
+
+<CodeGroup>
+```bash cURL
+curl -X GET /api/v1/data \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
+```
+
+```typescript TypeScript
+const response = await fetch("/api/v1/data", {
+  headers: {
+    Authorization: `Bearer ${session.access_token}`,
+  },
+});
+```
+</CodeGroup>
+
+**How it works:**
+- The middleware decodes the JWT and extracts the `sub` claim as `user_id`
+- On first login, `ensure_jwt_user_profile` auto-creates a user profile
+- Sets `request.state.user_id` and `request.state.auth_type = "jwt"`
+
+<Info>
+  JWTs expire after 1 hour by default. The UI handles refresh automatically via Supabase client. For API integrations, use per-user API keys instead.
+</Info>
+
+## Method 2: Per-User API Key
+
+Long-lived keys prefixed with `md_*`. Each key is bound to a single user. Create them from the UI under **Settings > API Keys** or via the API.
+
+<CodeGroup>
+```bash cURL
+curl -X GET /api/v1/data \
+  -H "Authorization: Bearer md_abc123def456..."
+```
+
+```python Python
+from mem_dog_client import MemDogClient
+
+client = MemDogClient(
+    api_key="md_abc123def456...",
+    base_url="http://localhost:8080"
+)
+items = client.list_data()
+```
+</CodeGroup>
+
+**How it works:**
+- The middleware checks Supabase for a matching key (O(1) lookup)
+- Resolves to the owning `user_id`
+- All operations execute as that user with their access permissions
+
+### Creating an API Key
+
+```bash
+curl -X POST /api/v1/api-keys \
+  -H "Authorization: Bearer <jwt>" \
+  -d '{"name": "CI Pipeline", "expires_in_days": 90}'
+```
+
+```json
+{
+  "key": "md_abc123def456...",
+  "name": "CI Pipeline",
+  "expires_at": "2026-06-25T00:00:00Z"
+}
+```
+
+<Warning>
+  API keys are shown only once at creation time. Store them securely. If lost, revoke the key and create a new one.
+</Warning>
+
+## Method 3: Global API Key
+
+Set via the `API_KEY` environment variable on the API server. Provides full access without user scoping.
+
+```bash
+curl -X GET /api/v1/data \
+  -H "Authorization: Bearer <global_api_key>"
+```
+
+**How it works:**
+- The middleware compares the token against the `API_KEY` env var
+- No `user_id` is set — operations are unscoped
+- Intended for admin scripts and service-to-service calls
+
+<Warning>
+  The global API key bypasses all user-level access control. Never expose it to end users or client-side code. Use `md_*` keys for any user-facing integration.
+</Warning>
+
+## Auth Evaluation Order
+
+<Steps>
+  <Step title="Check JWT">
+    If the token decodes as a valid Supabase JWT, authenticate as the JWT user.
+  </Step>
+  <Step title="Check per-user key">
+    If the token starts with `md_`, look it up in the API keys table.
+  </Step>
+  <Step title="Check global key">
+    Compare against the `API_KEY` environment variable.
+  </Step>
+  <Step title="Reject">
+    If none match, return `401 Unauthorized`.
+  </Step>
+</Steps>

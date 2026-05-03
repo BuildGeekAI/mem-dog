@@ -1,0 +1,209 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Mem-Dog",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#06b6d4",
+    "light": "#22d3ee",
+    "dark": "#0891b2",
+    "anchors": {
+      "from": "#06b6d4",
+      "to": "#8b5cf6"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/BuildGeekAI/mem-dog"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "/quickstart"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "Integrations",
+      "url": "apps"
+    },
+    {
+      "name": "SDKs",
+      "url": "sdks"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/BuildGeekAI/mem-dog"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "index",
+        "quickstart",
+        "platform-overview",
+        "self-hosting"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "core-concepts/data-items",
+        "core-concepts/memory-types",
+        "core-concepts/knowledge-graph",
+        "core-concepts/search-modes",
+        "core-concepts/ai-pipeline"
+      ]
+    },
+    {
+      "group": "Platform Features",
+      "pages": [
+        "features/ai-studio",
+        "features/model-garden",
+        "features/smart-routing",
+        "features/agent-configs",
+        "features/pod-management",
+        "features/rag-chat",
+        "features/memory-compression",
+        "features/access-control",
+        "features/organizations",
+        "features/webhooks",
+        "features/mcp-server"
+      ]
+    },
+    {
+      "group": "DigiMe Agent",
+      "pages": [
+        "digime/overview",
+        "digime/channels",
+        "digime/multi-user",
+        "digime/skills"
+      ]
+    },
+    {
+      "group": "Deployment",
+      "pages": [
+        "deployment/local-dev",
+        "deployment/mac-mini",
+        "deployment/gke-setup-mac",
+        "deployment/resource-requirements"
+      ]
+    },
+    {
+      "group": "Architecture",
+      "pages": [
+        "architecture/architecture",
+        "architecture/graph-memory",
+        "architecture/model-garden",
+        "architecture/organizations"
+      ]
+    },
+    {
+      "group": "Services",
+      "pages": [
+        "services/api",
+        "services/ui",
+        "services/webhook-gateway",
+        "services/webhook-pipeline"
+      ]
+    },
+    {
+      "group": "Comparisons",
+      "pages": [
+        "comparisons/comparison-mem0",
+        "comparisons/comparison-zep",
+        "comparisons/comparison-berrydb",
+        "comparisons/comparison-snowflake-databricks",
+        "comparisons/comparison-nango"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/index",
+        "api-reference/authentication",
+        {
+          "group": "Data",
+          "pages": [
+            "api-reference/data/create",
+            "api-reference/data/get",
+            "api-reference/data/list",
+            "api-reference/data/update",
+            "api-reference/data/delete",
+            "api-reference/data/versions"
+          ]
+        },
+        {
+          "group": "Memories",
+          "pages": [
+            "api-reference/memories/create",
+            "api-reference/memories/list",
+            "api-reference/memories/get",
+            "api-reference/memories/update",
+            "api-reference/memories/delete",
+            "api-reference/memories/compress"
+          ]
+        },
+        {
+          "group": "Search & AI",
+          "pages": [
+            "api-reference/search/semantic",
+            "api-reference/search/chat",
+            "api-reference/search/embeddings"
+          ]
+        },
+        {
+          "group": "Knowledge Graph",
+          "pages": [
+            "api-reference/graph/entities",
+            "api-reference/graph/relationships",
+            "api-reference/graph/facts"
+          ]
+        },
+        {
+          "group": "Infrastructure",
+          "pages": [
+            "api-reference/k8s-pods/list",
+            "api-reference/k8s-pods/create",
+            "api-reference/k8s-pods/scale",
+            "api-reference/k8s-pods/delete"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "SDKs",
+      "pages": [
+        "sdks/index",
+        "sdks/python",
+        "sdks/typescript",
+        "sdks/go",
+        "sdks/rust",
+        "sdks/ruby",
+        "sdks/agent-adapters"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/BuildGeekAI/mem-dog"
+  },
+  "feedback": {
+    "thumbsRating": true
+  },
+  "search": {
+    "prompt": "Search mem-dog docs..."
+  },
+  "analytics": {},
+  "openapi": "openapi.json"
+}

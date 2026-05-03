@@ -1,0 +1,42 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: mem-dog
+build:
+  local:
+    push: false
+  artifacts:
+    - image: mem-dog-api
+      context: api
+      docker:
+        dockerfile: Dockerfile
+    - image: mem-dog-ui
+      context: ui
+      docker:
+        dockerfile: Dockerfile
+        buildArgs:
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+          NEXT_PUBLIC_WEBHOOK_GATEWAY_URL: ${NEXT_PUBLIC_WEBHOOK_GATEWAY_URL:-}
+          NEXT_PUBLIC_WEBHOOK_API_KEY: ${NEXT_PUBLIC_WEBHOOK_API_KEY:-}
+manifests:
+  rawYaml:
+    - k8s/namespace.yaml
+    - k8s/api-configmap.yaml
+    - k8s/api-pvc.yaml
+    - k8s/api-deployment.yaml
+    - k8s/api-service.yaml
+    - k8s/ui-deployment.yaml
+    - k8s/ui-service.yaml
+deploy:
+  kubectl: {}
+portForward:
+  - resourceType: service
+    resourceName: api
+    namespace: mem-dog
+    port: 8080
+    localPort: 8080
+  - resourceType: service
+    resourceName: ui
+    namespace: mem-dog
+    port: 3000
+    localPort: 3000

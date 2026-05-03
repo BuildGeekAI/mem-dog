@@ -1,0 +1,239 @@
+# SQL seed scripts for mem-dog tables on Supabase Postgres.
+# Sourced from api/supabase/*.sql — keep in sync.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: supabase-seed-sql
+  namespace: supabase
+  labels:
+    app.kubernetes.io/name: supabase-seed
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: supabase
+data:
+  01-mem-dog-blobs.sql: |
+    CREATE TABLE IF NOT EXISTS mem_dog_blobs (
+        store_name   TEXT        NOT NULL,
+        path         TEXT        NOT NULL,
+        user_id      TEXT,
+        content      TEXT        NOT NULL,
+        content_type TEXT        NOT NULL DEFAULT 'application/octet-stream',
+        updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+        PRIMARY KEY (store_name, path)
+    );
+
+    CREATE INDEX IF NOT EXISTS mem_dog_blobs_prefix_idx
+        ON mem_dog_blobs (store_name, path text_pattern_ops);
+
+    CREATE INDEX IF NOT EXISTS mem_dog_blobs_user_idx
+        ON mem_dog_blobs (store_name, user_id);
+
+    GRANT ALL ON public.mem_dog_blobs TO service_role;
+    GRANT ALL ON public.mem_dog_blobs TO anon;
+    GRANT ALL ON public.mem_dog_blobs TO authenticated;
+
+    NOTIFY pgrst, 'reload schema';
+
+  02-mem-dog-embeddings.sql: |
+    CREATE EXTENSION IF NOT EXISTS vector;
+
+    CREATE TABLE IF NOT EXISTS mem_dog_embeddings (
+        embedding_id  TEXT        PRIMARY KEY,
+        data_id       TEXT        NOT NULL,
+        data_version  INTEGER     NOT NULL,
+        version_label TEXT,
+        user_id       TEXT        NOT NULL,
+        ai_engine     TEXT        NOT NULL,
+        model         TEXT        NOT NULL,
+        dimensions    INTEGER     NOT NULL,
+        chunk_index   INTEGER     NOT NULL,
+        chunk_text    TEXT        NOT NULL,
+        vector        vector,
+        ai_signature  JSONB,
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE INDEX IF NOT EXISTS mem_dog_embeddings_user_data_idx
+        ON mem_dog_embeddings (user_id, data_id, version_label);
+
+    GRANT ALL ON public.mem_dog_embeddings TO service_role;
+    GRANT ALL ON public.mem_dog_embeddings TO anon;
+    GRANT ALL ON public.mem_dog_embeddings TO authenticated;
+
+    CREATE OR REPLACE FUNCTION match_embeddings(
+        query_embedding  TEXT,
+        match_count      INT  DEFAULT 5,
+        filter_user_id   TEXT DEFAULT NULL,
+        filter_data_ids  TEXT[] DEFAULT NULL
+    )
+    RETURNS TABLE (
+        embedding_id TEXT,
+        data_id      TEXT,
+        chunk_text   TEXT,
+        similarity   FLOAT
+    )
+    LANGUAGE sql
+    STABLE
+    AS $$
+        SELECT
+            e.embedding_id,
+            e.data_id,
+            e.chunk_text,
+            1 - (e.vector <=> query_embedding::vector) AS similarity
+        FROM mem_dog_embeddings e
+        WHERE e.vector IS NOT NULL
+          AND (filter_user_id IS NULL OR e.user_id = filter_user_id)
+          AND (filter_data_ids IS NULL OR e.data_id = ANY(filter_data_ids))
+        ORDER BY e.vector <=> query_embedding::vector
+        LIMIT match_count;
+    $$;
+
+    GRANT EXECUTE ON FUNCTION match_embeddings(TEXT, INT, TEXT, TEXT[]) TO service_role;
+    GRANT EXECUTE ON FUNCTION match_embeddings(TEXT, INT, TEXT, TEXT[]) TO anon;
+    GRANT EXECUTE ON FUNCTION match_embeddings(TEXT, INT, TEXT, TEXT[]) TO authenticated;
+
+    NOTIFY pgrst, 'reload schema';
+
+  03-store-kv.sql: |
+    CREATE TABLE IF NOT EXISTS store_kv (
+      kv_key text primary key,
+      value text not null,
+      content_type text not null default 'application/octet-stream'
+    );
+
+    DO $$
+    BEGIN
+      IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'store_kv' AND column_name = 'key') THEN
+        ALTER TABLE store_kv RENAME COLUMN key TO kv_key;
+      END IF;
+    END $$;
+
+    GRANT ALL ON public.store_kv TO service_role;
+    GRANT ALL ON public.store_kv TO anon;
+    GRANT ALL ON public.store_kv TO authenticated;
+
+  04-list-data-paginated.sql: |
+    CREATE OR REPLACE FUNCTION list_data_paginated(
+        p_user_id   TEXT DEFAULT NULL,
+        p_skip      INT  DEFAULT 0,
+        p_limit     INT  DEFAULT 50,
+        p_tags      TEXT[] DEFAULT NULL,
+        p_match_all BOOLEAN DEFAULT FALSE
+    )
+    RETURNS TABLE (path TEXT, content TEXT, total BIGINT)
+    LANGUAGE sql
+    STABLE
+    AS $$
+      WITH decoded AS (
+        SELECT
+          b.path,
+          b.content,
+          convert_from(decode(b.content, 'base64'), 'UTF8')::jsonb AS j
+        FROM mem_dog_blobs b
+        WHERE b.store_name = 'meta'
+          AND (p_user_id IS NULL OR b.path LIKE p_user_id || '/%')
+          AND b.path LIKE '%/meta.json'
+          AND b.path NOT LIKE '%/ver_%'
+      ),
+      filtered AS (
+        SELECT
+          d.path,
+          d.content,
+          d.j,
+          COUNT(*) OVER () AS total
+        FROM decoded d
+        WHERE (
+          p_tags IS NULL
+          OR array_length(p_tags, 1) IS NULL
+          OR (
+            CASE
+              WHEN p_match_all THEN (d.j -> 'tags') @> to_jsonb(p_tags)
+              ELSE (d.j -> 'tags') ?| p_tags
+            END
+          )
+        )
+      )
+      SELECT f.path, f.content, f.total
+      FROM filtered f
+      ORDER BY (f.j ->> 'updated_at') DESC NULLS LAST
+      LIMIT p_limit
+      OFFSET p_skip;
+    $$;
+
+    GRANT EXECUTE ON FUNCTION list_data_paginated(TEXT, INT, INT, TEXT[], BOOLEAN) TO service_role;
+    GRANT EXECUTE ON FUNCTION list_data_paginated(TEXT, INT, INT, TEXT[], BOOLEAN) TO anon;
+    GRANT EXECUTE ON FUNCTION list_data_paginated(TEXT, INT, INT, TEXT[], BOOLEAN) TO authenticated;
+
+    NOTIFY pgrst, 'reload schema';
+
+  05-agent-configs.sql: |
+    CREATE TABLE IF NOT EXISTS agent_configs (
+        config_id     TEXT        PRIMARY KEY,
+        agent_type    TEXT        NOT NULL,
+        user_id       TEXT,
+        intro         TEXT,
+        system_prompt TEXT,
+        output_schema TEXT,
+        skills        JSONB       NOT NULL DEFAULT '[]',
+        model_tier    TEXT,
+        parameters    JSONB       NOT NULL DEFAULT '{}',
+        version       INTEGER     NOT NULL DEFAULT 1,
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+        UNIQUE (agent_type, user_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS agent_configs_type_user_idx
+        ON agent_configs (agent_type, user_id);
+
+    GRANT ALL ON public.agent_configs TO service_role;
+    GRANT ALL ON public.agent_configs TO anon;
+    GRANT ALL ON public.agent_configs TO authenticated;
+
+    NOTIFY pgrst, 'reload schema';
+
+  06-seed-agent-configs.sql: |
+    INSERT INTO agent_configs (config_id, agent_type, user_id, intro, system_prompt, output_schema, skills, model_tier, parameters, version)
+    VALUES
+    ('acfg_seed_json',        'json',        NULL, 'Analyse this JSON content thoroughly',        'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_csv',         'csv',         NULL, 'Analyse this CSV data thoroughly',            'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_yaml',        'yaml',        NULL, 'Analyse this YAML content thoroughly',        'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_xml',         'xml',         NULL, 'Analyse this XML document thoroughly',        'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_feed',        'feed',        NULL, 'Read and analyse this RSS/Atom feed thoroughly','You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_sensor',      'sensor',      NULL, 'Analyse this sensor telemetry thoroughly',    'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_iot_sensor',  'iot_sensor',  NULL, 'Analyse this IoT sensor telemetry thoroughly', 'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_gps',         'gps',         NULL, 'Analyse this GPS/location data thoroughly',   'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_biometric',   'biometric',   NULL, 'Analyse this biometric data thoroughly',      'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_log_stream',  'log_stream',  NULL, 'Read and analyse this streaming log data thoroughly','You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_archive',     'archive',     NULL, 'Analyse the contents of this archive thoroughly','You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_binary_blob', 'binary_blob', NULL, 'Analyse this binary data thoroughly',         'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'small',  '{}', 1),
+    ('acfg_seed_code',           'code',           NULL, 'Read and analyse this source code thoroughly',           'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_log_file',      'log_file',       NULL, 'Read and analyse this log file thoroughly',              'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_email',          'email',          NULL, 'Read and analyse this email thoroughly',                 'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_calendar',      'calendar',       NULL, 'Read and analyse these calendar events thoroughly',      'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_chat',           'chat',           NULL, 'Read and analyse this chat transcript thoroughly',       'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_channel_message','channel_message',NULL, 'Read and analyse this channel message thoroughly',      'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_html_doc',      'html_doc',       NULL, 'Extract the main content from this HTML and analyse it thoroughly','You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_markdown',      'markdown',       NULL, 'Read and analyse this Markdown document thoroughly',     'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_time_series',   'time_series',    NULL, 'Analyse this time series data thoroughly',               'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_vehicle_telemetry','vehicle_telemetry',NULL,'Analyse this vehicle telemetry data thoroughly',      'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_financial',     'financial',      NULL, 'Analyse this financial data thoroughly',                 'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_industrial',    'industrial',     NULL, 'Analyse this industrial data thoroughly',                'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_infrastructure','infrastructure', NULL, 'Analyse this infrastructure data thoroughly',            'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1),
+    ('acfg_seed_web_page',      'web_page',       NULL, 'Read and analyse this web page content thoroughly',      'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_pdf',           'pdf',            NULL, 'Read and analyse this PDF document thoroughly',          'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_office_doc',    'office_doc',     NULL, 'Read and analyse this Office document thoroughly',       'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_image',         'image',          NULL, 'Look at this image carefully and analyse it thoroughly',  'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_image_batch',   'image_batch',    NULL, 'Look at these images carefully and analyse them thoroughly','You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_video_url',     'video_url',      NULL, 'Watch this video carefully and analyse it thoroughly',    'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"],"transcript":"string — Full verbatim transcript","scenes":["array of strings — Chronological scene descriptions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_video_stream',  'video_stream',   NULL, 'Watch this video carefully and analyse it thoroughly',    'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"],"transcript":"string — Full verbatim transcript","scenes":["array of strings — Chronological scene descriptions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_audio_url',     'audio_url',      NULL, 'Listen to this audio carefully and analyse it thoroughly', 'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"],"transcript":"string — Full verbatim transcript","scenes":["array of strings — Chronological scene descriptions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_audio_stream',  'audio_stream',   NULL, 'Listen to this audio carefully and analyse it thoroughly', 'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"],"transcript":"string — Full verbatim transcript","scenes":["array of strings — Chronological scene descriptions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_geospatial',    'geospatial',     NULL, 'Analyse this geospatial data thoroughly',                'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_lidar',         'lidar',          NULL, 'Analyse this LiDAR point cloud data thoroughly',         'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_model_3d',      'model_3d',       NULL, 'Analyse this 3D model data thoroughly',                  'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_medical_imaging','medical_imaging',NULL, 'Analyse this medical imaging data thoroughly',           'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_conferencing',  'conferencing',   NULL, 'Analyse this conferencing/meeting data thoroughly',      'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_satellite',     'satellite',      NULL, 'Analyse this satellite data thoroughly',                 'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_scientific',    'scientific',     NULL, 'Analyse this scientific data thoroughly',                'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'large',  '{}', 1),
+    ('acfg_seed_url_download',  'url_download',   NULL, 'Read and analyse this downloaded content thoroughly',    'You are a data analysis assistant. You MUST respond with ONLY a valid JSON object — no markdown, no code fences, no preamble, no explanation. Output raw JSON and nothing else.', '{"category":"string — One domain label","entities":["array of strings — All named entities"],"keywords":["array of strings — 5-15 topical keywords"],"summary":"string — Comprehensive 3-5 sentence summary","queries":["array of strings — 5-8 natural language questions"]}', '[]', 'medium', '{}', 1)
+    ON CONFLICT (agent_type, user_id) DO NOTHING;

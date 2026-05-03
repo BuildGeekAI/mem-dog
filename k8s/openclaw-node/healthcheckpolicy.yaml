@@ -1,0 +1,23 @@
+# Configure GKE load balancer health check to use /healthz instead of /
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: openclaw-node-healthcheck
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: openclaw-node
+spec:
+  default:
+    checkIntervalSec: 15
+    timeoutSec: 5
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    config:
+      type: HTTP
+      httpHealthCheck:
+        requestPath: /healthz
+  targetRef:
+    group: ""
+    kind: Service
+    name: openclaw-node

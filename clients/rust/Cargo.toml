@@ -1,0 +1,13 @@
+[package]
+name = "memdog"
+version = "0.2.0"
+edition = "2021"
+description = "Rust SDK for the mem-dog data ingestion and AI enrichment platform"
+license = "MIT"
+
+[dependencies]
+reqwest = { version = "0.12", features = ["json", "multipart"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = "0.4"

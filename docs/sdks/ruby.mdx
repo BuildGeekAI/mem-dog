@@ -1,0 +1,38 @@
+---
+title: "Ruby SDK"
+description: "Clean Ruby client using native HTTP"
+icon: "gem"
+---
+
+# Ruby SDK
+
+Clean Ruby interface using native `Net::HTTP`.
+
+## Installation
+
+```ruby
+gem 'mem_dog_client'
+```
+
+## Usage
+
+```ruby
+require 'mem_dog_client'
+
+client = MemDogClient.new(
+  base_url: 'http://localhost:8080',
+  api_key: 'md_your_key'
+)
+
+# Store data
+item = client.create_data(
+  content: 'Meeting notes from standup',
+  tags: ['standup']
+)
+
+# Search
+results = client.semantic_search('what happened in standup?', max_results: 10)
+
+# List
+items = client.list_data(limit: 20)
+```

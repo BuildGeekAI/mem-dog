@@ -1,0 +1,18 @@
+# Documentation
+
+| Document | What's covered |
+|----------|---------------|
+| [Architecture](architecture.md) | System design, data flow, storage backends, AI/LLM stack, networking |
+| [API](api.md) | Data model, authentication, endpoints, configuration |
+| [Webhook Pipeline](webhook-pipeline.md) | Processing flow, 40 sub-agents, classification, LLM routing |
+| [Webhook Gateway](webhook-gateway.md) | Channel adapters, OpenClaw Node, envelope format |
+| [UI](ui.md) | Tabs, components, routing, configuration |
+| [Deployment](deployment.md) | GKE/Cloud Run targets, scripts, namespaces, gateway routing |
+| [Local Development](local-dev.md) | Docker Compose, env files, testing |
+| [Python Client](client.md) | SDK installation and usage |
+| [Graph Memory](graph-memory.md) | Entity/relationship graph, entity-aware RAG, schema |
+| [Model Garden](model-garden.md) | AI provider management, encrypted keys, model discovery |
+| [Integrations](integrations.md) | Provider platform, OAuth2, credentials, API proxy |
+| [GKE Setup (Mac)](gke-setup-mac.md) | Deploying to GKE from a Mac Mini |
+| [Presentation](presentation.md) | 18-slide overview of the full platform |
+| [mem-dog vs mem0](comparison-mem0.md) | Detailed feature-by-feature comparison |

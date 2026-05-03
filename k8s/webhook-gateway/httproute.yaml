@@ -1,0 +1,100 @@
+# HTTPRoute attaches to the "open-jaws" GKE Gateway and routes external
+# traffic to the webhook-gateway service.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: webhook-gateway-routes
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: webhook-gateway
+spec:
+  parentRefs:
+    - name: open-jaws
+      namespace: webhook-gateway
+      sectionName: http
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /webhooks
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /channels
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /query
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /health
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /ready
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /providers
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /docs
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /openapi.json
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /chat
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /proxy
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080
+    - matches:
+        - path:
+            type: Exact
+            value: /
+      backendRefs:
+        - name: webhook-gateway
+          port: 8080

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Chat</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #1a1a2e; color: #e0e0e0; height: 100vh; display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: #16213e; padding: 12px 20px; border-bottom: 1px solid #0f3460;
+    display: flex; align-items: center; gap: 10px;
+  }
+  header h1 { font-size: 18px; color: #e94560; }
+  header span { font-size: 13px; color: #888; }
+  #messages {
+    flex: 1; overflow-y: auto; padding: 16px 20px; display: flex;
+    flex-direction: column; gap: 10px;
+  }
+  .msg {
+    max-width: 75%; padding: 10px 14px; border-radius: 12px;
+    font-size: 14px; line-height: 1.5; word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .msg.user {
+    align-self: flex-end; background: #0f3460; color: #e0e0e0;
+    border-bottom-right-radius: 4px;
+  }
+  .msg.bot {
+    align-self: flex-start; background: #16213e; color: #e0e0e0;
+    border: 1px solid #0f3460; border-bottom-left-radius: 4px;
+  }
+  .msg.error { background: #3d1212; border-color: #e94560; }
+  .msg .meta { font-size: 11px; color: #666; margin-top: 4px; }
+  #input-area {
+    padding: 12px 20px; background: #16213e; border-top: 1px solid #0f3460;
+    display: flex; gap: 10px;
+  }
+  #input-area textarea {
+    flex: 1; background: #1a1a2e; color: #e0e0e0; border: 1px solid #0f3460;
+    border-radius: 8px; padding: 10px 14px; font-size: 14px; resize: none;
+    font-family: inherit; outline: none; min-height: 44px; max-height: 120px;
+  }
+  #input-area textarea:focus { border-color: #e94560; }
+  #input-area button {
+    background: #e94560; color: #fff; border: none; border-radius: 8px;
+    padding: 0 20px; font-size: 14px; cursor: pointer; font-weight: 600;
+    white-space: nowrap;
+  }
+  #input-area button:hover { background: #c73652; }
+  #input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<header>
+  <h1>OpenClaw Chat</h1>
+  <span>webchat channel</span>
+</header>
+<div id="messages"></div>
+<div id="input-area">
+  <textarea id="input" rows="1" placeholder="Type a message..." autofocus></textarea>
+  <button id="send" onclick="sendMessage()">Send</button>
+</div>
+<script>
+(function() {
+  var userId = 'chat-user-' + Math.random().toString(36).slice(2, 10);
+  var sessionId = 'sess-' + Date.now().toString(36);
+  var msgSeq = 0;
+  var messagesEl = document.getElementById('messages');
+  var inputEl = document.getElementById('input');
+  var sendBtn = document.getElementById('send');
+
+  function addMessage(text, cls, meta) {
+    var div = document.createElement('div');
+    div.className = 'msg ' + cls;
+    div.textContent = text;
+    if (meta) {
+      var m = document.createElement('div');
+      m.className = 'meta';
+      m.textContent = meta;
+      div.appendChild(m);
+    }
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  window.sendMessage = function() {
+    var text = inputEl.value.trim();
+    if (!text) return;
+
+    addMessage(text, 'user');
+    inputEl.value = '';
+    inputEl.style.height = 'auto';
+    sendBtn.disabled = true;
+
+    var messageId = 'msg-' + (++msgSeq) + '-' + Date.now().toString(36);
+    var payload = {
+      text: text,
+      user_id: userId,
+      session_id: sessionId,
+      message_id: messageId,
+      channel_id: sessionId
+    };
+
+    fetch('/webhooks/webchat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function(r) {
+      if (!r.ok) return r.text().then(function(t) { throw new Error(r.status + ': ' + t); });
+      return r.json();
+    })
+    .then(function(data) {
+      var info = 'trace: ' + (data.trace_id || '-').slice(0, 12) + '...';
+      addMessage('Accepted (message_id: ' + (data.message_id || '-') + ')', 'bot', info);
+    })
+    .catch(function(err) {
+      addMessage('Error: ' + err.message, 'bot error');
+    })
+    .finally(function() {
+      sendBtn.disabled = false;
+      inputEl.focus();
+    });
+  };
+
+  inputEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  inputEl.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+})();
+</script>
+</body>
+</html>

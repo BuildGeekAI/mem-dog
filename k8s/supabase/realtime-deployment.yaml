@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-realtime
+  namespace: supabase
+  labels:
+    app.kubernetes.io/name: supabase-realtime
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: supabase
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-realtime
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-realtime
+        app.kubernetes.io/part-of: mem-dog
+        app.kubernetes.io/component: supabase
+    spec:
+      containers:
+        - name: realtime
+          image: supabase/realtime:v2.30.34
+          ports:
+            - containerPort: 4000
+              name: http
+          env:
+            - name: PORT
+              value: "4000"
+            - name: DB_HOST
+              value: supabase-db.supabase.svc.cluster.local
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: postgres
+            - name: DB_USER
+              value: postgres
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secrets
+                  key: POSTGRES_PASSWORD
+            - name: DB_SSL
+              value: "false"
+            - name: DB_AFTER_CONNECT_QUERY
+              value: "SET search_path TO _realtime"
+            - name: API_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secrets
+                  key: JWT_SECRET
+            - name: FLY_ALLOC_ID
+              value: fly123
+            - name: FLY_APP_NAME
+              value: realtime
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secrets
+                  key: JWT_SECRET
+            - name: ERL_AFLAGS
+              value: "-proto_dist inet_tcp"
+            - name: APP_NAME
+              value: realtime
+            - name: ENABLE_TAILSCALE
+              value: "false"
+            - name: DNS_NODES
+              value: "''"
+            - name: RLIMIT_NOFILE
+              value: "10000"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 4000
+            initialDelaySeconds: 15
+            periodSeconds: 30

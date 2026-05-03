@@ -1,0 +1,65 @@
+---
+title: "DigiMe Overview"
+description: "An OpenClaw-powered AI agent that turns any messaging app into a window to your knowledge base"
+icon: "robot"
+---
+
+DigiMe is an AI agent built on the OpenClaw runtime that lives inside your messaging apps. It connects to mem-dog's RAG system, letting you store, search, and query your knowledge base through natural conversation.
+
+## What Is DigiMe?
+
+DigiMe bridges the gap between your messaging apps and your data. Instead of switching to a dashboard or API, you can:
+
+- **Ask questions** and get cited answers from your knowledge base
+- **Forward messages** to automatically ingest and process them
+- **Search semantically** across everything you've stored
+- **Ingest data** by simply sending it in a chat
+
+<CardGroup cols={2}>
+  <Card title="25+ Channels" icon="message" href="/digime/channels">
+    WhatsApp, Signal, Telegram, Discord, Slack, and many more.
+  </Card>
+  <Card title="4 Skills" icon="wand-magic-sparkles" href="/digime/skills">
+    Bridge, Ingest, Query, and Semantic Search — each targeting a specific interaction pattern.
+  </Card>
+  <Card title="Multi-User" icon="users" href="/digime/multi-user">
+    A single DigiMe instance serves multiple users with full data isolation.
+  </Card>
+  <Card title="Always On" icon="signal">
+    Runs as a persistent pod on Kubernetes with automatic reconnection to all channels.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+<Steps>
+  <Step title="Message arrives">
+    A user sends a message in any connected channel (WhatsApp, Slack, etc.).
+  </Step>
+  <Step title="Identity resolution">
+    DigiMe maps the channel-specific identity (phone number, Slack ID, etc.) to a mem-dog `user_id`.
+  </Step>
+  <Step title="Skill routing">
+    Based on the message content or command prefix, DigiMe routes to the appropriate skill.
+  </Step>
+  <Step title="mem-dog interaction">
+    The skill calls the mem-dog API (ingest, search, or chat) on behalf of the resolved user.
+  </Step>
+  <Step title="Response">
+    Results are formatted for the channel and sent back to the user in the same conversation.
+  </Step>
+</Steps>
+
+## Architecture
+
+```
+User (WhatsApp/Slack/etc.)
+  → OpenClaw Runtime (channel adapters)
+    → DigiMe Skills (bridge/ingest/query/search)
+      → mem-dog API (ingest, search, chat)
+        → Response back to user
+```
+
+<Info>
+  DigiMe is separate from the webhook pipeline. It communicates directly with the mem-dog API using per-user credentials, not through webhook ingestion.
+</Info>

@@ -1,0 +1,139 @@
+# Architecture
+
+## System Overview
+
+```mermaid
+graph TD
+    Channels["Channels\nWhatsApp, Telegram, Slack, ..."] --> OC["OpenClaw Node\nDigiMe agent"]
+    Users --> UI["UI\nNext.js · Cloud Run"]
+
+    OC --> GW["Webhook Gateway\nChannel adapter"]
+    GW --> API["API\nFastAPI · GKE"]
+    UI --> API
+    GW --> Pipeline["Webhook Pipeline\nNATS + 40 agents"]
+    API -- callbacks --> Pipeline
+    Pipeline -- stores results --> API
+
+    API --> Storage["Storage\nGCS / Supabase / local"]
+    API --> Neo4j["Neo4j\nGraphiti knowledge graph"]
+    Pipeline -- entities/rels --> API -- dual-write --> Neo4j
+```
+
+## Components
+
+| Component | Stack | Deployment | Port |
+|-----------|-------|------------|------|
+| **API** | Python 3.12, FastAPI | GKE (`mem-dog` ns) | 8080 |
+| **UI** | Next.js 14, TypeScript | Cloud Run | 3000 |
+| **Webhook Pipeline** | Python 3.12, NATS, FastAPI | GKE (`webhook-pipeline` ns) | 8080 |
+| **Webhook Gateway** | Python 3.12, FastAPI | GKE (`webhook-gateway` ns) | 8080 |
+| **OpenClaw Node** | Node.js, OpenClaw runtime | GKE (`webhook-gateway` ns) | 18789 |
+| **Neo4j** | Neo4j 5.26 Community | GKE (`neo4j` ns) | 7687 |
+| **Python Client** | Python, httpx | pip | — |
+
+## Data Flow
+
+### Channel ingestion (e.g. WhatsApp message)
+
+1. Channel delivers message to **Webhook Gateway** (normalized into UniversalEnvelope)
+2. User interacts with **DigiMe agent** (OpenClaw Node) — an AI agent that queries the mem-dog RAG system, performs semantic search, and ingests data through conversation
+3. Gateway normalizes into `UniversalEnvelope` (`{data, meta_data}`)
+4. Gateway forwards to **API** via `POST /api/v1/ingest`
+5. API stores raw data, publishes to **Webhook Pipeline** via NATS
+6. Pipeline classifies data type (6-layer detection), routes to sub-agent
+7. Sub-agent stages content, calls LLM for analysis, stores viewpoint + embedding
+
+### UI ingestion
+
+1. User uploads data (text, file, URL, camera, voice, video)
+2. UI calls `POST /api/v1/data`
+3. API stores and optionally forwards to pipeline for AI enrichment
+
+### Query
+
+1. User queries via chat or semantic search, selecting a search mode:
+   - **Vector** — pgvector cosine similarity (default)
+   - **FTS** — BM25 full-text keyword search via tsvector
+   - **Hybrid** — cosine + BM25 merged with Reciprocal Rank Fusion (RRF)
+   - **Graph** — Graphiti knowledge graph search (BFS + semantic + BM25 on Neo4j)
+   - **Full** — pgvector hybrid + Graphiti graph in parallel, merged with RRF
+2. Optional reranking: RRF, MMR (diversity), cross-encoder (LLM-scored)
+3. Optional temporal filtering: query facts valid at a specific point in time
+4. Results returned with inline `[1][2]` citations
+
+### Knowledge graph (dual-write)
+
+1. Webhook pipeline extracts entities/relationships from ingested data
+2. `POST /api/v1/graph/entities/batch` writes to Postgres graph tables
+3. Same data is dual-written to Graphiti/Neo4j as a temporal episode (fire-and-forget)
+4. Direct text ingestion (`POST /api/v1/ingest` with `direct=true`) also feeds Graphiti
+5. Graphiti extracts its own entities with temporal awareness (valid_at/invalid_at)
+
+## Storage Backends
+
+Configured via `STORAGE_BACKEND` env var:
+
+| Backend | Data Store | Embeddings | Use case |
+|---------|-----------|------------|----------|
+| `local` | Filesystem (`/data`) | In-memory | Local dev |
+| `gcs` | GCS buckets | GCS bucket | Cloud (legacy) |
+| `supabase` | `mem_dog_blobs` table | `mem_dog_embeddings` pgvector | Cloud (current) |
+
+Raw binary files always go to GCS (`RAW_BUCKET`) regardless of backend.
+
+### Knowledge Graph Storage
+
+| Store | Data | Use case |
+|-------|------|----------|
+| Postgres (`mem_dog_entities`, `mem_dog_relationships`) | Entities, relationships, entity-data mappings | Always active, entity-aware RAG |
+| Neo4j (Graphiti) | Temporal episodes, entity nodes, fact edges | Optional (`NEO4J_URI`), graph/full search, temporal queries |
+
+BM25 full-text search uses a `tsvector` column on `mem_dog_embeddings` (migration: `api/supabase/mem_dog_embeddings_fts.sql`).
+
+## AI / LLM Stack
+
+All model selection flows through the API's **smart routing** system (`api/app/smart_routing.py`), served via `GET /api/v1/ai/smart-routing-config/{user_id}`.
+
+### Model tiers
+
+| Tier | Default Model | Used for |
+|------|--------------|----------|
+| Small | `ollama/gemma3:4b` | JSON, CSV, YAML, XML, IoT |
+| Medium | `ollama/gemma3:12b` | Code, email, chat, financial |
+| Large | `ollama/gemma3:27b` | PDFs, Office docs, web pages |
+| Multimodal | `ollama/qwen3-vl:235b-cloud` | Images, visual PDFs |
+| Omni | `ollama/qwen3.5:cloud` | Audio, video |
+| Embedding | `embeddinggemma` | Vector embeddings |
+
+### Fallback chain
+
+**Webhook pipeline:** Smart routing primary (Ollama Cloud) → fallback (Gemini) → self-hosted Ollama (last resort)
+
+**Chat with Data:** Local Ollama (15s timeout) → Gemini fallback
+
+Users can override model selection per data type via **Settings → AI Config → Smart Routing**.
+
+## Networking (GKE)
+
+All external traffic enters through the `open-jaws` Gateway (L7 Global External Managed LB):
+
+| Path | Destination | Timeout |
+|------|-------------|---------|
+| `/gke-api/*` | `api` service (prefix stripped) | 120s |
+| `/oc/*` | `openclaw-node` (prefix stripped) | 30s |
+| `/webhooks`, `/channels`, `/query`, `/chat`, etc. | `webhook-gateway` | 30s |
+
+Internal service discovery uses Kubernetes DNS (`api.mem-dog.svc.cluster.local:8080`).
+
+## Observability
+
+- **Traces:** OpenTelemetry distributed traces across all components, stored as data records in `tracing`-type memories
+- **Metrics:** `http.server.request_count` counter with method/path/status labels
+- **UI:** Telemetry dashboard with waterfall span viewer
+
+## Security
+
+- **API auth:** `X-API-Key` header (global key or per-user `md_*` keys)
+- **Data access control:** Per-item ACLs (`null`=public, `["*"]`=authenticated, `["user:uuid"]`, `["role:name"]`)
+- **Credential encryption:** Fernet AES-256 via `MASTER_ENCRYPTION_KEY`
+- **Gateway middleware:** API key auth, IP allowlist, rate limiting

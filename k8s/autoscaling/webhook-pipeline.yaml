@@ -1,0 +1,77 @@
+# Webhook pipeline services — scale to 0 after 15 min idle
+# NATS stays at min=1 (message bus must be available)
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: webhook-agent-scaler
+  namespace: webhook-pipeline
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+spec:
+  scaleTargetRef:
+    name: webhook-agent
+  minReplicaCount: 0
+  maxReplicaCount: 2
+  cooldownPeriod: 900        # 15 min idle before scale to 0
+  pollingInterval: 30
+  triggers:
+    - type: nats-jetstream
+      metadata:
+        natsServerMonitoringEndpoint: "nats.webhook-pipeline.svc.cluster.local:8222"
+        account: "$G"
+        stream: "WEBHOOKS"
+        consumer: "webhook-processor"
+        lagThreshold: "1"    # Scale up when there's 1+ pending message
+    - type: cron
+      metadata:
+        timezone: "America/Chicago"
+        start: "0 8 * * 1-5"   # Scale up Mon-Fri 8am
+        end: "0 22 * * 1-5"    # Scale down at 10pm
+        desiredReplicas: "1"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: webhook-receiver-scaler
+  namespace: webhook-pipeline
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+spec:
+  scaleTargetRef:
+    name: webhook-receiver
+  minReplicaCount: 0
+  maxReplicaCount: 2
+  cooldownPeriod: 900
+  pollingInterval: 30
+  triggers:
+    - type: kubernetes-workload
+      metadata:
+        podSelector: "app=webhook-agent"
+        value: "1"           # Scale with the agent
+    - type: cron
+      metadata:
+        timezone: "America/Chicago"
+        start: "0 8 * * 1-5"
+        end: "0 22 * * 1-5"
+        desiredReplicas: "1"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: webhook-pull-worker-scaler
+  namespace: webhook-pipeline
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+spec:
+  scaleTargetRef:
+    name: webhook-pull-worker
+  minReplicaCount: 0
+  maxReplicaCount: 2
+  cooldownPeriod: 900
+  pollingInterval: 30
+  triggers:
+    - type: kubernetes-workload
+      metadata:
+        podSelector: "app=webhook-agent"
+        value: "1"           # Scale with the agent

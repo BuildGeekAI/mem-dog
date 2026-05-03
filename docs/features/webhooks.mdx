@@ -1,0 +1,84 @@
+---
+title: "Webhooks"
+description: "Per-user webhook endpoints with HMAC verification, event logging, and 25+ channel adapters"
+icon: "webhook"
+---
+
+Webhooks let external services push data into mem-dog. Each user gets unique endpoints with HMAC secret verification and full event logging.
+
+## Endpoint Format
+
+Each webhook endpoint has a unique ULID-based identifier:
+
+```
+POST /api/v1/webhooks/whk_01JQRS.../ingest
+```
+
+## Creating a Webhook
+
+<CodeGroup>
+```bash cURL
+curl -X POST /api/v1/webhooks \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "name": "GitHub Events",
+    "channel": "github",
+    "enabled": true
+  }'
+```
+
+```json Response
+{
+  "id": "whk_01JQRS...",
+  "name": "GitHub Events",
+  "channel": "github",
+  "secret": "whsec_...",
+  "url": "https://api.mem-dog.dev/api/v1/webhooks/whk_01JQRS.../ingest",
+  "enabled": true
+}
+```
+</CodeGroup>
+
+## HMAC Verification
+
+Every webhook includes an HMAC secret (`whsec_...`) for payload verification. Senders must include the signature in the `X-Webhook-Signature` header.
+
+<Info>
+  mem-dog verifies the HMAC-SHA256 signature before processing any payload. Requests with invalid or missing signatures are rejected with `401 Unauthorized`.
+</Info>
+
+## Channel Adapters
+
+25+ built-in adapters normalize incoming payloads into the UniversalEnvelope format:
+
+<CardGroup cols={3}>
+  <Card title="Developer" icon="code">GitHub, GitLab, Bitbucket, Jira, Linear</Card>
+  <Card title="Communication" icon="message">Slack, Discord, MS Teams, Email</Card>
+  <Card title="CRM" icon="address-book">HubSpot, Salesforce, Intercom</Card>
+  <Card title="Observability" icon="chart-line">PagerDuty, Datadog, Sentry, Grafana, OpsGenie</Card>
+  <Card title="Reviews" icon="star">Yelp, Google Business, Trustpilot, G2, TripAdvisor, App Store, Capterra</Card>
+  <Card title="Custom" icon="puzzle-piece">Generic JSON, raw binary</Card>
+</CardGroup>
+
+## Event Logging & Stats
+
+Every webhook invocation is logged with:
+
+| Field | Description |
+|-------|-------------|
+| **Timestamp** | When the event was received |
+| **Status** | Success, rejected (bad signature), or error |
+| **Payload size** | Bytes received |
+| **Processing time** | End-to-end latency |
+| **Data ID** | The `data_<ulid>` created from this event |
+
+View stats in the UI under **Integrations > Webhooks** or via the API:
+
+```bash
+curl -X GET /api/v1/webhooks/whk_01JQRS.../stats \
+  -H "Authorization: Bearer <token>"
+```
+
+<Tip>
+  Disable a webhook temporarily by setting `enabled: false`. Events sent to disabled webhooks return `200 OK` but are not processed — useful during maintenance windows.
+</Tip>

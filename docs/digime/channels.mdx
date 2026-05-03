@@ -1,0 +1,87 @@
+---
+title: "Supported Channels"
+description: "25+ messaging platforms supported by DigiMe through OpenClaw adapters"
+icon: "messages"
+---
+
+DigiMe supports 25+ messaging channels through the OpenClaw runtime. Each channel has a dedicated adapter that handles authentication, message formatting, and media attachments.
+
+## Channel List
+
+<CardGroup cols={3}>
+  <Card title="WhatsApp" icon="whatsapp">Via WhatsApp Business API or linked device</Card>
+  <Card title="Signal" icon="signal-messenger">Via Signal CLI or linked device</Card>
+  <Card title="Telegram" icon="telegram">Bot API with group support</Card>
+  <Card title="Discord" icon="discord">Bot with slash commands</Card>
+  <Card title="Slack" icon="slack">App with slash commands and events</Card>
+  <Card title="Matrix" icon="grid">Element, Synapse, and other clients</Card>
+  <Card title="MS Teams" icon="microsoft">Bot Framework integration</Card>
+  <Card title="IRC" icon="hashtag">Any IRC network</Card>
+  <Card title="Google Chat" icon="google">Workspace bot</Card>
+  <Card title="Line" icon="l">LINE Messaging API</Card>
+  <Card title="Feishu" icon="comment">Lark/Feishu bot</Card>
+  <Card title="Mattermost" icon="message">Self-hosted team chat</Card>
+  <Card title="Nextcloud Talk" icon="cloud">Nextcloud integration</Card>
+  <Card title="Nostr" icon="n">Decentralized protocol</Card>
+  <Card title="Twitch" icon="twitch">Chat bot</Card>
+  <Card title="Zalo" icon="z">Zalo Official Account</Card>
+  <Card title="BlueBubbles" icon="apple">iMessage via BlueBubbles</Card>
+</CardGroup>
+
+## Channel Configuration
+
+Each channel is configured in the OpenClaw node's `config.yaml`:
+
+```yaml
+channels:
+  whatsapp:
+    enabled: true
+    phone_number: "+1234567890"
+    session_path: "/data/whatsapp-session"
+
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+
+  slack:
+    enabled: true
+    app_token: "${SLACK_APP_TOKEN}"
+    bot_token: "${SLACK_BOT_TOKEN}"
+```
+
+<Info>
+  Channel credentials are stored as Kubernetes secrets in the `webhook-gateway` namespace and mounted into the OpenClaw node pod.
+</Info>
+
+## Message Format
+
+All incoming messages are normalized to a common format before skill processing:
+
+```json
+{
+  "channel_type": "whatsapp",
+  "peer_id": "+1234567890",
+  "message_id": "msg_abc123",
+  "content": "What did we discuss yesterday?",
+  "timestamp": "2026-03-27T10:00:00Z",
+  "attachments": []
+}
+```
+
+## Adding a New Channel
+
+<Steps>
+  <Step title="Enable the adapter">
+    Add the channel configuration to `config.yaml` with credentials.
+  </Step>
+  <Step title="Map identities">
+    Register channel identities for your users. See [Multi-User](/digime/multi-user) for details.
+  </Step>
+  <Step title="Restart the pod">
+    The OpenClaw node picks up new channels on restart.
+  </Step>
+</Steps>
+
+<Tip>
+  Start with one channel and expand. Each channel operates independently — adding a new one does not affect existing connections.
+</Tip>

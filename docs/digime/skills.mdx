@@ -1,0 +1,113 @@
+---
+title: "DigiMe Skills"
+description: "4 skills in detail: bridge, ingest, query, and semantic-search with endpoint formats and payloads"
+icon: "wand-magic-sparkles"
+---
+
+DigiMe has 4 skills, each targeting a specific interaction pattern with the mem-dog knowledge base.
+
+## mem-dog-bridge
+
+Forwards ALL incoming messages to mem-dog for storage and processing. This is the default "always-on" skill — every message is captured without explicit user action.
+
+```
+Endpoint: POST /api/v1/data
+Headers:  Authorization: Bearer <user_api_key>
+```
+
+```json
+{
+  "content": "The quarterly review is moved to Friday",
+  "source": "whatsapp",
+  "source_type": "message",
+  "channel_type": "whatsapp",
+  "metadata": {
+    "peer_id": "+1234567890",
+    "message_id": "msg_abc123",
+    "timestamp": "2026-03-27T10:00:00Z"
+  }
+}
+```
+
+<Info>
+  Bridge mode captures everything passively. It is ideal for building a comprehensive knowledge base from day-to-day conversations.
+</Info>
+
+## mem-dog-ingest
+
+Stores data explicitly when the user sends a command (e.g., `/remember` or `/save`). Unlike bridge, this only fires on intentional storage requests.
+
+```
+Endpoint: POST /api/v1/data
+Headers:  Authorization: Bearer <user_api_key>
+```
+
+```json
+{
+  "content": "Project deadline: April 15, 2026",
+  "source": "telegram",
+  "source_type": "user_input",
+  "memory_type": "factual",
+  "tags": ["deadline", "project"]
+}
+```
+
+## mem-dog-query
+
+Handles natural language questions using the RAG chat endpoint. Returns answers with `[1][2]` citation markers.
+
+```
+Endpoint: POST /api/v1/ai/query/chat
+Headers:  Authorization: Bearer <user_api_key>
+```
+
+```json
+{
+  "query": "What is the project deadline?",
+  "search_mode": "hybrid",
+  "reranker": "mmr"
+}
+```
+
+**Response formatted for chat:**
+```
+The project deadline is April 15, 2026 [1].
+
+Sources:
+[1] "Project deadline: April 15, 2026" (saved Mar 27)
+```
+
+## mem-dog-semantic-search
+
+Performs vector similarity search and returns matching items directly (without LLM answer generation). Useful for browsing related content.
+
+```
+Endpoint: POST /api/v1/search
+Headers:  Authorization: Bearer <user_api_key>
+```
+
+```json
+{
+  "query": "meeting notes from last week",
+  "search_mode": "vector",
+  "limit": 5
+}
+```
+
+## Skill Routing
+
+<Steps>
+  <Step title="Command prefix">
+    Messages starting with `/ask`, `/search`, `/remember`, or `/save` route to the corresponding skill.
+  </Step>
+  <Step title="Natural language">
+    Questions (detected by the `?` suffix or interrogative words) route to **query**.
+  </Step>
+  <Step title="Default">
+    All other messages route to **bridge** for passive capture.
+  </Step>
+</Steps>
+
+<Tip>
+  Skills can be enabled or disabled per channel. For example, you might enable bridge on WhatsApp (capture everything) but only enable query and search on Slack (explicit lookups only).
+</Tip>

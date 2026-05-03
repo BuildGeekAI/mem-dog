@@ -1,0 +1,76 @@
+# API Gateway OpenAPI specification for the mem-dog webhook endpoint.
+#
+# This spec configures GCP API Gateway to:
+#   1. Route POST /webhook to the receiver Cloud Function
+#   2. Enforce API key authentication via the x-api-key header
+#
+# Deployment:
+#   Replace RECEIVER_FUNCTION_URL with the actual Cloud Function URL before
+#   creating/updating the API Gateway config.
+
+swagger: "2.0"
+info:
+  title: Mem-Dog Webhook API
+  description: >
+    Webhook ingestion endpoint for the mem-dog private AI system.
+    Accepts arbitrary JSON payloads and routes them through Pub/Sub
+    for asynchronous processing by an ADK agent.
+  version: "1.0.0"
+
+host: "GATEWAY_HOST"  # Replaced at deploy time
+schemes:
+  - https
+
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: x-api-key
+    in: header
+
+paths:
+  /webhook:
+    post:
+      summary: Receive a webhook payload
+      description: >
+        Accepts a JSON object payload. The payload is published to Pub/Sub
+        for asynchronous processing. Returns 202 Accepted immediately.
+      operationId: receiveWebhook
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - api_key: []
+      parameters:
+        - in: body
+          name: payload
+          required: true
+          schema:
+            type: object
+            description: Any valid JSON object.
+      responses:
+        "202":
+          description: Payload accepted for processing.
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: accepted
+              message_id:
+                type: string
+                example: "1234567890"
+              received_at:
+                type: string
+                example: "2026-02-16T12:00:00+00:00"
+        "400":
+          description: Bad request (empty body or invalid JSON).
+        "401":
+          description: Unauthorized (missing or invalid API key).
+        "405":
+          description: Method not allowed (only POST is accepted).
+        "413":
+          description: Payload too large (exceeds 1 MB).
+      x-google-backend:
+        address: "RECEIVER_FUNCTION_URL"
+        deadline: 30.0

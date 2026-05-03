@@ -1,0 +1,110 @@
+---
+title: "Agent Adapters"
+description: "LangChain, CrewAI, OpenAI function calling, and MCP integrations for mem-dog"
+icon: "robot"
+---
+
+Agent adapters let you use mem-dog as the memory layer for popular AI agent frameworks.
+
+## LangChain
+
+### ChatMessageHistory
+
+Use mem-dog as LangChain's conversation memory backend:
+
+```python
+from mem_dog_client.langchain import MemDogChatMessageHistory
+
+history = MemDogChatMessageHistory(
+    api_key="md_...",
+    session_id="sess_01J...",
+    base_url="http://localhost:8080"
+)
+
+# Automatically stores and retrieves conversation turns
+history.add_user_message("What is our Q3 revenue?")
+history.add_ai_message("Q3 revenue was $2.4M, up 15% YoY.")
+
+messages = history.messages  # Returns all messages in session
+```
+
+### Retriever
+
+Use mem-dog as a LangChain retriever for RAG chains:
+
+```python
+from mem_dog_client.langchain import MemDogRetriever
+
+retriever = MemDogRetriever(
+    api_key="md_...",
+    search_mode="hybrid",
+    reranker="mmr",
+    k=5
+)
+
+# Use in a RAG chain
+from langchain.chains import RetrievalQA
+chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
+answer = chain.run("What decisions were made last week?")
+```
+
+## CrewAI
+
+Two tools for crew agent memory — `save` and `search`:
+
+```python
+from mem_dog_client.crewai import MemDogSaveTool, MemDogSearchTool
+
+save_tool = MemDogSaveTool(api_key="md_...")
+search_tool = MemDogSearchTool(api_key="md_...")
+
+from crewai import Agent
+
+researcher = Agent(
+    role="Research Analyst",
+    tools=[save_tool, search_tool],
+    memory=True
+)
+```
+
+<Info>
+  CrewAI tools automatically tag saved items with the agent role and task ID for traceability.
+</Info>
+
+## OpenAI Function Calling
+
+Register mem-dog operations as OpenAI function definitions:
+
+```python
+from mem_dog_client.openai import get_mem_dog_tools, handle_tool_call
+
+tools = get_mem_dog_tools()  # Returns function definitions
+
+response = openai.chat.completions.create(
+    model="gpt-4o",
+    messages=messages,
+    tools=tools
+)
+
+# Handle the tool call
+if response.choices[0].message.tool_calls:
+    result = handle_tool_call(
+        response.choices[0].message.tool_calls[0],
+        api_key="md_..."
+    )
+```
+
+## MCP
+
+The MCP integration exposes 8 tools via SSE. See [MCP Server](/features/mcp-server) for setup with Claude Desktop and Cursor.
+
+| Tool | LangChain | CrewAI | OpenAI | MCP |
+|------|-----------|--------|--------|-----|
+| Add/Save | via History | `MemDogSaveTool` | `mem_dog_add` | `mem_dog_add` |
+| Search | `MemDogRetriever` | `MemDogSearchTool` | `mem_dog_search` | `mem_dog_search` |
+| Chat | Custom chain | Custom tool | `mem_dog_chat` | `mem_dog_chat` |
+| Get/List | Direct client | Direct client | `mem_dog_get/list` | `mem_dog_get/list` |
+
+<Tip>
+  All adapters use the same underlying Python SDK. You can mix adapter usage with direct client calls in the same application.
+</Tip>

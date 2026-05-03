@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-db
+  namespace: supabase
+  labels:
+    app.kubernetes.io/name: supabase-db
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: supabase
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+  selector:
+    app.kubernetes.io/name: supabase-db

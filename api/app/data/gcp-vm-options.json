@@ -1,0 +1,109 @@
+{
+  "provider": "GCP Compute Engine VM",
+  "note": "Full GPU support, persistent VMs, ideal for production inference. One model per VM recommended for low latency and high throughput pipelines. Models align with api/app/model_catalog.py (catalog_model_id); use --model with catalog id or display name.",
+  "instances": [
+    {
+      "instance_type": "n1-standard-4 + T4",
+      "gcp_machine_type": "n1-standard-4",
+      "gcp_accelerator_type": "nvidia-tesla-t4",
+      "gcp_accelerator_count": 1,
+      "machine_family": "n1",
+      "vcpu": 4,
+      "memory_gb": 15,
+      "gpu": "NVIDIA T4",
+      "gpu_vram_gb": 16,
+      "cost_per_hour": 0.35,
+      "inference_backend": ["Ollama", "vLLM", "TGI", "llama.cpp"],
+      "suitable_for": ["router", "small-extractor", "embedding"],
+      "models": [
+        { "model": "Mistral-7B-Instruct", "catalog_model_id": "mistral-7b", "ollama_tag": "mistral:7b-instruct", "params": "7B", "quantization": "Q4_K_M", "vram_required_gb": 5, "use_case": "primary LLM router", "inference_speed_tokens_sec": 55, "recommended": true, "pipeline_role": "router" },
+        { "model": "Gemma-3-4B", "catalog_model_id": "gemma-3-4b", "ollama_tag": "gemma3:4b", "params": "4B", "quantization": "Q4_K_M", "vram_required_gb": 3.5, "use_case": "lightweight router or simple text extraction", "inference_speed_tokens_sec": 80, "recommended": true, "pipeline_role": "router" },
+        { "model": "Llama-3.1-8B", "catalog_model_id": "llama-3.1-8b", "ollama_tag": "llama3.1:8b", "params": "8B", "quantization": "Q4_K_M", "vram_required_gb": 6, "use_case": "general text extraction and summarization", "inference_speed_tokens_sec": 50, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "Llama-3.2-1B", "catalog_model_id": "llama-3.2-1b", "ollama_tag": "llama3.2:1b", "params": "1B", "quantization": "Q4_K_M", "vram_required_gb": 1.5, "use_case": "edge inference, simple classification", "inference_speed_tokens_sec": 200, "recommended": false, "pipeline_role": "router" },
+        { "model": "Llama-3.2-3B", "catalog_model_id": "llama-3.2-3b", "ollama_tag": "llama3.2:3b", "params": "3B", "quantization": "Q4_K_M", "vram_required_gb": 3, "use_case": "fast data parsing and extraction", "inference_speed_tokens_sec": 150, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "Gemma-2-2B", "catalog_model_id": "gemma-2-2b", "ollama_tag": "gemma2:2b", "params": "2B", "quantization": "Q4_K_M", "vram_required_gb": 2, "use_case": "fast classification, simple QA", "inference_speed_tokens_sec": 160, "recommended": false, "pipeline_role": "router" },
+        { "model": "Gemma-3-1B", "catalog_model_id": "gemma-3-1b", "ollama_tag": "gemma3:1b", "params": "1B", "quantization": "Q4_K_M", "vram_required_gb": 2, "use_case": "ultra-lightweight inference", "inference_speed_tokens_sec": 180, "recommended": false, "pipeline_role": "router" },
+        { "model": "Phi-3-mini", "catalog_model_id": "phi-3-mini", "ollama_tag": "phi3:mini", "params": "3.8B", "quantization": "Q4_K_M", "vram_required_gb": 3.5, "use_case": "structured reasoning for data pipelines", "inference_speed_tokens_sec": 120, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "Phi-3-medium-14B", "ollama_tag": "phi3:medium", "params": "14B", "quantization": "Q4_K_M", "vram_required_gb": 10, "use_case": "complex document extraction with reasoning", "inference_speed_tokens_sec": 28, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "Qwen-2.5-0.5B", "catalog_model_id": "qwen2.5-0.5b", "ollama_tag": "qwen2.5:0.5b", "params": "0.5B", "quantization": "Q4_K_M", "vram_required_gb": 1, "use_case": "fast routing, language detection", "inference_speed_tokens_sec": 300, "recommended": false, "pipeline_role": "router" },
+        { "model": "Qwen-2.5-1.5B", "catalog_model_id": "qwen2.5-1.5b", "ollama_tag": "qwen2.5:1.5b", "params": "1.5B", "quantization": "Q4_K_M", "vram_required_gb": 2, "use_case": "multilingual extraction, tagging", "inference_speed_tokens_sec": 220, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "DeepSeek-R1-Distill-1.5B", "catalog_model_id": "deepseek-r1-distill-1.5b", "ollama_tag": "deepseek-r1:1.5b", "params": "1.5B", "quantization": "Q4_K_M", "vram_required_gb": 2, "use_case": "reasoning sub-tasks, cost-effective CoT", "inference_speed_tokens_sec": 200, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "Whisper-large-v3", "ollama_tag": "whisper:large-v3", "params": "1.5B", "quantization": "F16", "vram_required_gb": 3, "use_case": "Zoom / audio transcription extractor", "inference_speed_tokens_sec": 120, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "nomic-embed-text", "ollama_tag": "nomic-embed-text", "params": "137M", "quantization": "F32", "vram_required_gb": 0.3, "use_case": "text embeddings", "inference_speed_tokens_sec": 500, "recommended": true, "pipeline_role": "embedding" }
+      ]
+    },
+    {
+      "instance_type": "g2-standard-8 + L4",
+      "gcp_machine_type": "g2-standard-8",
+      "gcp_accelerator_type": "nvidia-l4",
+      "gcp_accelerator_count": 1,
+      "machine_family": "g2",
+      "vcpu": 8,
+      "memory_gb": 32,
+      "gpu": "NVIDIA L4",
+      "gpu_vram_gb": 24,
+      "cost_per_hour": 0.7,
+      "inference_backend": ["Ollama", "vLLM", "TGI", "LocalAI"],
+      "suitable_for": ["extractor", "multimodal", "vision"],
+      "models": [
+        { "model": "Gemma-3-12B", "catalog_model_id": "gemma-3-12b", "ollama_tag": "gemma3:12b", "params": "12B", "quantization": "Q4_K_M", "vram_required_gb": 8, "use_case": "mid-tier general extraction", "inference_speed_tokens_sec": 45, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "Mistral-Nemo-12B", "catalog_model_id": "mistral-nemo-12b", "ollama_tag": "mistral-nemo:12b", "params": "12B", "quantization": "Q4_K_M", "vram_required_gb": 8, "use_case": "structured JSON extraction from documents", "inference_speed_tokens_sec": 42, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "Gemma-2-9B", "catalog_model_id": "gemma-2-9b", "ollama_tag": "gemma2:9b", "params": "9B", "quantization": "Q4_K_M", "vram_required_gb": 8, "use_case": "structured analysis, data reasoning", "inference_speed_tokens_sec": 70, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "Qwen-2.5-7B", "catalog_model_id": "qwen2.5-7b", "ollama_tag": "qwen2.5:7b", "params": "7B", "quantization": "Q4_K_M", "vram_required_gb": 6, "use_case": "multilingual reasoning, code and data analysis", "inference_speed_tokens_sec": 85, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "DeepSeek-R1-Distill-7B", "catalog_model_id": "deepseek-r1-distill-7b", "ollama_tag": "deepseek-r1:7b", "params": "7B", "quantization": "Q4_K_M", "vram_required_gb": 6, "use_case": "analytical reasoning, data analysis", "inference_speed_tokens_sec": 85, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "Granite-4-Tiny", "catalog_model_id": "granite4-tiny", "ollama_tag": "granite4:tiny", "params": "~7B MoE", "quantization": "Q4_K_M", "vram_required_gb": 6, "use_case": "enterprise tasks, tool use", "inference_speed_tokens_sec": 75, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "CodeLlama-7B", "catalog_model_id": "codellama-7b", "ollama_tag": "codellama:7b", "params": "7B", "quantization": "Q4_K_M", "vram_required_gb": 5, "use_case": "code completion, SQL, data scripting", "inference_speed_tokens_sec": 80, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "Phi-4-14B", "catalog_model_id": "phi-4", "ollama_tag": "phi4", "params": "14B", "quantization": "Q4_K_M", "vram_required_gb": 12, "use_case": "math reasoning, data analysis", "inference_speed_tokens_sec": 50, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "Gemma-2-27B", "catalog_model_id": "gemma-2-27b", "ollama_tag": "gemma2:27b", "params": "27B", "quantization": "Q4_K_M", "vram_required_gb": 20, "use_case": "complex reasoning, agentic workflows", "inference_speed_tokens_sec": 30, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "DeepSeek-R1-Distill-14B", "catalog_model_id": "deepseek-r1-distill-14b", "ollama_tag": "deepseek-r1:14b", "params": "14B", "quantization": "Q4_K_M", "vram_required_gb": 12, "use_case": "complex reasoning, orchestration support", "inference_speed_tokens_sec": 45, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "LLaVA-13B", "ollama_tag": "llava:13b", "params": "13B", "quantization": "Q4_K_M", "vram_required_gb": 10, "use_case": "vision + text extraction", "inference_speed_tokens_sec": 30, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "Llama-3.1-70B", "catalog_model_id": "llama-3.3-70b", "ollama_tag": "llama3.1:70b", "params": "70B", "quantization": "Q2_K", "vram_required_gb": 22, "use_case": "heavy extraction (Q2; prefer A100 for speed)", "inference_speed_tokens_sec": 8, "recommended": false, "pipeline_role": "extractor", "warning": "Very slow at Q2, prefer A100 for 70B" },
+        { "model": "BiomedCLIP", "ollama_tag": "biomedclip", "params": "400M", "quantization": "F16", "vram_required_gb": 1, "use_case": "medical imaging extraction", "inference_speed_tokens_sec": 200, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "RemoteCLIP", "ollama_tag": "remoteclip", "params": "400M", "quantization": "F16", "vram_required_gb": 1, "use_case": "satellite and geospatial image extraction", "inference_speed_tokens_sec": 200, "recommended": true, "pipeline_role": "extractor" }
+      ]
+    },
+    {
+      "instance_type": "a2-highgpu-1g + A100",
+      "gcp_machine_type": "a2-highgpu-1g",
+      "gcp_accelerator_type": "nvidia-tesla-a100",
+      "gcp_accelerator_count": 1,
+      "machine_family": "a2",
+      "vcpu": 12,
+      "memory_gb": 85,
+      "gpu": "NVIDIA A100",
+      "gpu_vram_gb": 40,
+      "cost_per_hour": 2.93,
+      "inference_backend": ["vLLM", "TGI", "Ollama"],
+      "suitable_for": ["large-extractor", "synthesis", "multimodal-heavy"],
+      "models": [
+        { "model": "Gemma-3-27B", "catalog_model_id": "gemma-3-27b", "ollama_tag": "gemma3:27b", "params": "27B", "quantization": "Q4_K_M", "vram_required_gb": 18, "use_case": "heavy extraction and synthesis orchestrator", "inference_speed_tokens_sec": 35, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "Gemma-2-27B", "catalog_model_id": "gemma-2-27b", "ollama_tag": "gemma2:27b", "params": "27B", "quantization": "Q4_K_M", "vram_required_gb": 20, "use_case": "complex reasoning, agentic workflows", "inference_speed_tokens_sec": 30, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "Llama-3.1-70B", "catalog_model_id": "llama-3.3-70b", "ollama_tag": "llama3.1:70b", "params": "70B", "quantization": "Q4_K_M", "vram_required_gb": 38, "use_case": "complex reasoning and multi-step extraction", "inference_speed_tokens_sec": 18, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "Mixtral-8x7B", "catalog_model_id": "mixtral-8x7b", "ollama_tag": "mixtral:8x7b", "params": "47B", "quantization": "Q4_K_M", "vram_required_gb": 28, "use_case": "MoE model — fast for its size", "inference_speed_tokens_sec": 40, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "DeepSeek-R1-Distill-32B", "catalog_model_id": "deepseek-r1-distill-32b", "ollama_tag": "deepseek-r1:32b", "params": "32B", "quantization": "Q4_K_M", "vram_required_gb": 24, "use_case": "complex orchestration, deep reasoning", "inference_speed_tokens_sec": 25, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "Qwen-3-32B", "catalog_model_id": "qwen3-32b", "ollama_tag": "qwen3:32b", "params": "32B", "quantization": "Q4_K_M", "vram_required_gb": 24, "use_case": "complex reasoning, code generation", "inference_speed_tokens_sec": 28, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "CodeLlama-34B", "catalog_model_id": "codellama-34b", "ollama_tag": "codellama:34b", "params": "34B", "quantization": "Q4_K_M", "vram_required_gb": 22, "use_case": "code generation, refactoring", "inference_speed_tokens_sec": 30, "recommended": false, "pipeline_role": "extractor" },
+        { "model": "LLaVA-34B", "ollama_tag": "llava:34b", "params": "34B", "quantization": "Q4_K_M", "vram_required_gb": 22, "use_case": "high-accuracy vision extraction", "inference_speed_tokens_sec": 20, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "Whisper-large-v3 + Pyannote", "ollama_tag": "whisper:large-v3", "params": "1.5B", "quantization": "F16", "vram_required_gb": 4, "use_case": "Zoom real-time transcription + diarization", "inference_speed_tokens_sec": 300, "recommended": true, "pipeline_role": "extractor" }
+      ]
+    },
+    {
+      "instance_type": "a2-highgpu-1g + A100 80GB",
+      "gcp_machine_type": "a2-ultragpu-1g",
+      "gcp_accelerator_type": "nvidia-a100-80gb",
+      "gcp_accelerator_count": 1,
+      "machine_family": "a2",
+      "vcpu": 12,
+      "memory_gb": 85,
+      "gpu": "NVIDIA A100",
+      "gpu_vram_gb": 80,
+      "cost_per_hour": 3.93,
+      "inference_backend": ["vLLM", "TGI"],
+      "suitable_for": ["very-large-extractor", "full-precision-models"],
+      "models": [
+        { "model": "Llama-3.1-70B", "catalog_model_id": "llama-3.3-70b", "ollama_tag": "llama3.1:70b", "params": "70B", "quantization": "Q8", "vram_required_gb": 70, "use_case": "high-accuracy full-quality extraction", "inference_speed_tokens_sec": 25, "recommended": true, "pipeline_role": "extractor" },
+        { "model": "Gemma-3-27B", "catalog_model_id": "gemma-3-27b", "ollama_tag": "gemma3:27b", "params": "27B", "quantization": "F16", "vram_required_gb": 54, "use_case": "full precision Gemma", "inference_speed_tokens_sec": 30, "recommended": false, "pipeline_role": "extractor", "note": "Q4 on A100 40GB is usually sufficient" }
+      ]
+    }
+  ]
+}

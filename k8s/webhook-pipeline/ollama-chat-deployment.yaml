@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-chat
+  namespace: webhook-pipeline
+  labels:
+    app: ollama-chat
+    app.kubernetes.io/part-of: mem-dog-webhook-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama-chat
+  template:
+    metadata:
+      labels:
+        app: ollama-chat
+    spec:
+      nodeSelector:
+        workload: ollama
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          env:
+            - name: OLLAMA_KEEP_ALIVE
+              value: "-1"
+          ports:
+            - containerPort: 11434
+              name: http
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - >-
+                    ollama pull gemma3:4b &&
+                    echo "hi" | ollama run gemma3:4b --nowordwrap 2>/dev/null;
+                    true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 11434
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - ollama ps | grep -q gemma3
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+      volumes:
+        - name: ollama-data
+          emptyDir: {}

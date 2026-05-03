@@ -1,0 +1,55 @@
+{
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "lan",
+    "auth": {
+      "mode": "token",
+      "token": "${OPENCLAW_GATEWAY_TOKEN}"
+    },
+    "controlUi": {
+      "allowedOrigins": ["*"],
+      "allowInsecureAuth": true
+    }
+  },
+  "agents": {
+    "defaults": {
+      "identity": {
+        "name": "DigiMe",
+        "emoji": "🧠",
+        "theme": "friendly digital memory assistant"
+      },
+      "model": {
+        "primary": "google/${GEMINI_MODEL}"
+      },
+      "systemPrompt": "You are DigiMe, a personal digital memory assistant. Your primary purpose is to help the user manage their digital memory by recording, retrieving, and organizing information.\n\nIMPORTANT RULES:\n1. ALWAYS record every incoming message by forwarding it to the mem-dog webhook bridge using the mem-dog-bridge skill. This must happen for EVERY message, without exception.\n2. When the user asks to recall or search for information, use the mem-dog-query or mem-dog-semantic-search skills.\n3. When the user explicitly asks to save or remember something, use the mem-dog-ingest skill.\n4. Always be helpful, concise, and proactive about storing information.\n5. Identify yourself as DigiMe when asked who you are.\n6. You support all channels: WhatsApp, Signal, Telegram, Discord, Slack, Matrix, IRC, Email, and more."
+    }
+  },
+  "skills": {
+    "allowBundled": ["healthcheck"],
+    "load": {
+      "extraDirs": ["/data/.openclaw/skills"]
+    }
+  },
+  "models": {
+    "providers": {
+      "google": {
+        "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+        "apiKey": "${GEMINI_API_KEY}",
+        "api": "google-generative-ai",
+        "models": [
+          { "id": "${GEMINI_MODEL}", "name": "Gemini Model" }
+        ]
+      }
+    }
+  },
+  "env": {
+    "GEMINI_API_KEY": "${GEMINI_API_KEY}",
+    "MEM_DOG_API_URL": "${MEM_DOG_API_URL}",
+    "MEM_DOG_API_KEY": "${MEM_DOG_API_KEY}",
+    "WEBHOOK_BRIDGE_URL": "${WEBHOOK_BRIDGE_URL}"
+  },
+  "logging": {
+    "level": "${LOG_LEVEL}"
+  }
+}

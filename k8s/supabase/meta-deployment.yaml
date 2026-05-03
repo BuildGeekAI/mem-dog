@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-meta
+  namespace: supabase
+  labels:
+    app.kubernetes.io/name: supabase-meta
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: supabase
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-meta
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-meta
+        app.kubernetes.io/part-of: mem-dog
+        app.kubernetes.io/component: supabase
+    spec:
+      containers:
+        - name: postgres-meta
+          image: supabase/postgres-meta:v0.84.2
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: PG_META_PORT
+              value: "8080"
+            - name: PG_META_DB_HOST
+              value: supabase-db.supabase.svc.cluster.local
+            - name: PG_META_DB_PORT
+              value: "5432"
+            - name: PG_META_DB_NAME
+              value: postgres
+            - name: PG_META_DB_USER
+              value: postgres
+            - name: PG_META_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secrets
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30

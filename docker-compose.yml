@@ -1,0 +1,259 @@
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL + pgvector
+  # Structured data: metadata, embeddings (with vector), viewpoints.
+  # Raw data and model weights continue to use the local filesystem volume.
+  # ---------------------------------------------------------------------------
+  db:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: memdog
+      POSTGRES_PASSWORD: memdog
+      POSTGRES_DB: memdog
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U memdog -d memdog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Redis — Store API backend (?redis=true on /api/v1/store)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Core API
+  # ---------------------------------------------------------------------------
+  api:
+    build: ./api
+    ports:
+      - "8080:8080"
+    environment:
+      - STORAGE_BACKEND=local
+      - MEM_DOG_DATA_DIR=/data
+      - ENVIRONMENT=development
+      # PostgreSQL backend for metadata / embeddings / viewpoints
+      - POSTGRES_URL=postgresql+psycopg2://memdog:memdog@db:5432/memdog
+      # Redis store (?redis=true on /api/v1/store)
+      - REDIS_URL=redis://redis:6379/0
+      # Model management — local mode
+      - DEPLOYMENT_MODE=local
+      - MODEL_LOCAL_DIR=/models
+      # Ollama tier — tier URLs point to Ollama containers
+      - MODEL_SERVER_URL_SMALL=http://ollama-small:11434
+      - MODEL_SERVER_URL_MEDIUM=http://ollama-medium:11434
+      - MODEL_SERVER_URL_LARGE=http://ollama-large:11434
+      - OLLAMA_TIER=${OLLAMA_TIER:-true}
+      # Neo4j (Graphiti knowledge graph)
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=memdog_neo4j
+      # Docker container names (for tier activation when using local model servers)
+      - DOCKER_SERVICE_SMALL=mem-dog-model-server-small-1
+      - DOCKER_SERVICE_MEDIUM=mem-dog-model-server-medium-1
+      - DOCKER_SERVICE_LARGE=mem-dog-model-server-large-1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    volumes:
+      - mem-dog-data:/data
+      # Shared model weights volume (legacy; Ollama uses per-tier volumes)
+      - model-weights:/models
+      # Docker socket lets the API restart tier containers on activation
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Frontend UI
+  # ---------------------------------------------------------------------------
+  ui:
+    build:
+      context: ./ui
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080
+        NEXT_PUBLIC_WEBHOOK_GATEWAY_URL: ${NEXT_PUBLIC_WEBHOOK_GATEWAY_URL:-}
+        NEXT_PUBLIC_WEBHOOK_API_KEY: ${NEXT_PUBLIC_WEBHOOK_API_KEY:-}
+        NEXT_PUBLIC_WEBHOOK_GATEWAY_URL: ${NEXT_PUBLIC_WEBHOOK_GATEWAY_URL:-http://localhost:8070}
+        NEXT_PUBLIC_WEBHOOK_API_KEY: ${NEXT_PUBLIC_WEBHOOK_API_KEY:-${WGW_API_KEY:-}}
+    ports:
+      - "3000:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # Ollama model servers — three tiers (small / medium / large)
+  # Each tier runs Ollama in Docker. Models are pulled via API or copied from GCS.
+  # ---------------------------------------------------------------------------
+  ollama-small:
+    image: ollama/ollama:latest
+    ports:
+      - "8081:11434"
+    volumes:
+      - ollama-small-data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  ollama-medium:
+    image: ollama/ollama:latest
+    ports:
+      - "8082:11434"
+    volumes:
+      - ollama-medium-data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  ollama-large:
+    image: ollama/ollama:latest
+    ports:
+      - "8083:11434"
+    volumes:
+      - ollama-large-data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Neo4j — knowledge graph database for Graphiti temporal graph
+  # ---------------------------------------------------------------------------
+  neo4j:
+    image: neo4j:5.26-community
+    ports:
+      - "7474:7474"   # HTTP browser
+      - "7687:7687"   # Bolt protocol
+    environment:
+      NEO4J_AUTH: neo4j/memdog_neo4j
+      NEO4J_PLUGINS: '["apoc"]'
+    volumes:
+      - neo4j-data:/data
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "memdog_neo4j", "RETURN 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Webhook Gateway — channel adapter and webhook forwarder
+  #
+  # Receives inbound webhooks from email, video conferencing, and generic
+  # channels, normalises them, and forwards to the mem-dog webhook pipeline.
+  # Docs at http://localhost:8070/docs
+  # ---------------------------------------------------------------------------
+  webhook-gateway:
+    build: ./webhook-gateway
+    ports:
+      - "8070:8080"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      - LLM_MODEL=${LLM_MODEL:-}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_API_BASE=${LLM_API_BASE:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - WEBHOOK_GATEWAY_URL=http://api:8080/api/v1/ingest
+      - WEBHOOK_API_KEY=${WEBHOOK_API_KEY:-dev-key}
+      - MEM_DOG_API_URL=http://api:8080
+      - OTEL_ENABLED=true
+      - OTEL_SERVICE_NAME=webhook-gateway
+      - WGW_API_KEY=${WGW_API_KEY:-}
+      - WGW_RATE_LIMIT=${WGW_RATE_LIMIT:-0}
+      - WGW_CORS_ORIGINS=${WGW_CORS_ORIGINS:-}
+      - WGW_ALLOWED_IPS=${WGW_ALLOWED_IPS:-}
+      - LOG_LEVEL=DEBUG
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # MCP Server — SSE transport for Claude Desktop, Cursor, etc.
+  # Connect to http://localhost:8090/mcp/sse with x-api-key header
+  # ---------------------------------------------------------------------------
+  mcp-server:
+    build:
+      context: .
+      dockerfile: mcp-server/Dockerfile
+    ports:
+      - "8091:8080"
+    environment:
+      - MEM_DOG_API_URL=http://api:8080
+      - LOG_LEVEL=DEBUG
+      - PORT=8080
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Webhook processor — local mode (HTTP trigger instead of Pub/Sub)
+  #
+  # Runs the same Python code as the Cloud Function but via Flask dev server.
+  # Send payloads directly to http://localhost:8090
+  # ---------------------------------------------------------------------------
+  webhook-processor:
+    build: ./webhook/processor
+    ports:
+      - "8090:8090"
+    environment:
+      - MEM_DOG_API_URL=http://api:8080
+      - MODEL_SERVER_URL=http://ollama-medium:11434
+      - MODEL_SERVER_URL_SMALL=http://ollama-small:11434
+      - MODEL_SERVER_URL_MEDIUM=http://ollama-medium:11434
+      - MODEL_SERVER_URL_LARGE=http://ollama-large:11434
+      - MODEL_SERVER_MODEL=gemma
+      - GOOGLE_GENAI_USE_VERTEXAI=FALSE
+      - LOCAL_DEV=true
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  mem-dog-data:
+  model-weights:
+  pgdata:
+  ollama-small-data:
+  ollama-medium-data:
+  neo4j-data:
+  ollama-large-data:

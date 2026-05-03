@@ -1,0 +1,29 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: model-manager
+  namespace: webhook-pipeline
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "deployments/scale"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "services"]
+    verbs: ["get", "list", "create", "delete"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: api-model-manager
+  namespace: webhook-pipeline
+subjects:
+  - kind: ServiceAccount
+    name: api-sa
+    namespace: mem-dog
+roleRef:
+  kind: Role
+  name: model-manager
+  apiGroup: rbac.authorization.k8s.io

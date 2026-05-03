@@ -1,0 +1,75 @@
+---
+title: "Pod Management"
+description: "Manage Kubernetes pods from the browser — create, scale, and delete Ollama instances"
+icon: "server"
+---
+
+The Infrastructure tab in AI Studio provides a browser-based interface for managing Kubernetes pods. Spin up Ollama instances, scale replicas, and monitor resource usage without touching `kubectl`.
+
+## Pod Types
+
+<CardGroup cols={2}>
+  <Card title="Managed Pods" icon="wand-magic-sparkles">
+    Pods created and controlled through the UI. Prefixed with `mdl-` (e.g., `mdl-ollama-small`). Full lifecycle management: create, scale, restart, delete.
+  </Card>
+  <Card title="Infrastructure Pods" icon="lock">
+    Core platform pods (API, webhook pipeline, gateway, databases). Visible for monitoring but not directly modifiable from the UI.
+  </Card>
+</CardGroup>
+
+## Creating Ollama Pods
+
+<Steps>
+  <Step title="Open Infrastructure tab">
+    Navigate to **AI Studio > Infrastructure**.
+  </Step>
+  <Step title="Click Create Pod">
+    Select **Ollama** as the pod type. Choose a model tier (small, medium, large).
+  </Step>
+  <Step title="Configure resources">
+    Set CPU, memory, and GPU limits. For Apple Metal (Mac Mini), enable GPU layers with `N_GPU_LAYERS`.
+  </Step>
+  <Step title="Deploy">
+    The pod is created with the `mdl-` prefix in the `mem-dog` namespace. Models are pulled automatically on first request.
+  </Step>
+</Steps>
+
+## Scaling
+
+Scale managed pods up or down directly from the UI. Each pod card shows current replica count and a scale control.
+
+```
+mdl-ollama-small:   2 replicas  [- ] [+]
+mdl-ollama-medium:  1 replica   [- ] [+]
+mdl-ollama-large:   1 replica   [- ] [+]
+```
+
+<Info>
+  Scaling to 0 replicas pauses the pod without deleting it. Scale back up to resume — the model weights are cached on the persistent volume.
+</Info>
+
+## Resource Monitoring
+
+Each pod displays real-time metrics:
+
+| Metric | Description |
+|--------|-------------|
+| **CPU** | Current usage vs. requested limit |
+| **Memory** | RSS usage vs. limit |
+| **GPU** | GPU memory utilization (if applicable) |
+| **Requests** | Inference requests per minute |
+| **Latency** | P50/P95 response times |
+
+## RBAC
+
+<Warning>
+  Pod management requires the `admin` or `owner` role in the organization. Members and viewers can see pod status but cannot create, scale, or delete pods.
+</Warning>
+
+## The `mdl-` Prefix
+
+All managed pods use the `mdl-` prefix to distinguish them from infrastructure pods. This convention:
+
+- Prevents accidental modification of core platform components
+- Enables scoped RBAC policies
+- Makes it easy to audit AI compute resources separately

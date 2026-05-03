@@ -1,0 +1,44 @@
+# Optional: Ingress for host-based routing with minikube ingress addon.
+# Enable with: minikube addons enable ingress
+# Add to /etc/hosts: 127.0.0.1 mem-dog.local api.mem-dog.local docs.mem-dog.local
+# Then run: minikube tunnel
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mem-dog
+  namespace: mem-dog
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: mem-dog.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ui
+                port:
+                  number: 3000
+    - host: api.mem-dog.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8080
+    - host: docs.mem-dog.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: docs
+                port:
+                  number: 8000

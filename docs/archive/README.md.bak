@@ -1,0 +1,158 @@
+# mem-dog
+
+Personal memory platform that ingests, stores, enriches, and queries arbitrary data from 25+ communication channels through AI-powered processing.
+
+## What It Does
+
+- **Ingest** data from WhatsApp, Telegram, Slack, Discord, Signal, Matrix, email, and 18+ more channels — or upload directly via the web UI (text, files, URLs, camera, voice, video)
+- **Store** any data type with automatic versioning, tags, per-item access control, and memory containers (timeline, session, conversation, factual, episodic, semantic, custom)
+- **Enrich** every piece of data through a 40-agent AI pipeline that classifies content, generates analysis viewpoints, and creates vector embeddings
+- **Query** across all stored data using conversational RAG chat with inline citations, semantic similarity search, or structured API queries
+
+## Architecture
+
+```mermaid
+graph TD
+    Channels["Channels\nWhatsApp, Telegram, Slack, ..."] --> OC["Webhook Gateway\n+ OpenClaw Node"]
+    Users --> UI["UI\nNext.js"]
+
+    OC --> Pipeline["Webhook Pipeline\nNATS + 40 typed agents"]
+    OC --> API["API\nFastAPI"]
+    UI --> API
+    API -- callbacks --> Pipeline
+    Pipeline -- stores data --> API
+
+    API --> Storage["Storage\nGCS / Supabase / local"]
+```
+
+| Component | Stack | Deployment |
+|-----------|-------|------------|
+| **API** | Python 3.12, FastAPI | GKE |
+| **UI** | Next.js 14, React 18, TypeScript | Cloud Run |
+| **Webhook Pipeline** | Python 3.12, FastAPI, NATS | GKE |
+| **Webhook Gateway** | Python 3.12, FastAPI | GKE |
+| **OpenClaw Node** | Node.js (OpenClaw runtime) | GKE |
+| **Python Client** | Python, httpx | pip install |
+
+## Quick Start
+
+```bash
+# Start the full local stack (9 services)
+docker compose up
+
+# UI:       http://localhost:3000
+# API:      http://localhost:8080
+# API docs: http://localhost:8080/docs
+# Gateway:  http://localhost:8070/docs
+```
+
+## Key Features
+
+### Data & Storage
+- Universal storage (JSON, text, binary, images, files)
+- Automatic versioning on every update
+- Per-item ACLs (public, authenticated, user-specific, role-based)
+- 10 memory types (timeline, session, conversation, user, organizational, factual, episodic, semantic, custom, tracing)
+- Three storage backends: local filesystem, GCS, Supabase (PostgreSQL + pgvector)
+
+### AI Pipeline
+- 40 typed sub-agents for images, PDFs, code, JSON, audio, video, medical records, geospatial data, and more
+- 6-layer data classification (explicit field → LLM classifier → MIME → URL extension → fallback)
+- Tiered model routing: small (gemma3:4b), medium (12b), large (27b), multimodal (qwen3-vl), omni (qwen3.5)
+- Per-user, per-data-type model overrides with smart routing
+- Customizable agent pipeline configs (intro, system prompt, output schema, skills, model tier)
+- Vector embeddings (pgvector) and RAG chat with inline citations
+- **Graph memory** — automatic entity/relationship extraction into Postgres (person, org, product, location, concept, event), entity-aware RAG search
+- **Memory compression** — LLM-powered summarization of verbose memories, auto-triggers at configurable thresholds
+
+### Developer SDK
+- **Simple SDK** — `MemDog` facade with 8 methods: `add()`, `search()`, `get()`, `delete()`, `entities()`, `related()`, `compress()`
+- **Agent adapters** — drop-in memory backends for LangChain (`ChatMessageHistory` + `Retriever`), CrewAI (`save/search`), and OpenAI function calling
+- **Full REST client** — 70+ methods covering all API endpoints
+
+### Multi-Channel Ingestion
+- 25+ channels with DigiMe AI agent for querying the RAG system
+- 300-provider integration platform with OAuth2, API-key auth, and credential-injecting API proxy
+
+### Observability
+- OpenTelemetry distributed tracing across all components
+- Waterfall span viewer in the UI
+- Per-user stats with LLM token usage breakdowns
+
+## Project Structure
+
+```
+mem-dog/
+├── api/                  # Core API (FastAPI, Python 3.12)
+├── ui/                   # Web frontend (Next.js 14, TypeScript)
+├── webhook/              # Data processing pipeline
+│   ├── receiver/         #   HTTP receiver (Flask)
+│   ├── processor/        #   NATS pull worker
+│   └── webhook_agent/    #   Agent server + 40 sub-agents
+├── webhook-gateway/      # Multi-channel webhook gateway
+├── openclaw-node/        # DigiMe AI agent (queries mem-dog RAG system)
+├── client/               # Python SDK
+├── mcp-server/           # MCP server
+├── k8s/                  # Kubernetes manifests
+│   ├── *.yaml            #   API + UI (mem-dog namespace)
+│   ├── webhook-pipeline/ #   NATS + agents + Ollama
+│   ├── webhook-gateway/  #   Gateway + load balancer
+│   ├── openclaw-node/    #   DigiMe AI agent
+│   └── supabase/         #   Self-hosted Supabase stack
+├── scripts/              # Deploy, test, and utility scripts
+├── config/               # Shared AI model config (ai.env)
+├── testing/              # E2E tests (Playwright)
+├── docker-compose.yml    # Local dev (9 services)
+└── skaffold.yaml         # K8s local dev
+```
+
+## Deployment
+
+```bash
+# API → GKE
+GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
+  ./scripts/manual-deploy.sh deploy-api-gke -p memdog-dev -e dev
+
+# UI → Cloud Run
+./scripts/manual-deploy.sh deploy-ui -p memdog-dev -e dev
+
+# Webhook Pipeline → GKE
+GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
+  ./scripts/manual-deploy.sh deploy-webhook-pipeline-gke -p memdog-dev -e dev
+```
+
+## API
+
+60+ REST endpoints across data, memories, users, tags, versions, AI query, embeddings, viewpoints, prompts, skills, channels, stats, and bulk operations.
+
+```bash
+# Create data
+curl -X POST http://localhost:8080/api/v1/data \
+  -F "content=Hello world" -F "name=greeting"
+
+# Query with AI
+curl -X POST http://localhost:8080/api/v1/ai/query/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What do I know about meetings?", "user_id": "00000000-0000-0000-0000-000000000001"}'
+
+# Semantic search
+curl -X POST http://localhost:8080/api/v1/ai/query/semantic \
+  -H "Content-Type: application/json" \
+  -d '{"query": "project updates", "limit": 5}'
+```
+
+## Documentation
+
+Full docs in [docs/](docs/README.md):
+
+- [Architecture](docs/architecture.md) — system design, data flow, storage, AI stack
+- [API](docs/api.md) — endpoints, data model, configuration
+- [Webhook Pipeline](docs/webhook-pipeline.md) — processing flow, sub-agents, LLM routing
+- [Webhook Gateway](docs/webhook-gateway.md) — channel gateway and DigiMe AI agent
+- [UI](docs/ui.md) — tabs, components, state management
+- [Deployment](docs/deployment.md) — GKE/Cloud Run, scripts, gateway routing
+- [Local Development](docs/local-dev.md) — Docker Compose, testing
+- [Python Client](docs/client.md) — SDK usage, simple SDK, agent adapters
+- [Graph Memory](docs/graph-memory.md) — entity/relationship graph, entity-aware RAG
+- [Integrations](docs/integrations.md) — provider platform, OAuth, credentials
+- [GKE Setup (Mac)](docs/gke-setup-mac.md) — deploying to GKE from a Mac Mini

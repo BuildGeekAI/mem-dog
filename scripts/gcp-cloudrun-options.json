@@ -1,0 +1,141 @@
+{
+  "provider": "GCP Cloud Run",
+  "note": "Cloud Run model servers use CPU (or GPU in preview). Models align with api/app/model_catalog.py (catalog_model_id). Tiers small/medium/large/very-large match deploy-model-servers in manual-deploy.sh. GPU on Cloud Run is preview — limited regions.",
+  "instances": [
+    {
+      "instance_type": "cloud-run-cpu",
+      "tier": null,
+      "vcpu": 4,
+      "memory_gb": 16,
+      "gpu": null,
+      "gpu_vram_gb": null,
+      "cost_per_hour": 0.08,
+      "inference_backend": ["LocalAI", "llama.cpp"],
+      "suitable_for": ["router", "classifier", "embedding"],
+      "models": [
+        { "model": "Llama-3.2-1B", "catalog_model_id": "llama-3.2-1b", "params": "1B", "quantization": "Q4_K_M", "ram_required_gb": 1.5, "use_case": "ultra-lightweight router / classifier", "inference_speed_tokens_sec": 200, "recommended": true },
+        { "model": "TinyLlama-1.1B", "params": "1.1B", "quantization": "Q4_K_M", "ram_required_gb": 1.5, "use_case": "ultra-lightweight router / classifier", "inference_speed_tokens_sec": 15, "recommended": false },
+        { "model": "Phi-3-mini-3.8B", "catalog_model_id": "phi-3-mini", "params": "3.8B", "quantization": "Q4_K_M", "ram_required_gb": 4, "use_case": "lightweight router with reasoning", "inference_speed_tokens_sec": 8, "recommended": true },
+        { "model": "Gemma-2-2B", "catalog_model_id": "gemma-2-2b", "params": "2B", "quantization": "Q4_K_M", "ram_required_gb": 2.5, "use_case": "fast classification and routing", "inference_speed_tokens_sec": 12, "recommended": true },
+        { "model": "Gemma-3-1B", "catalog_model_id": "gemma-3-1b", "params": "1B", "quantization": "Q4_K_M", "ram_required_gb": 2, "use_case": "edge inference, simple QA", "inference_speed_tokens_sec": 180, "recommended": true },
+        { "model": "Qwen-2.5-0.5B", "catalog_model_id": "qwen2.5-0.5b", "params": "0.5B", "quantization": "Q4_K_M", "ram_required_gb": 1, "use_case": "fast routing, language detection", "inference_speed_tokens_sec": 300, "recommended": false },
+        { "model": "Qwen-2.5-1.5B", "catalog_model_id": "qwen2.5-1.5b", "params": "1.5B", "quantization": "Q4_K_M", "ram_required_gb": 2, "use_case": "multilingual extraction, tagging", "inference_speed_tokens_sec": 220, "recommended": false },
+        { "model": "DeepSeek-R1-Distill-1.5B", "catalog_model_id": "deepseek-r1-distill-1.5b", "params": "1.5B", "quantization": "Q4_K_M", "ram_required_gb": 2, "use_case": "reasoning sub-tasks", "inference_speed_tokens_sec": 200, "recommended": false },
+        { "model": "nomic-embed-text", "params": "137M", "quantization": "F32", "ram_required_gb": 0.5, "use_case": "text embeddings for vector search", "inference_speed_tokens_sec": 200, "recommended": true }
+      ]
+    },
+    {
+      "instance_type": "cloud-run-gpu-preview",
+      "tier": null,
+      "vcpu": 8,
+      "memory_gb": 32,
+      "gpu": "NVIDIA L4",
+      "gpu_vram_gb": 24,
+      "cost_per_hour": 0.9,
+      "inference_backend": ["Ollama", "vLLM", "LocalAI"],
+      "suitable_for": ["router", "small-extractor"],
+      "note": "GPU on Cloud Run is in preview — limited regions, limited availability",
+      "models": [
+        { "model": "Mistral-7B-Instruct", "catalog_model_id": "mistral-7b", "params": "7B", "quantization": "Q4_K_M", "vram_required_gb": 5, "ram_required_gb": 6, "use_case": "primary router model", "inference_speed_tokens_sec": 60, "recommended": true },
+        { "model": "Llama-3.2-3B", "catalog_model_id": "llama-3.2-3b", "params": "3B", "quantization": "Q4_K_M", "vram_required_gb": 2.5, "ram_required_gb": 3, "use_case": "ultra-fast routing decisions", "inference_speed_tokens_sec": 90, "recommended": true },
+        { "model": "Gemma-3-4B", "catalog_model_id": "gemma-3-4b", "params": "4B", "quantization": "Q4_K_M", "vram_required_gb": 3.5, "ram_required_gb": 4, "use_case": "balanced router with good reasoning", "inference_speed_tokens_sec": 75, "recommended": true },
+        { "model": "Llama-3.1-8B", "catalog_model_id": "llama-3.1-8b", "params": "8B", "quantization": "Q4_K_M", "vram_required_gb": 6, "ram_required_gb": 7, "use_case": "instruction following, data analysis", "inference_speed_tokens_sec": 80, "recommended": true },
+        { "model": "Phi-3-medium-14B", "params": "14B", "quantization": "Q4_K_M", "vram_required_gb": 10, "ram_required_gb": 12, "use_case": "complex routing with multi-step reasoning", "inference_speed_tokens_sec": 35, "recommended": false },
+        { "model": "Phi-4-14B", "catalog_model_id": "phi-4", "params": "14B", "quantization": "Q4_K_M", "vram_required_gb": 12, "ram_required_gb": 12, "use_case": "math reasoning, data analysis", "inference_speed_tokens_sec": 50, "recommended": false }
+      ]
+    },
+    {
+      "instance_type": "small",
+      "tier": "small",
+      "vcpu": 2,
+      "memory_gb": 6,
+      "gpu": null,
+      "gpu_vram_gb": null,
+      "cost_per_hour": 0.04,
+      "inference_backend": ["llama.cpp", "LocalAI"],
+      "suitable_for": ["router", "classifier", "leaf"],
+      "note": "Matches mem-dog-model-server-small (deploy-model-servers). < 4 GB models.",
+      "models": [
+        { "model": "Llama-3.2-1B", "catalog_model_id": "llama-3.2-1b", "params": "1B", "quantization": "Q4_K_M", "ram_required_gb": 1.5, "use_case": "edge inference, classification", "inference_speed_tokens_sec": 200, "recommended": true },
+        { "model": "Llama-3.2-3B", "catalog_model_id": "llama-3.2-3b", "params": "3B", "quantization": "Q4_K_M", "ram_required_gb": 3, "use_case": "data parsing, simple extraction", "inference_speed_tokens_sec": 150, "recommended": true },
+        { "model": "Gemma-2-2B", "catalog_model_id": "gemma-2-2b", "params": "2B", "quantization": "Q4_K_M", "ram_required_gb": 2, "use_case": "fast classification, simple QA", "inference_speed_tokens_sec": 160, "recommended": true },
+        { "model": "Gemma-3-1B", "catalog_model_id": "gemma-3-1b", "params": "1B", "quantization": "Q4_K_M", "ram_required_gb": 2, "use_case": "ultra-lightweight inference", "inference_speed_tokens_sec": 180, "recommended": true },
+        { "model": "Gemma-3-4B", "catalog_model_id": "gemma-3-4b", "params": "4B", "quantization": "Q4_K_M", "ram_required_gb": 4, "use_case": "multimodal, fast analysis", "inference_speed_tokens_sec": 110, "recommended": true },
+        { "model": "Phi-3-mini", "catalog_model_id": "phi-3-mini", "params": "3.8B", "quantization": "Q4_K_M", "ram_required_gb": 3.5, "use_case": "structured reasoning, data pipelines", "inference_speed_tokens_sec": 120, "recommended": true },
+        { "model": "Qwen-2.5-0.5B", "catalog_model_id": "qwen2.5-0.5b", "params": "0.5B", "quantization": "Q4_K_M", "ram_required_gb": 1, "use_case": "fast routing", "inference_speed_tokens_sec": 300, "recommended": false },
+        { "model": "Qwen-2.5-1.5B", "catalog_model_id": "qwen2.5-1.5b", "params": "1.5B", "quantization": "Q4_K_M", "ram_required_gb": 2, "use_case": "multilingual extraction", "inference_speed_tokens_sec": 220, "recommended": false },
+        { "model": "DeepSeek-R1-Distill-1.5B", "catalog_model_id": "deepseek-r1-distill-1.5b", "params": "1.5B", "quantization": "Q4_K_M", "ram_required_gb": 2, "use_case": "reasoning sub-tasks", "inference_speed_tokens_sec": 200, "recommended": false },
+        { "model": "SmolLM2-1.7B", "catalog_model_id": "smollm2-1.7b", "params": "1.7B", "quantization": "Q4_K_M", "ram_required_gb": 2, "use_case": "lightweight chat and extraction", "inference_speed_tokens_sec": 150, "recommended": false }
+      ]
+    },
+    {
+      "instance_type": "medium",
+      "tier": "medium",
+      "vcpu": 4,
+      "memory_gb": 12,
+      "gpu": null,
+      "gpu_vram_gb": null,
+      "cost_per_hour": 0.06,
+      "inference_backend": ["llama.cpp", "LocalAI"],
+      "suitable_for": ["mid-tier", "extractor", "summarization"],
+      "note": "Matches mem-dog-model-server-medium. 4–10 GB models.",
+      "models": [
+        { "model": "Mistral-7B-Instruct", "catalog_model_id": "mistral-7b", "params": "7B", "quantization": "Q4_K_M", "ram_required_gb": 6, "use_case": "general reasoning, data extraction", "inference_speed_tokens_sec": 80, "recommended": true },
+        { "model": "Mistral-Nemo-12B", "catalog_model_id": "mistral-nemo-12b", "params": "12B", "quantization": "Q4_K_M", "ram_required_gb": 10, "use_case": "multi-step reasoning", "inference_speed_tokens_sec": 55, "recommended": true },
+        { "model": "Llama-3.1-8B", "catalog_model_id": "llama-3.1-8b", "params": "8B", "quantization": "Q4_K_M", "ram_required_gb": 7, "use_case": "instruction following, summarization", "inference_speed_tokens_sec": 80, "recommended": true },
+        { "model": "Gemma-2-9B", "catalog_model_id": "gemma-2-9b", "params": "9B", "quantization": "Q4_K_M", "ram_required_gb": 8, "use_case": "structured analysis, reasoning", "inference_speed_tokens_sec": 70, "recommended": true },
+        { "model": "Gemma-3-12B", "catalog_model_id": "gemma-3-12b", "params": "12B", "quantization": "Q4_K_M", "ram_required_gb": 10, "use_case": "multimodal, reasoning", "inference_speed_tokens_sec": 55, "recommended": true },
+        { "model": "Qwen-2.5-7B", "catalog_model_id": "qwen2.5-7b", "params": "7B", "quantization": "Q4_K_M", "ram_required_gb": 6, "use_case": "multilingual reasoning, code", "inference_speed_tokens_sec": 85, "recommended": true },
+        { "model": "Qwen-2.5-Coder-7B", "catalog_model_id": "qwen2.5-coder-7b", "params": "7B", "quantization": "Q4_K_M", "ram_required_gb": 6, "use_case": "SQL, code analysis", "inference_speed_tokens_sec": 85, "recommended": false },
+        { "model": "DeepSeek-R1-Distill-7B", "catalog_model_id": "deepseek-r1-distill-7b", "params": "7B", "quantization": "Q4_K_M", "ram_required_gb": 6, "use_case": "analytical reasoning", "inference_speed_tokens_sec": 85, "recommended": false },
+        { "model": "DeepSeek-R1-Distill-8B", "catalog_model_id": "deepseek-r1-distill-8b", "params": "8B", "quantization": "Q4_K_M", "ram_required_gb": 7, "use_case": "reasoning, data analysis", "inference_speed_tokens_sec": 80, "recommended": false },
+        { "model": "Granite-4-Tiny", "catalog_model_id": "granite4-tiny", "params": "~7B MoE", "quantization": "Q4_K_M", "ram_required_gb": 6, "use_case": "enterprise tasks, tool use", "inference_speed_tokens_sec": 75, "recommended": false },
+        { "model": "CodeLlama-7B", "catalog_model_id": "codellama-7b", "params": "7B", "quantization": "Q4_K_M", "ram_required_gb": 5, "use_case": "code completion, SQL", "inference_speed_tokens_sec": 80, "recommended": false },
+        { "model": "BioMistral-7B", "catalog_model_id": "biomistral-7b", "params": "7B", "quantization": "Q4_K_M", "ram_required_gb": 6, "use_case": "biomedical QA", "inference_speed_tokens_sec": 75, "recommended": false },
+        { "model": "InternLM2.5-7B", "catalog_model_id": "internlm2.5-7b", "params": "7B", "quantization": "Q4_K_M", "ram_required_gb": 6, "use_case": "general and code", "inference_speed_tokens_sec": 80, "recommended": false },
+        { "model": "Yi-1.5-9B", "catalog_model_id": "yi-1.5-9b", "params": "9B", "quantization": "Q4_K_M", "ram_required_gb": 8, "use_case": "multilingual, code", "inference_speed_tokens_sec": 70, "recommended": false },
+        { "model": "Qwen-3-8B", "catalog_model_id": "qwen3-8b", "params": "8B", "quantization": "Q4_K_M", "ram_required_gb": 6, "use_case": "general, code, reasoning", "inference_speed_tokens_sec": 85, "recommended": false }
+      ]
+    },
+    {
+      "instance_type": "large",
+      "tier": "large",
+      "vcpu": 8,
+      "memory_gb": 24,
+      "gpu": null,
+      "gpu_vram_gb": null,
+      "cost_per_hour": 0.12,
+      "inference_backend": ["llama.cpp", "LocalAI"],
+      "suitable_for": ["orchestrator", "complex reasoning"],
+      "note": "Matches mem-dog-model-server-large. 10–20 GB models.",
+      "models": [
+        { "model": "Gemma-2-27B", "catalog_model_id": "gemma-2-27b", "params": "27B", "quantization": "Q4_K_M", "ram_required_gb": 20, "use_case": "complex reasoning, agentic workflows", "inference_speed_tokens_sec": 30, "recommended": true },
+        { "model": "Gemma-3-27B", "catalog_model_id": "gemma-3-27b", "params": "27B", "quantization": "Q4_K_M", "ram_required_gb": 20, "use_case": "vision, reasoning, synthesis", "inference_speed_tokens_sec": 30, "recommended": true },
+        { "model": "Phi-4-14B", "catalog_model_id": "phi-4", "params": "14B", "quantization": "Q4_K_M", "ram_required_gb": 12, "use_case": "math reasoning, data analysis", "inference_speed_tokens_sec": 50, "recommended": true },
+        { "model": "DeepSeek-R1-Distill-14B", "catalog_model_id": "deepseek-r1-distill-14b", "params": "14B", "quantization": "Q4_K_M", "ram_required_gb": 12, "use_case": "complex reasoning, orchestration", "inference_speed_tokens_sec": 45, "recommended": false },
+        { "model": "Medicine-LLM-13B", "catalog_model_id": "medicine-llm-13b", "params": "13B", "quantization": "Q4_K_M", "ram_required_gb": 10, "use_case": "medical QA", "inference_speed_tokens_sec": 55, "recommended": false },
+        { "model": "InternLM2.5-20B", "catalog_model_id": "internlm2.5-20b", "params": "20B", "quantization": "Q4_K_M", "ram_required_gb": 14, "use_case": "general, long context", "inference_speed_tokens_sec": 40, "recommended": false }
+      ]
+    },
+    {
+      "instance_type": "very-large",
+      "tier": "very-large",
+      "vcpu": 20,
+      "memory_gb": 80,
+      "gpu": null,
+      "gpu_vram_gb": null,
+      "cost_per_hour": 0.35,
+      "inference_backend": ["llama.cpp", "LocalAI"],
+      "suitable_for": ["orchestrator", "complex reasoning", "70B models"],
+      "note": "Matches mem-dog-model-server-very-large. 20 vCPU + 80 GB required by Cloud Run. > 20 GB models.",
+      "models": [
+        { "model": "Llama-3.3-70B", "catalog_model_id": "llama-3.3-70b", "params": "70B", "quantization": "Q4_K_M", "ram_required_gb": 48, "use_case": "orchestration, complex reasoning", "inference_speed_tokens_sec": 25, "recommended": true },
+        { "model": "Mixtral-8x7B", "catalog_model_id": "mixtral-8x7b", "params": "47B", "quantization": "Q4_K_M", "ram_required_gb": 26, "use_case": "MoE, complex reasoning", "inference_speed_tokens_sec": 45, "recommended": true },
+        { "model": "DeepSeek-R1-Distill-32B", "catalog_model_id": "deepseek-r1-distill-32b", "params": "32B", "quantization": "Q4_K_M", "ram_required_gb": 24, "use_case": "complex orchestration", "inference_speed_tokens_sec": 25, "recommended": true },
+        { "model": "Qwen-3-32B", "catalog_model_id": "qwen3-32b", "params": "32B", "quantization": "Q4_K_M", "ram_required_gb": 24, "use_case": "reasoning, code generation", "inference_speed_tokens_sec": 28, "recommended": true },
+        { "model": "CodeLlama-34B", "catalog_model_id": "codellama-34b", "params": "34B", "quantization": "Q4_K_M", "ram_required_gb": 22, "use_case": "code generation, refactoring", "inference_speed_tokens_sec": 30, "recommended": false },
+        { "model": "Yi-1.5-34B", "catalog_model_id": "yi-1.5-34b", "params": "34B", "quantization": "Q4_K_M", "ram_required_gb": 24, "use_case": "multilingual, code", "inference_speed_tokens_sec": 28, "recommended": false }
+      ]
+    }
+  ]
+}

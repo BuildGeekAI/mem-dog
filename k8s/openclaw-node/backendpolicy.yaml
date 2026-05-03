@@ -1,0 +1,19 @@
+# Increase backend timeout to support WebSocket connections for the
+# OpenClaw Control UI (default 30s is too short for persistent WS).
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: openclaw-node-backend-policy
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: openclaw-node
+spec:
+  default:
+    timeoutSec: 86400
+    connectionDraining:
+      drainingTimeoutSec: 30
+  targetRef:
+    group: ""
+    kind: Service
+    name: openclaw-node

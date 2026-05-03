@@ -1,0 +1,99 @@
+---
+title: "API Reference"
+description: "REST API overview with authentication, base URLs, and common patterns"
+icon: "book"
+---
+
+The mem-dog API is a RESTful JSON API built with FastAPI. All endpoints are prefixed with `/api/v1/`.
+
+## Base URL
+
+| Environment | URL |
+|-------------|-----|
+| Local dev | `http://localhost:8080/api/v1` |
+| Via UI proxy | `http://localhost:3000/api/v1` |
+| Production | `https://<your-domain>/api/v1` |
+
+## Authentication
+
+Three methods, evaluated in order. See [Authentication](/api-reference/authentication) for details.
+
+<CardGroup cols={3}>
+  <Card title="Supabase JWT" icon="key">
+    `Authorization: Bearer <jwt>`
+
+    User identity from `sub` claim.
+  </Card>
+  <Card title="Per-User API Key" icon="fingerprint">
+    `Authorization: Bearer md_...`
+
+    Scoped to a single user.
+  </Card>
+  <Card title="Global API Key" icon="shield">
+    `Authorization: Bearer <api_key>`
+
+    Full access, no user scoping.
+  </Card>
+</CardGroup>
+
+## Common Patterns
+
+### IDs
+
+All IDs are ULID-based with type prefixes:
+
+| Type | Format | Example |
+|------|--------|---------|
+| Data item | `data_<ulid>` | `data_01JQRS5X7Y...` |
+| Memory | `mem_<type>_<ulid>` | `mem_factual_01JQRS...` |
+| Webhook | `whk_<ulid>` | `whk_01JQRS5X7Y...` |
+| Project | `proj_<ulid>` | `proj_01JQRS5X7Y...` |
+
+### Pagination
+
+List endpoints support `limit` and `offset`:
+
+```bash
+GET /api/v1/data?limit=20&offset=40
+```
+
+### Error Format
+
+All errors return a consistent JSON structure:
+
+```json
+{
+  "detail": "Item not found",
+  "status_code": 404
+}
+```
+
+### Common Status Codes
+
+| Code | Meaning |
+|------|---------|
+| `200` | Success |
+| `201` | Created |
+| `400` | Bad request (validation error) |
+| `401` | Unauthorized (missing/invalid auth) |
+| `403` | Forbidden (insufficient permissions) |
+| `404` | Not found |
+| `429` | Rate limited |
+| `500` | Internal server error |
+
+## Key Endpoint Groups
+
+| Group | Prefix | Description |
+|-------|--------|-------------|
+| Data | `/data` | CRUD for data items |
+| Search | `/search` | Vector, FTS, hybrid, graph search |
+| Memories | `/memories` | Memory management and compression |
+| AI | `/ai` | Chat, models, routing, agents |
+| Webhooks | `/webhooks` | Webhook endpoint management |
+| Organizations | `/organizations` | Org and project management |
+| Integrations | `/integrations` | Nango-powered third-party connections |
+| MCP | `/mcp` | MCP SSE server |
+
+<Info>
+  The full OpenAPI spec is available at `/api/v1/docs` (Swagger UI) and `/api/v1/redoc` (ReDoc) when the API is running.
+</Info>

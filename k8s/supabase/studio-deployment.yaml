@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-studio
+  namespace: supabase
+  labels:
+    app.kubernetes.io/name: supabase-studio
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: supabase
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-studio
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-studio
+        app.kubernetes.io/part-of: mem-dog
+        app.kubernetes.io/component: supabase
+    spec:
+      containers:
+        - name: studio
+          image: supabase/studio:2026.02.16-sha-26c615c
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: STUDIO_DEFAULT_ORGANIZATION
+              value: mem-dog
+            - name: STUDIO_DEFAULT_PROJECT
+              value: mem-dog
+            - name: STUDIO_PORT
+              value: "3000"
+            - name: SUPABASE_PUBLIC_URL
+              value: "http://supabase-kong.supabase.svc.cluster.local:8000"
+            - name: SUPABASE_URL
+              value: "http://supabase-kong.supabase.svc.cluster.local:8000"
+            - name: SUPABASE_ANON_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secrets
+                  key: ANON_KEY
+            - name: SUPABASE_SERVICE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secrets
+                  key: SERVICE_ROLE_KEY
+            - name: NEXT_PUBLIC_ENABLE_LOGS
+              value: "true"
+            - name: NEXT_ANALYTICS_BACKEND_PROVIDER
+              value: postgres
+            - name: LOGFLARE_URL
+              value: "http://supabase-kong.supabase.svc.cluster.local:8000"
+            - name: LOGFLARE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secrets
+                  key: SERVICE_ROLE_KEY
+            - name: STUDIO_PG_META_URL
+              value: "http://supabase-meta.supabase.svc.cluster.local:8080"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 30

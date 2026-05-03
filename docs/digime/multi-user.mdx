@@ -1,0 +1,88 @@
+---
+title: "Multi-User Setup"
+description: "Channel identity resolution and per-user data isolation with a single DigiMe instance"
+icon: "users"
+---
+
+A single DigiMe instance can serve multiple users across all connected channels. Each user's data is fully isolated — users only see their own knowledge base.
+
+## Identity Resolution
+
+DigiMe maps channel-specific identities to mem-dog user IDs using a `(channel_type, peer_id)` tuple:
+
+```
+(whatsapp, +1234567890) → user_id: c987ef72-...
+(telegram, 123456789)   → user_id: c987ef72-...
+(slack, U05ABC123)      → user_id: a1b2c3d4-...
+```
+
+<Info>
+  The same person can be mapped across multiple channels. All their channel identities resolve to a single `user_id`, giving them a unified knowledge base regardless of which app they use.
+</Info>
+
+## Registering Identities
+
+Register channel identities via the API:
+
+<CodeGroup>
+```bash cURL
+curl -X POST /api/v1/channel-identities \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "user_id": "c987ef72-6524-4713-ab46-f7767bcd380b",
+    "channel_type": "whatsapp",
+    "peer_id": "+1234567890"
+  }'
+```
+
+```python Python
+client.register_channel_identity(
+    user_id="c987ef72-...",
+    channel_type="whatsapp",
+    peer_id="+1234567890"
+)
+```
+</CodeGroup>
+
+## Data Isolation
+
+Every API call DigiMe makes includes the resolved `user_id`. This ensures:
+
+- **Search** only returns results owned by or shared with that user
+- **Ingest** tags new data with the correct owner
+- **Chat** citations only reference accessible items
+- **Memories** are scoped to the user's access level
+
+<Warning>
+  Messages from unregistered channel identities are dropped. DigiMe will respond with a message asking the user to register. This prevents unauthorized access to the knowledge base.
+</Warning>
+
+## How It Works
+
+<Steps>
+  <Step title="Message received">
+    DigiMe receives a message with `channel_type` and `peer_id` from the OpenClaw adapter.
+  </Step>
+  <Step title="Lookup">
+    The identity resolver queries the channel identities table for a matching `(channel_type, peer_id)` pair.
+  </Step>
+  <Step title="Resolve">
+    If found, the corresponding `user_id` is attached to the request context. If not found, the message is rejected.
+  </Step>
+  <Step title="Execute">
+    The skill executes against the mem-dog API with the resolved user's credentials.
+  </Step>
+</Steps>
+
+## Multiple Channels, One User
+
+A user can interact with DigiMe from any registered channel and see the same data:
+
+```
+Alice on WhatsApp: "Remember the meeting is at 3pm"
+  → Stored under user_id: alice-uuid
+
+Alice on Slack: "When is the meeting?"
+  → Searches alice-uuid's data
+  → "The meeting is at 3pm [1]"
+```

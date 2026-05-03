@@ -1,0 +1,36 @@
+---
+title: "Rust SDK"
+description: "Async Rust client using tokio and reqwest"
+icon: "rust"
+---
+
+# Rust SDK
+
+Fully async with tokio + reqwest. Zero-cost abstractions.
+
+## Installation
+
+```toml
+[dependencies]
+mem-dog-client = { git = "https://github.com/BuildGeekAI/mem-dog", path = "clients/rust" }
+tokio = { version = "1", features = ["full"] }
+```
+
+## Usage
+
+```rust
+use mem_dog_client::MemDogClient;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = MemDogClient::new("http://localhost:8080", "md_your_key");
+
+    // Store data
+    let item = client.create_data("Meeting notes", &["standup"]).await?;
+
+    // Search
+    let results = client.semantic_search("what happened?", 10).await?;
+
+    Ok(())
+}
+```

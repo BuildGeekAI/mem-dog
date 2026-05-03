@@ -1,0 +1,81 @@
+---
+title: "Data Items"
+description: "The core unit of storage in Mem-Dog"
+icon: "database"
+---
+
+# Data Items
+
+Every piece of ingested content — text, images, PDFs, JSON, audio, video — becomes a **data item** with a unique ULID-based ID (`data_<ulid>`).
+
+## Features
+
+| Feature | Details |
+|---------|---------|
+| **ID format** | `data_<ulid>` — time-sortable, globally unique |
+| **Versioning** | Every mutation creates a new version with diff tracking |
+| **Tags** | Arbitrary key-value metadata for organization and search |
+| **ACLs** | Per-item access control: private, shared, public, restricted |
+| **MIME types** | 60+ supported — text, images, PDFs, JSON, audio, video, and more |
+
+## Create a Data Item
+
+<CodeGroup>
+```bash cURL
+curl -X POST http://localhost:8080/api/v1/data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Meeting notes: Q3 launch with Acme Corp",
+    "metadata": {
+      "tags": ["meeting", "acme"],
+      "type": "note"
+    }
+  }'
+```
+
+```python Python
+from mem_dog_client import MemDog
+
+m = MemDog("http://localhost:8080", user_id="demo")
+m.add("Meeting notes: Q3 launch with Acme Corp", tags=["meeting", "acme"])
+```
+
+```typescript TypeScript
+const response = await fetch('/api/v1/data', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    content: 'Meeting notes: Q3 launch with Acme Corp',
+    metadata: { tags: ['meeting', 'acme'], type: 'note' }
+  })
+});
+```
+</CodeGroup>
+
+## Version History
+
+Every update creates a new version. Retrieve the full history:
+
+```bash
+curl http://localhost:8080/api/v1/data/{data_id}/versions
+```
+
+Response includes diffs between versions, timestamps, and the user who made each change.
+
+## Access Control
+
+| Level | Who can access |
+|-------|---------------|
+| **private** (default) | Only the owner |
+| **shared** | Owner + users in `shared_with` list |
+| **public** | Any authenticated user |
+| **restricted** | Only users in `shared_with` list (not even the owner) |
+
+Set access when creating or updating:
+
+```json
+{
+  "access_level": "shared",
+  "shared_with": ["user_id_1", "user_id_2"]
+}
+```

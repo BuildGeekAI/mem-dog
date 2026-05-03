@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nango-config
+  namespace: nango
+data:
+  NANGO_DB_HOST: "nango-db.nango.svc.cluster.local"
+  NANGO_DB_PORT: "5432"
+  NANGO_DB_NAME: "nango"
+  NANGO_DB_USER: "nango"
+  # OAuth callback URL — set to the external gateway URL
+  NANGO_SERVER_URL: "http://34.36.80.165"
+  # Disable Nango's built-in auth (we use our own)
+  FLAG_AUTH_ENABLED: "false"
+  NANGO_DASHBOARD_USERNAME: "admin"

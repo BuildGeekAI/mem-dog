@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: mem-dog
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: mem-dog
+data:
+  STORAGE_BACKEND: "local"
+  MEM_DOG_DATA_DIR: "/data"
+  ENVIRONMENT: "development"
+  LOG_LEVEL: "INFO"
+  # Supabase storage (activated by deploy-supabase-gke):
+  # STORAGE_BACKEND: "supabase"
+  # SUPABASE_URL: "http://supabase-kong.supabase.svc.cluster.local:8000"
+  # SUPABASE_KEY is provided via api-supabase-secrets Secret (see api-deployment.yaml).

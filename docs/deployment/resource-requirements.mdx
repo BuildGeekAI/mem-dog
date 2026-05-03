@@ -1,0 +1,76 @@
+---
+title: "Resource Requirements"
+description: "Preflight checks, 3 deployment profiles, per-component resources, and Ollama model sizes"
+icon: "microchip"
+---
+
+Plan your deployment based on available resources. mem-dog supports three profiles from minimal single-node setups to full production clusters.
+
+## Preflight Check
+
+Run the preflight script to verify your environment:
+
+```bash
+./scripts/preflight-check.sh
+```
+
+This checks: Docker version, available RAM, disk space, GPU availability, Kubernetes connectivity, and required CLI tools (`kubectl`, `helm`, `gcloud`).
+
+## Deployment Profiles
+
+<CardGroup cols={3}>
+  <Card title="Minimal" icon="leaf">
+    **8 GB RAM, 4 CPU**
+
+    API + UI + Postgres. No AI processing. Good for development and testing the data layer.
+  </Card>
+  <Card title="Standard" icon="gauge">
+    **32 GB RAM, 8 CPU**
+
+    Full stack with 1 Ollama instance (small tier). Suitable for single-user or small team use.
+  </Card>
+  <Card title="Full" icon="rocket">
+    **64+ GB RAM, 16+ CPU, GPU**
+
+    All 3 Ollama tiers, Neo4j, Redis, NATS, webhook pipeline. Production-grade multi-user deployment.
+  </Card>
+</CardGroup>
+
+## Per-Component Resources
+
+| Component | CPU Request | Memory Request | Memory Limit | Storage |
+|-----------|-------------|----------------|--------------|---------|
+| API | 500m | 512 Mi | 1 Gi | 10 Gi PVC |
+| UI | 100m | 128 Mi | 256 Mi | - |
+| Webhook Gateway | 250m | 256 Mi | 512 Mi | - |
+| Webhook Pipeline | 500m | 512 Mi | 1 Gi | - |
+| OpenClaw Node | 250m | 256 Mi | 512 Mi | 5 Gi PVC |
+| PostgreSQL + pgvector | 500m | 1 Gi | 2 Gi | 20 Gi PVC |
+| Neo4j | 500m | 1 Gi | 2 Gi | 10 Gi PVC |
+| Redis | 100m | 128 Mi | 256 Mi | 1 Gi PVC |
+| NATS | 100m | 64 Mi | 128 Mi | - |
+| Ollama (small) | 2000m | 4 Gi | 8 Gi | 20 Gi PVC |
+| Ollama (medium) | 4000m | 8 Gi | 16 Gi | 40 Gi PVC |
+| Ollama (large) | 4000m | 16 Gi | 32 Gi | 60 Gi PVC |
+
+## Ollama Model Sizes
+
+| Model | Parameters | Disk | RAM (CPU) | RAM (GPU) |
+|-------|-----------|------|-----------|-----------|
+| Gemma3:4b | 4B | 2.5 GB | 4 GB | 3 GB |
+| Gemma3:12b | 12B | 7 GB | 10 GB | 8 GB |
+| Gemma3:27b | 27B | 16 GB | 24 GB | 16 GB |
+| Qwen3-VL | 8B | 5 GB | 8 GB | 6 GB |
+| Qwen3.5 | 32B | 19 GB | 28 GB | 20 GB |
+
+## Mac Mini Recommendations
+
+<Info>
+  A Mac Mini M2 Pro (32 GB) comfortably runs the **Standard** profile with Apple Metal GPU acceleration. Set `N_GPU_LAYERS=99` to offload all model layers to GPU.
+</Info>
+
+For a Mac Mini M4 Pro (64 GB), the **Full** profile runs well with all three Ollama tiers using Metal acceleration.
+
+<Warning>
+  Running large models on CPU-only systems is possible but significantly slower. Expect 5-10x longer inference times without GPU offloading.
+</Warning>

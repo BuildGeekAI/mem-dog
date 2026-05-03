@@ -1,0 +1,80 @@
+---
+title: "Access Control"
+description: "4 access levels, shared_with user lists, JWT auth, per-user API keys, and per-item ACLs"
+icon: "shield-halved"
+---
+
+mem-dog enforces access control at every layer — from authentication to per-item visibility. Data is private by default and only accessible to its owner unless explicitly shared.
+
+## 4 Access Levels
+
+| Level | Visibility |
+|-------|-----------|
+| **private** | Only the owner can read or write (default) |
+| **shared** | Owner + users in the `shared_with` list |
+| **public** | Any authenticated user in the organization |
+| **restricted** | Only users in the `shared_with` list (owner must also be listed) |
+
+## Sharing Data
+
+Use `shared_with` to grant access to specific users:
+
+<CodeGroup>
+```bash cURL
+curl -X PATCH /api/v1/data/data_01J.../access \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "access_level": "shared",
+    "shared_with": [
+      "c987ef72-6524-4713-ab46-f7767bcd380b",
+      "a1b2c3d4-5678-90ab-cdef-1234567890ab"
+    ]
+  }'
+```
+
+```python Python
+client.update_access(
+    item_id="data_01J...",
+    access_level="shared",
+    shared_with=["c987ef72-...", "a1b2c3d4-..."]
+)
+```
+</CodeGroup>
+
+## Authentication Methods
+
+mem-dog supports three authentication methods, evaluated in order:
+
+<Steps>
+  <Step title="Supabase JWT">
+    Passed as `Authorization: Bearer <jwt>`. The `sub` claim identifies the user. On first login, a user profile is auto-created via `ensure_jwt_user_profile`.
+  </Step>
+  <Step title="Per-user API key">
+    Keys prefixed with `md_*` (e.g., `md_abc123...`). O(1) lookup in Supabase. Scoped to a single user — all operations run as that user.
+  </Step>
+  <Step title="Global API key">
+    Set via `API_KEY` env var. Full access, no user scoping. Intended for service-to-service calls and admin operations.
+  </Step>
+</Steps>
+
+<Warning>
+  The global API key bypasses user scoping entirely. Use per-user `md_*` keys for any user-facing integration.
+</Warning>
+
+## Per-Item ACLs
+
+Every data item and memory carries its own access control metadata:
+
+```json
+{
+  "id": "data_01J...",
+  "user_id": "c987ef72-...",
+  "access_level": "shared",
+  "shared_with": ["a1b2c3d4-..."],
+  "created_at": "2026-03-27T10:00:00Z"
+}
+```
+
+<Info>
+  Access checks happen at query time. Search results, list endpoints, and chat citations only return items the requesting user is authorized to see.
+</Info>

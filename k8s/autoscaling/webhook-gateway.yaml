@@ -1,0 +1,22 @@
+# Webhook Gateway — scale to 0 after 15 min idle
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: webhook-gateway-scaler
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+spec:
+  scaleTargetRef:
+    name: webhook-gateway
+  minReplicaCount: 0
+  maxReplicaCount: 2
+  cooldownPeriod: 900
+  pollingInterval: 30
+  triggers:
+    - type: cron
+      metadata:
+        timezone: "America/Chicago"
+        start: "0 7 * * 1-5"
+        end: "0 23 * * 1-5"
+        desiredReplicas: "1"

@@ -1,0 +1,90 @@
+---
+title: "Agent Configs"
+description: "Customize processing flags, system prompts, output schemas, and model tiers for 40 sub-agents"
+icon: "sliders"
+---
+
+Each of mem-dog's 40 sub-agents can be individually configured. Control what gets processed, how it gets processed, and what the output looks like.
+
+## Processing Flags
+
+Enable or disable processing per data type. When disabled, data of that type is stored raw without AI enrichment.
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `classify` | On | Run classification agent on ingest |
+| `summarize` | On | Generate summaries |
+| `extract_entities` | On | Extract named entities |
+| `extract_actions` | On | Identify action items |
+| `embed` | On | Generate vector embeddings |
+| `analyze_sentiment` | Off | Run sentiment analysis |
+| `extract_topics` | On | Extract topic tags |
+
+<Info>
+  Disabling flags reduces processing time and LLM costs. For high-volume data types like logs, consider disabling `summarize` and `analyze_sentiment`.
+</Info>
+
+## Custom System Prompts
+
+Override the default system prompt for any agent to change its behavior. Useful for domain-specific instructions.
+
+<CodeGroup>
+```text Default Summary Prompt
+Summarize the following content. Extract the key points,
+decisions made, and any action items. Be concise.
+```
+
+```text Custom Legal Summary
+Summarize the following legal document. Focus on:
+- Contractual obligations and deadlines
+- Liability clauses and limitations
+- Key defined terms
+Use formal legal language. Flag any ambiguous clauses.
+```
+</CodeGroup>
+
+## Output Schema Overrides
+
+Each agent produces structured output. Override the default schema to add custom fields or change the format.
+
+```json
+{
+  "agent": "SummaryAgent",
+  "data_type": "meeting_notes",
+  "schema_override": {
+    "summary": "string",
+    "decisions": ["string"],
+    "action_items": [
+      {
+        "task": "string",
+        "assignee": "string",
+        "due_date": "string | null"
+      }
+    ],
+    "follow_up_date": "string | null"
+  }
+}
+```
+
+## Model Tier Selection
+
+Assign each agent to a [model tier](/features/smart-routing) based on the complexity of its task.
+
+<CardGroup cols={2}>
+  <Card title="Small Tier Agents" icon="gauge-low">
+    ClassifierAgent, TaggerAgent, LanguageDetector, DuplicateChecker
+  </Card>
+  <Card title="Medium Tier Agents" icon="gauge">
+    SummaryAgent, EntityExtractor, TopicExtractor, SentimentAnalyzer
+  </Card>
+  <Card title="Large Tier Agents" icon="gauge-high">
+    AnalysisAgent, RelationshipMapper, ReasoningAgent, ComparisonAgent
+  </Card>
+  <Card title="Multimodal Agents" icon="image">
+    ImageAnalyzer, DocumentOCR, DiagramParser, ScreenshotReader
+  </Card>
+</CardGroup>
+
+<Tip>
+  Changes to agent configs take effect on the next webhook pipeline invocation. No redeployment needed.
+</Tip>

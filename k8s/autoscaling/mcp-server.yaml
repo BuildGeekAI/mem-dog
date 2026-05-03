@@ -1,0 +1,20 @@
+# MCP Server — scale to 0 after 15 min with no traffic
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: mcp-server-scaler
+  namespace: mem-dog
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+spec:
+  scaleTargetRef:
+    name: mcp-server
+  minReplicaCount: 0
+  maxReplicaCount: 2
+  cooldownPeriod: 900        # 15 min idle
+  pollingInterval: 30
+  triggers:
+    - type: kubernetes-workload
+      metadata:
+        podSelector: "app.kubernetes.io/name=api"
+        value: "1"           # Scale with the API

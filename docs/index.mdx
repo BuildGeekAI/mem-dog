@@ -1,0 +1,103 @@
+---
+title: "Mem-Dog Documentation"
+description: "The private AI system — self-hosted, fast, cost-efficient"
+---
+
+# Welcome to Mem-Dog
+
+Mem-Dog is a complete, self-hosted AI system that ingests data from 25+ channels and 300+ apps, enriches it with 40 specialized AI agents, stores it in a temporal knowledge graph, and makes it searchable through 5 search modes with RAG chat — all running on hardware you control.
+
+<Info>
+  **New to Mem-Dog?** Start with the [Quickstart Guide](/quickstart) to get up and running in 30 seconds.
+</Info>
+
+## Get Started
+
+<CardGroup cols={3}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    `docker compose up` and your first API call
+  </Card>
+  <Card title="Platform Overview" icon="map" href="/platform-overview">
+    Understand the architecture and capabilities
+  </Card>
+  <Card title="Self-Hosting" icon="server" href="/self-hosting">
+    Deploy on Mac Mini, GKE, or any Kubernetes cluster
+  </Card>
+</CardGroup>
+
+## Core Concepts
+
+<CardGroup cols={3}>
+  <Card title="Data Items" icon="database" href="/core-concepts/data-items">
+    Versioned storage with ULID IDs, tagging, and ACLs
+  </Card>
+  <Card title="Memory Types" icon="brain" href="/core-concepts/memory-types">
+    10 types across 4 categories with TTL and access control
+  </Card>
+  <Card title="Knowledge Graph" icon="diagram-project" href="/core-concepts/knowledge-graph">
+    Dual-layer Postgres + Neo4j/Graphiti with temporal reasoning
+  </Card>
+  <Card title="Search Modes" icon="magnifying-glass" href="/core-concepts/search-modes">
+    5 modes (vector, FTS, hybrid, graph, full) + 4 rerankers
+  </Card>
+  <Card title="AI Pipeline" icon="microchip" href="/core-concepts/ai-pipeline">
+    40 agents, 6-layer classification, 5-tier model routing
+  </Card>
+  <Card title="DigiMe Agent" icon="message-bot" href="/digime/overview">
+    Conversational AI across 25+ messaging channels
+  </Card>
+</CardGroup>
+
+## Platform Features
+
+<CardGroup cols={2}>
+  <Card title="AI Studio" icon="sparkles" href="/features/ai-studio">
+    Unified control center — search, models, routing, agents, infrastructure
+  </Card>
+  <Card title="Model Garden" icon="flower" href="/features/model-garden">
+    16+ AI providers with encrypted key storage and model discovery
+  </Card>
+  <Card title="Smart Routing" icon="route" href="/features/smart-routing">
+    Per-agent model assignment with fallback chains
+  </Card>
+  <Card title="Pod Management" icon="server" href="/features/pod-management">
+    Create, scale, and manage Ollama pods from the browser
+  </Card>
+  <Card title="300+ Integrations" icon="plug" href="/apps">
+    OAuth2 connections via Nango — Slack, Gmail, Salesforce, and more
+  </Card>
+  <Card title="MCP Server" icon="terminal" href="/features/mcp-server">
+    8 tools for Claude Desktop, Cursor, and any MCP client
+  </Card>
+</CardGroup>
+
+## Developer Resources
+
+<CardGroup cols={3}>
+  <Card title="API Reference" icon="code" href="/api-reference">
+    70+ REST endpoints with examples
+  </Card>
+  <Card title="SDKs" icon="rectangle-code" href="/sdks">
+    Python, TypeScript, Go, Rust, Ruby
+  </Card>
+  <Card title="Comparisons" icon="scale-balanced" href="/comparisons/comparison-mem0">
+    vs Mem0, Zep, BerryDB, Snowflake, Databricks
+  </Card>
+</CardGroup>
+
+## By the Numbers
+
+| Metric | Value |
+|--------|-------|
+| AI Agents | 40 specialized sub-agents |
+| Data Types | 60+ supported |
+| Channel Adapters | 25+ messaging platforms |
+| App Integrations | 300+ via Nango |
+| Search Modes | 5 (vector, FTS, hybrid, graph, full) |
+| Rerankers | 4 (none, RRF, MMR, cross-encoder) |
+| Memory Types | 10 across 4 categories |
+| AI Providers | 16+ in Model Garden |
+| SDKs | 5 languages |
+| REST Endpoints | 70+ |
+| MCP Tools | 8 |
+| Cost (self-hosted) | $0/month |

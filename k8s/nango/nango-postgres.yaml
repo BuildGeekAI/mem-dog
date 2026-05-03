@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nango-db
+  namespace: nango
+  labels:
+    app: nango-db
+spec:
+  serviceName: nango-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nango-db
+  template:
+    metadata:
+      labels:
+        app: nango-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: nango
+            - name: POSTGRES_USER
+              value: nango
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nango-secrets
+                  key: NANGO_DB_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: nango-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: nango-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nango-db
+  namespace: nango
+spec:
+  selector:
+    app: nango-db
+  ports:
+    - port: 5432
+      targetPort: 5432

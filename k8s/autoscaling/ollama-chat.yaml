@@ -1,0 +1,19 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ollama-chat-scaler
+  namespace: webhook-pipeline
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+spec:
+  scaleTargetRef:
+    name: ollama-chat
+  minReplicaCount: 0
+  maxReplicaCount: 1
+  cooldownPeriod: 600        # 10 min idle before scale to 0
+  pollingInterval: 30
+  triggers:
+    - type: kubernetes-workload
+      metadata:
+        podSelector: "app=webhook-agent"
+        value: "1"           # Scale up when webhook-agent pods exist

@@ -1,0 +1,120 @@
+---
+title: "Python SDK"
+description: "Simple facade with 8 methods and full client with 70+ methods for mem-dog"
+icon: "python"
+---
+
+The Python SDK (`mem-dog-client`) provides two interfaces: a simple facade for common operations and a full client for advanced use cases.
+
+## Installation
+
+```bash
+pip install mem-dog-client
+```
+
+## Simple Facade
+
+8 high-level methods that cover the most common operations:
+
+<CodeGroup>
+```python Add data
+from mem_dog_client import MemDog
+
+m = MemDog(api_key="md_...", base_url="http://localhost:8080")
+
+# Store data
+item = m.add(
+    content="Q3 revenue grew 15% year-over-year",
+    source="report",
+    tags=["finance", "Q3"]
+)
+print(item.id)  # data_01J...
+```
+
+```python Search
+results = m.search(
+    query="revenue growth",
+    search_mode="hybrid",
+    limit=5
+)
+for r in results:
+    print(f"{r.score:.2f} | {r.content[:80]}")
+```
+
+```python Other methods
+# Retrieve by ID
+item = m.get("data_01J...")
+
+# Delete
+m.delete("data_01J...")
+
+# List extracted entities
+entities = m.entities(entity_type="person")
+
+# Compress conversation memories
+m.compress(memory_type="conversation", session_id="sess_01J...")
+
+# Find related items
+related = m.related("data_01J...", limit=5)
+
+# List with filters
+items = m.list(source="report", tags=["finance"], limit=20)
+```
+</CodeGroup>
+
+## Full Client
+
+The full `MemDogClient` exposes 70+ methods matching every REST API endpoint:
+
+```python
+from mem_dog_client import MemDogClient
+
+client = MemDogClient(api_key="md_...", base_url="http://localhost:8080")
+
+# Data operations
+client.create_data(content="...", source="api")
+client.get_data("data_01J...")
+client.update_data("data_01J...", tags=["updated"])
+client.delete_data("data_01J...")
+client.list_data(limit=50, offset=0)
+
+# Memory operations
+client.list_memories(memory_type="factual")
+client.get_memory("mem_factual_01J...")
+
+# Search
+client.search(query="...", search_mode="hybrid", reranker="mmr")
+client.chat(query="What happened in Q3?")
+
+# AI / Models
+client.list_models()
+client.list_providers()
+
+# Webhooks
+client.create_webhook(name="GitHub", channel="github")
+client.list_webhooks()
+
+# Organizations
+client.list_organizations()
+client.create_project(org_id="...", name="Production")
+```
+
+## Async Support
+
+Both interfaces support async via `httpx`:
+
+```python
+import asyncio
+from mem_dog_client import AsyncMemDog
+
+async def main():
+    m = AsyncMemDog(api_key="md_...", base_url="http://localhost:8080")
+    results = await m.search(query="revenue growth")
+    print(results)
+
+asyncio.run(main())
+```
+
+<Tip>
+  Use the simple facade (`MemDog`) for scripts and quick integrations. Use `MemDogClient` when you need full API coverage or fine-grained control.
+</Tip>

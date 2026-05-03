@@ -1,0 +1,32 @@
+# HTTPRoute that exposes the mem-dog API through the open-jaws Gateway.
+# External path: /gke-api/api/v1/*  →  rewritten to /api/v1/* on the API service.
+#
+# Requires the ReferenceGrant in api-referencegrant.yaml to be applied first
+# (cross-namespace backend reference from webhook-gateway → mem-dog).
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mem-dog-api-routes
+  namespace: webhook-gateway
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: api
+spec:
+  parentRefs:
+    - name: open-jaws
+      namespace: webhook-gateway
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /gke-api/
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: api
+          namespace: mem-dog
+          port: 8080

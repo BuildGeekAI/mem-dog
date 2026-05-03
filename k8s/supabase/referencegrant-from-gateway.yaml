@@ -1,0 +1,17 @@
+# Allow HTTPRoutes in the webhook-gateway namespace to reference
+# Services in the supabase namespace (cross-namespace backend refs).
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-webhook-gateway
+  namespace: supabase
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: webhook-gateway
+  to:
+    - group: ""
+      kind: Service

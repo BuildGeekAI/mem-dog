@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-pull-worker
+  namespace: webhook-pipeline
+  labels:
+    app: webhook-pull-worker
+    app.kubernetes.io/part-of: mem-dog-webhook-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-pull-worker
+  template:
+    metadata:
+      labels:
+        app: webhook-pull-worker
+    spec:
+      serviceAccountName: webhook-pipeline-sa
+      containers:
+        - name: pull-worker
+          image: webhook-pull-worker
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: webhook-pipeline-config
+            - secretRef:
+                name: webhook-pipeline-secrets
+                optional: true
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi

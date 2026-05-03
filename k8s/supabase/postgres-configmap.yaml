@@ -1,0 +1,69 @@
+# Postgres initialisation SQL for self-hosted Supabase.
+# Creates the roles, extensions, and schemas that PostgREST / GoTrue expect.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: supabase-db-init
+  namespace: supabase
+  labels:
+    app.kubernetes.io/name: supabase-db
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: supabase
+data:
+  00-init-roles.sql: |
+    -- Roles required by PostgREST and GoTrue.
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
+        CREATE ROLE anon NOLOGIN NOINHERIT;
+      END IF;
+      IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+        CREATE ROLE authenticated NOLOGIN NOINHERIT;
+      END IF;
+      IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'service_role') THEN
+        CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+      END IF;
+      IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'supabase_admin') THEN
+        CREATE ROLE supabase_admin NOLOGIN NOINHERIT BYPASSRLS;
+      END IF;
+      IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticator') THEN
+        CREATE ROLE authenticator NOINHERIT LOGIN;
+      END IF;
+    END
+    $$;
+
+    GRANT anon           TO authenticator;
+    GRANT authenticated  TO authenticator;
+    GRANT service_role   TO authenticator;
+    GRANT supabase_admin TO authenticator;
+
+    -- Allow PostgREST (authenticator) to switch to these roles.
+    GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES    TO anon, authenticated, service_role;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon, authenticated, service_role;
+
+  01-set-authenticator-password.sh: |
+    #!/bin/bash
+    set -e
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+      ALTER ROLE authenticator WITH PASSWORD '${POSTGRES_PASSWORD}';
+    EOSQL
+
+  02-extensions.sql: |
+    CREATE EXTENSION IF NOT EXISTS vector;
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+
+  03-schemas.sql: |
+    CREATE SCHEMA IF NOT EXISTS auth;
+    CREATE SCHEMA IF NOT EXISTS storage;
+    GRANT USAGE ON SCHEMA auth    TO anon, authenticated, service_role;
+    GRANT USAGE ON SCHEMA storage TO anon, authenticated, service_role;
+
+  04-realtime.sql: |
+    CREATE SCHEMA IF NOT EXISTS _realtime;
+    GRANT ALL ON SCHEMA _realtime TO postgres;
+    BEGIN;
+      CREATE PUBLICATION IF NOT EXISTS supabase_realtime;
+    COMMIT;

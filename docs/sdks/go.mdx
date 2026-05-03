@@ -1,0 +1,41 @@
+---
+title: "Go SDK"
+description: "Idiomatic Go client using stdlib net/http"
+icon: "golang"
+---
+
+# Go SDK
+
+Idiomatic Go with zero external dependencies — stdlib `net/http` only.
+
+## Installation
+
+```bash
+go get github.com/BuildGeekAI/mem-dog/clients/go
+```
+
+## Usage
+
+```go
+package main
+
+import (
+    memdog "github.com/BuildGeekAI/mem-dog/clients/go"
+)
+
+func main() {
+    client := memdog.NewClient("http://localhost:8080", "md_your_key")
+
+    // Store data
+    item, _ := client.CreateData(memdog.CreateDataRequest{
+        Content:  "Meeting notes from standup",
+        Metadata: map[string]interface{}{"tags": []string{"standup"}},
+    })
+
+    // Search
+    results, _ := client.SemanticSearch("what happened in standup?", 10)
+
+    // List
+    items, _ := client.ListData(memdog.ListOptions{Limit: 20})
+}
+```

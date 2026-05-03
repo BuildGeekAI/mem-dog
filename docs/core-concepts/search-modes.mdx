@@ -1,0 +1,67 @@
+---
+title: "Search Modes"
+description: "5 search modes and 4 reranking strategies"
+icon: "magnifying-glass"
+---
+
+# Search Modes
+
+Mem-Dog provides the most comprehensive search pipeline of any AI memory platform.
+
+## 5 Search Modes
+
+| Mode | Engine | How it works | Best for |
+|------|--------|-------------|----------|
+| **vector** | pgvector | Cosine similarity over embeddings | Semantic meaning ("things like this") |
+| **fts** | Postgres tsvector | BM25 keyword matching | Exact terms, names, IDs |
+| **hybrid** | pgvector + tsvector | Vector + BM25 via Reciprocal Rank Fusion | General purpose (default) |
+| **graph** | Graphiti + Neo4j | BFS traversal + semantic search on knowledge graph | Entity relationships, temporal facts |
+| **full** | All engines | All signals merged with RRF | Maximum recall |
+
+## 4 Reranking Strategies
+
+| Reranker | Method | When to use |
+|----------|--------|-------------|
+| **none** | Raw scores | Fast, simple queries |
+| **rrf** | Reciprocal Rank Fusion | Merging results from multiple modes |
+| **mmr** | Maximal Marginal Relevance | Diverse results, not just top-N similar |
+| **cross-encoder** | LLM-scored relevance | Highest accuracy |
+
+## Usage
+
+<CodeGroup>
+```bash cURL
+curl -X POST http://localhost:8080/api/v1/ai/query/semantic \
+  -d '{
+    "query": "What does Acme Corp want?",
+    "search_mode": "hybrid",
+    "reranker": "rrf",
+    "max_results": 10
+  }'
+```
+
+```python Python
+results = m.search("What does Acme Corp want?", use_ai=True)
+```
+</CodeGroup>
+
+## RAG Chat with Citations
+
+The `/api/v1/ai/query/chat` endpoint provides conversational answers with inline citations:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/ai/query/chat \
+  -d '{
+    "query": "Summarize the Acme Corp deal",
+    "search_mode": "full",
+    "reranker": "rrf"
+  }'
+```
+
+Response includes `[1]`, `[2]`, `[3]` citation markers linking back to source data.
+
+## Temporal Filtering
+
+For `graph` and `full` modes:
+- "Who was CEO in 2024?" → filters by `valid_at <= 2024 AND invalid_at > 2024`
+- "What changed since January?" → temporal range query

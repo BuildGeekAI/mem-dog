@@ -1,0 +1,82 @@
+---
+title: "SDKs Overview"
+description: "5 language SDKs and 4 agent adapters for integrating with mem-dog"
+icon: "code"
+---
+
+mem-dog provides native SDKs in 5 languages and adapter libraries for popular AI agent frameworks.
+
+## Language SDKs
+
+<CardGroup cols={3}>
+  <Card title="Python" icon="python" href="/sdks/python">
+    `mem-dog-client` — httpx-based, async support, 70+ methods. Simple facade with 8 high-level methods.
+  </Card>
+  <Card title="TypeScript" icon="js">
+    Native `fetch` API, zero dependencies. Full type safety with generated interfaces.
+  </Card>
+  <Card title="Go" icon="golang">
+    Standard library only (`net/http`). Idiomatic error handling and context support.
+  </Card>
+  <Card title="Rust" icon="rust">
+    Async `tokio` + `reqwest`. Strongly typed request/response models with serde.
+  </Card>
+  <Card title="Ruby" icon="gem">
+    Faraday-based client. Follows Ruby conventions with method chaining.
+  </Card>
+</CardGroup>
+
+## Agent Adapters
+
+<CardGroup cols={2}>
+  <Card title="LangChain" icon="link" href="/sdks/agent-adapters">
+    `ChatMessageHistory` for conversation memory and `Retriever` for RAG pipelines.
+  </Card>
+  <Card title="CrewAI" icon="users-gear" href="/sdks/agent-adapters">
+    `save` and `search` tools for crew agent memory.
+  </Card>
+  <Card title="OpenAI" icon="message-bot" href="/sdks/agent-adapters">
+    Function calling integration — mem-dog as tool definitions for GPT.
+  </Card>
+  <Card title="MCP" icon="plug" href="/features/mcp-server">
+    8 tools exposed via MCP SSE for Claude Desktop, Cursor, and other MCP clients.
+  </Card>
+</CardGroup>
+
+## Quick Comparison
+
+| SDK | Package | Transport | Async | Methods |
+|-----|---------|-----------|-------|---------|
+| Python | `mem-dog-client` | httpx | Yes | 70+ |
+| TypeScript | `@mem-dog/client` | fetch | Yes | 70+ |
+| Go | `mem-dog-go` | net/http | Yes (goroutines) | 70+ |
+| Rust | `mem-dog-rs` | reqwest/tokio | Yes | 70+ |
+| Ruby | `mem_dog` | faraday | No | 70+ |
+
+## Installation
+
+<CodeGroup>
+```bash Python
+pip install mem-dog-client
+```
+
+```bash TypeScript
+npm install @mem-dog/client
+```
+
+```bash Go
+go get github.com/mem-dog/mem-dog-go
+```
+
+```bash Rust
+cargo add mem-dog-rs
+```
+
+```bash Ruby
+gem install mem_dog
+```
+</CodeGroup>
+
+<Info>
+  All SDKs mirror the same REST API surface. If a method exists in one SDK, it exists in all of them with equivalent functionality.
+</Info>

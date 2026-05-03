@@ -1,0 +1,102 @@
+# Declarative Kong configuration for Supabase API gateway.
+# Routes all Supabase client SDK requests to the appropriate backend service.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: supabase-kong-config
+  namespace: supabase
+  labels:
+    app.kubernetes.io/name: supabase-kong
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: supabase
+data:
+  kong.yml: |
+    _format_version: "2.1"
+    _transform: true
+
+    # ---------------------------------------------------------------------------
+    # Services
+    # ---------------------------------------------------------------------------
+
+    services:
+      # -- PostgREST (REST API) --
+      - name: rest-v1
+        url: http://supabase-rest.supabase.svc.cluster.local:3000/
+        routes:
+          - name: rest-v1-all
+            strip_path: true
+            paths:
+              - /rest/v1/
+        plugins:
+          - name: cors
+          - name: key-auth
+            config:
+              hide_credentials: true
+
+      # -- GoTrue (Auth) --
+      - name: auth-v1
+        url: http://supabase-auth.supabase.svc.cluster.local:9999/
+        routes:
+          - name: auth-v1-all
+            strip_path: true
+            paths:
+              - /auth/v1/
+        plugins:
+          - name: cors
+
+      # -- Realtime --
+      - name: realtime-v1
+        url: http://supabase-realtime.supabase.svc.cluster.local:4000/socket/
+        routes:
+          - name: realtime-v1-all
+            strip_path: true
+            paths:
+              - /realtime/v1/
+        plugins:
+          - name: cors
+
+      # -- Postgres Meta (used by Studio) --
+      - name: meta
+        url: http://supabase-meta.supabase.svc.cluster.local:8080/
+        routes:
+          - name: meta-all
+            strip_path: true
+            paths:
+              - /pg/
+        plugins:
+          - name: key-auth
+            config:
+              hide_credentials: false
+
+      # -- PostgREST RPC (function calls via /rest/v1/rpc/) --
+      - name: rest-v1-rpc
+        url: http://supabase-rest.supabase.svc.cluster.local:3000/rpc/
+        routes:
+          - name: rest-v1-rpc-all
+            strip_path: true
+            paths:
+              - /rest/v1/rpc/
+        plugins:
+          - name: cors
+
+    # ---------------------------------------------------------------------------
+    # Consumers (API key authentication)
+    # ---------------------------------------------------------------------------
+
+    consumers:
+      - username: anon
+        keyauth_credentials:
+          - key: ${SUPABASE_ANON_KEY}
+      - username: service_role
+        keyauth_credentials:
+          - key: ${SUPABASE_SERVICE_KEY}
+
+    # ---------------------------------------------------------------------------
+    # ACLs (optional — uncomment to restrict routes by consumer group)
+    # ---------------------------------------------------------------------------
+    # plugins:
+    #   - name: acl
+    #     config:
+    #       allow:
+    #         - anon
+    #         - service_role

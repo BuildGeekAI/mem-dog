@@ -1,0 +1,102 @@
+---
+title: "Quickstart"
+description: "Get Mem-Dog running in 30 seconds"
+icon: "rocket"
+---
+
+# Quickstart
+
+## Start the Full Stack
+
+<Steps>
+  <Step title="Clone and start">
+    ```bash
+    git clone https://github.com/BuildGeekAI/mem-dog.git
+    cd mem-dog
+    docker compose up
+    ```
+    This starts 11 services: API, UI, Gateway, NATS, 3 Ollama tiers, Redis, PostgreSQL + pgvector, and Neo4j.
+  </Step>
+  <Step title="Open the UI">
+    | Service | URL |
+    |---------|-----|
+    | Web UI | http://localhost:3000 |
+    | API Docs | http://localhost:8080/docs |
+    | Neo4j Browser | http://localhost:7474 |
+    | Webhook Gateway | http://localhost:8070 |
+  </Step>
+  <Step title="Store your first data">
+    ```bash
+    curl -X POST http://localhost:8080/api/v1/data \
+      -H "Content-Type: application/json" \
+      -d '{
+        "content": "Meeting with Acme Corp: launch in Q3, finalize pricing model",
+        "metadata": {"tags": ["meeting", "acme"], "type": "note"}
+      }'
+    ```
+  </Step>
+  <Step title="Search semantically">
+    ```bash
+    curl -X POST http://localhost:8080/api/v1/ai/query/semantic \
+      -H "Content-Type: application/json" \
+      -d '{"query": "What does Acme Corp want?", "max_results": 5}'
+    ```
+  </Step>
+</Steps>
+
+## Use the Python SDK
+
+```python
+from mem_dog_client import MemDog
+
+m = MemDog("http://localhost:8080", user_id="demo")
+
+# Ingest
+m.add("Just had a great meeting with the Acme Corp team. "
+      "They want to launch in Q3 and need the pricing model finalized.",
+      tags=["meeting", "acme"])
+
+# Search
+results = m.search("What does Acme Corp want?", use_ai=True)
+# → "Acme Corp wants to launch in Q3 and needs pricing finalized [1]"
+
+# Knowledge graph
+entities = m.entities("Acme Corp")
+
+# Follow-up
+m.search("When is the launch deadline?", use_ai=True)
+# → "Q3, based on the meeting notes [1]"
+```
+
+## Connect Claude Desktop (MCP)
+
+Add to `~/.claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "mem-dog": {
+      "url": "http://localhost:8091/mcp/sse"
+    }
+  }
+}
+```
+
+No API key needed in local mode.
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card title="Platform Overview" icon="map" href="/platform-overview">
+    Understand the full architecture
+  </Card>
+  <Card title="Core Concepts" icon="book" href="/core-concepts/data-items">
+    Data items, memories, knowledge graph, search
+  </Card>
+  <Card title="AI Studio" icon="sparkles" href="/features/ai-studio">
+    Configure models, routing, agents, and pods
+  </Card>
+  <Card title="Deploy to Production" icon="cloud" href="/deployment/gke-setup-mac">
+    GKE deployment guide
+  </Card>
+</CardGroup>

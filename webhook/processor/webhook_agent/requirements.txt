@@ -1,0 +1,17 @@
+google-adk>=1.0.0
+google-auth>=2.0
+google-cloud-storage>=2.0
+requests>=2.31
+# LiteLLM >= 1.80.8 required for Gemini 3 Flash support (vertex_ai/gemini-3-flash).
+litellm>=1.80.8
+python-dotenv>=1.0.0
+# FastAPI + uvicorn power the direct /process-webhook server (server.py).
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+# Document text extraction (PDF, Word, Excel, PowerPoint)
+pypdf>=4.0
+# PDF page → image conversion (for vision models that don't accept PDF natively)
+pymupdf>=1.24
+python-docx>=1.0
+openpyxl>=3.1
+python-pptx>=0.6
