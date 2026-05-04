@@ -4,13 +4,12 @@
 
 [![Docker Compose](https://img.shields.io/badge/Docker_Compose-ready-blue.svg)](docker-compose.yml)
 
-
-<img width="2752" height="1536" alt="unnamed (8)" src="https://github.com/user-attachments/assets/3d8b362e-7b3b-4cae-9c23-ef7d1ad6fbda" />
-
-
 **The private AI system for individuals and organizations.**
 
 Ingest data from 300+ apps, enrich it with a 42-agent AI pipeline, store it with versioning and access control, and query it with 5 search modes powered by a temporal knowledge graph.
+
+<img width="2752" height="1536" alt="unnamed (8)" src="https://github.com/user-attachments/assets/3d8b362e-7b3b-4cae-9c23-ef7d1ad6fbda" />
+
 
 ---
 
