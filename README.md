@@ -2,9 +2,11 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
+[![Docker Compose](https://img.shields.io/badge/Docker_Compose-ready-blue.svg)](docker-compose.yml)
+
+
 <img width="2752" height="1536" alt="unnamed (8)" src="https://github.com/user-attachments/assets/3d8b362e-7b3b-4cae-9c23-ef7d1ad6fbda" />
 
-[![Docker Compose](https://img.shields.io/badge/Docker_Compose-ready-blue.svg)](docker-compose.yml)
 
 **The private AI system for individuals and organizations.**
 
