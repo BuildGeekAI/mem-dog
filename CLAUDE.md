@@ -16,6 +16,7 @@ mem-dog is a multi-channel data ingestion and AI enrichment platform. Data flows
 - **webhook/receiver/** — HTTP receiver that publishes to NATS.
 - **webhook-gateway/** — FastAPI (Python ≥3.11, `pyproject.toml`) service that normalizes channel messages into UniversalEnvelope format. Supports multiple LLM providers via litellm, channel policies, rate limiting, and credential-injecting integration proxy. CLI entry point: `wgw`.
 - **openclaw-node/** — DigiMe AI agent (OpenClaw runtime) that communicates with the mem-dog RAG system to answer queries, search, and ingest data through conversation. Separate from the webhook pipeline.
+- **mcp-server/** — FastMCP SSE server (Python 3.12) exposing 8 tools for MCP clients (Claude Desktop, Cursor). Uses `mem_dog_client` internally. Auth via `x-api-key`. Entry: `mcp-server/app/main.py`.
 - **client/** — Python SDK (`mem_dog_client`) using httpx. Mirrors REST API with 70+ methods.
 - **clients/** — Multi-language SDKs: TypeScript (native fetch), Go (stdlib), Rust (async tokio), Ruby.
 - **k8s/** — Kubernetes manifests for GKE + Supabase. Namespaces: `mem-dog` (API), `webhook-pipeline`, `webhook-gateway` (gateway + openclaw-node), `supabase`.
