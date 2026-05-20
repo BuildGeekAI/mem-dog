@@ -1,0 +1,2 @@
+mem-dog-client>=0.1.0
+mem-dog-client[langchain]>=0.1.0  # for example 06 (customer support bot)
