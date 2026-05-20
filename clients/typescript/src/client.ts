@@ -386,4 +386,107 @@ export class MemDogClient {
   async ingest(envelope: Record<string, unknown>, opts: { direct?: boolean } = {}) {
     return this.json("POST", "/api/v1/ingest", { json: { envelope, direct: opts.direct ?? false } });
   }
+
+  // ===================== PROMPTS =====================
+
+  async listPrompts(opts: { dataId?: string; category?: string; userId?: string } = {}) {
+    return this.json("GET", "/api/v1/ai/prompts", { params: { data_id: opts.dataId, category: opts.category, user_id: opts.userId } });
+  }
+  async createPrompt(payload: Record<string, unknown>) { return this.json("POST", "/api/v1/ai/prompts", { json: payload }); }
+  async getPrompt(promptId: string) { return this.json("GET", `/api/v1/ai/prompts/${promptId}`); }
+  async updatePrompt(promptId: string, payload: Record<string, unknown>) { return this.json("PUT", `/api/v1/ai/prompts/${promptId}`, { json: payload }); }
+  async deletePrompt(promptId: string) { await this.request("DELETE", `/api/v1/ai/prompts/${promptId}`); }
+
+  // ===================== SKILLS =====================
+
+  async listSkills(opts: { dataId?: string; userId?: string; tag?: string } = {}) {
+    return this.json("GET", "/api/v1/ai/skills", { params: { data_id: opts.dataId, user_id: opts.userId, tag: opts.tag } });
+  }
+  async createSkill(payload: Record<string, unknown>) { return this.json("POST", "/api/v1/ai/skills", { json: payload }); }
+  async getSkill(skillId: string) { return this.json("GET", `/api/v1/ai/skills/${skillId}`); }
+  async updateSkill(skillId: string, payload: Record<string, unknown>) { return this.json("PUT", `/api/v1/ai/skills/${skillId}`, { json: payload }); }
+  async deleteSkill(skillId: string) { await this.request("DELETE", `/api/v1/ai/skills/${skillId}`); }
+
+  // ===================== ANALYSIS TEMPLATES =====================
+
+  async listAnalysisTemplates(opts: { dataType?: string } = {}) {
+    return this.json("GET", "/api/v1/ai/analysis-templates", { params: { data_type: opts.dataType } });
+  }
+  async createAnalysisTemplate(payload: Record<string, unknown>) { return this.json("POST", "/api/v1/ai/analysis-templates", { json: payload }); }
+  async seedAnalysisTemplates() { return this.json("POST", "/api/v1/ai/analysis-templates/seed"); }
+  async getAnalysisTemplate(templateId: string) { return this.json("GET", `/api/v1/ai/analysis-templates/${templateId}`); }
+  async updateAnalysisTemplate(templateId: string, payload: Record<string, unknown>) { return this.json("PUT", `/api/v1/ai/analysis-templates/${templateId}`, { json: payload }); }
+  async deleteAnalysisTemplate(templateId: string) { await this.request("DELETE", `/api/v1/ai/analysis-templates/${templateId}`); }
+
+  // ===================== STORE =====================
+
+  async listStoreKeys(opts: { prefix?: string } = {}) {
+    return this.json("GET", "/api/v1/store", { params: { prefix: opts.prefix } });
+  }
+  async getStoreValue(key: string) { return this.json("GET", `/api/v1/store/${key}`); }
+  async setStoreValue(key: string, payload: Record<string, unknown>) { return this.json("PUT", `/api/v1/store/${key}`, { json: payload }); }
+  async deleteStoreValue(key: string) { await this.request("DELETE", `/api/v1/store/${key}`); }
+
+  // ===================== CHANNELS =====================
+
+  async createChannelIdentity(payload: Record<string, unknown>) { return this.json("POST", "/api/v1/channel-identities", { json: payload }); }
+  async getChannelIdentity(channelType: string, channelUniqueId: string) {
+    return this.json("GET", "/api/v1/channel-identities/by-channel", { params: { channel_type: channelType, channel_unique_id: channelUniqueId } });
+  }
+  async updateChannelIdentity(channelType: string, channelUniqueId: string, payload: Record<string, unknown>) {
+    const res = await this.request("PATCH", "/api/v1/channel-identities/by-channel", {
+      body: JSON.stringify(payload), headers: { "Content-Type": "application/json" },
+      params: { channel_type: channelType, channel_unique_id: channelUniqueId },
+    });
+    return (await res.json()) as unknown;
+  }
+  async deleteChannelIdentity(channelType: string, channelUniqueId: string) {
+    await this.request("DELETE", "/api/v1/channel-identities/by-channel", { params: { channel_type: channelType, channel_unique_id: channelUniqueId } });
+  }
+  async listUserChannelIdentities(userId: string) { return this.json("GET", `/api/v1/channel-identities/by-user/${userId}`); }
+  async listChannels() { return this.json("GET", "/api/v1/channels"); }
+  async getChannel(channelType: string) { return this.json("GET", `/api/v1/channels/${channelType}`); }
+  async updateChannel(channelType: string, payload: Record<string, unknown>) { return this.json("PUT", `/api/v1/channels/${channelType}`, { json: payload }); }
+  async deleteChannel(channelType: string) { await this.request("DELETE", `/api/v1/channels/${channelType}`); }
+
+  // ===================== ADDITIONAL ENDPOINTS =====================
+
+  async getVersion(dataId: string, version: number) { return this.json("GET", `/api/v1/versions/${dataId}/${version}`); }
+  async listUserDataItem(dataId: string, opts: { user?: string; format?: string } = {}) {
+    return this.json("GET", `/api/v1/list/${dataId}`, { params: { user: opts.user, format: opts.format } });
+  }
+  async getMemoryEntries(memoryId: string) { return this.json("GET", `/api/v1/memories/${memoryId}/entries`); }
+  async dumpUserData() { return this.json("GET", "/api/v1/users/dump"); }
+  async getUserData(userId: string) { return this.json("GET", `/api/v1/users/${userId}/data`); }
+  async createUserData(userId: string, opts: { file?: File | Blob; content?: string } = {}) {
+    const form = new FormData();
+    if (opts.content !== undefined) form.append("content", opts.content);
+    if (opts.file) form.append("file", opts.file);
+    const res = await this.request("POST", `/api/v1/users/${userId}/data`, { body: form });
+    return (await res.json()) as Record<string, unknown>;
+  }
+  async bulkDeleteUserData(user: string) { await this.request("DELETE", `/api/v1/bulk/data/user/${user}`); }
+  async bulkDeleteMemoryData(memoryId: string) { await this.request("DELETE", `/api/v1/bulk/data/memory/${memoryId}`); }
+  async getDataEmbeddings(dataId: string) { return this.json("GET", `/api/v1/ai/embeddings/data/${dataId}`); }
+  async deleteDataEmbeddings(dataId: string) { await this.request("DELETE", `/api/v1/ai/embeddings/data/${dataId}`); }
+  async bulkDeleteEmbeddings(payload: Record<string, unknown>) { return this.json("POST", "/api/v1/ai/embeddings/bulk-delete", { json: payload }); }
+  async updateViewpoint(viewpointId: string, payload: Record<string, unknown>) { return this.json("PUT", `/api/v1/ai/viewpoints/${viewpointId}`, { json: payload }); }
+  async getViewpointHistory(viewpointId: string) { return this.json("GET", `/api/v1/ai/viewpoints/${viewpointId}/history`); }
+  async getDataViewpoints(dataId: string) { return this.json("GET", `/api/v1/ai/viewpoints/data/${dataId}`); }
+  async bulkDeleteViewpoints(payload: Record<string, unknown>) { return this.json("POST", "/api/v1/ai/viewpoints/bulk-delete", { json: payload }); }
+  async deleteDataEntities(dataId: string) { await this.request("DELETE", `/api/v1/graph/data/${dataId}/entities`); }
+  async timelineQuery(payload: Record<string, unknown>) { return this.json("POST", "/api/v1/ai/query/timeline", { json: payload }); }
+  async aiQueryTest() { return this.json("GET", "/api/v1/ai/query/test"); }
+  async getModelDetails(modelId: string) { return this.json("GET", `/api/v1/ai/model-catalog/${modelId}`); }
+  async oauthCallback(code: string, state: string) { return this.json("POST", "/api/v1/integrations/oauth/callback", { json: { code, state } }); }
+  async getDataStats() { return this.json("GET", "/api/v1/stats/data"); }
+  async getMemoryStats() { return this.json("GET", "/api/v1/stats/memories"); }
+  async getEmbeddingStats() { return this.json("GET", "/api/v1/stats/embeddings"); }
+  async getViewpointStats() { return this.json("GET", "/api/v1/stats/viewpoints"); }
+  async refreshUserStats(userId: string) { return this.json("POST", `/api/v1/stats/refresh/users/${userId}`); }
+  async getAgentTypeCounts() { return this.json("GET", "/api/v1/stats/agent-types"); }
+  async incrementAgentType(agentType: string) { return this.json("POST", `/api/v1/stats/agent-types/${agentType}/increment`); }
+  async decrementAgentType(agentType: string) { return this.json("POST", `/api/v1/stats/agent-types/${agentType}/decrement`); }
+  async recordTokenUsage(payload: Record<string, unknown>) { return this.json("POST", "/api/v1/stats/token-usage", { json: payload }); }
+  async deleteTokenUsage(userId: string) { await this.request("DELETE", `/api/v1/stats/token-usage/${userId}`); }
 }

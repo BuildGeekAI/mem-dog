@@ -72,6 +72,11 @@ class MemDogClient:
         with self._client() as c:
             return c.get("/health")
 
+    def get_me(self) -> httpx.Response:
+        """GET /api/v1/auth/me - Get authenticated user profile."""
+        with self._client() as c:
+            return c.get("/api/v1/auth/me")
+
     # -------------------------------------------------------------------------
     # Data
     # -------------------------------------------------------------------------
@@ -267,6 +272,11 @@ class MemDogClient:
         """GET /api/v1/versions/{data_id} - List versions for a data item."""
         with self._client() as c:
             return c.get(f"/api/v1/versions/{data_id}")
+
+    def get_version(self, data_id: str, version: int) -> httpx.Response:
+        """GET /api/v1/versions/{data_id}/{version} - Get specific version."""
+        with self._client() as c:
+            return c.get(f"/api/v1/versions/{data_id}/{version}")
 
     # -------------------------------------------------------------------------
     # List (user data)
@@ -819,3 +829,559 @@ class MemDogClient:
                 },
                 params=params,
             )
+
+    def get_memory_entries(self, memory_id: str) -> httpx.Response:
+        """GET /api/v1/memories/{memory_id}/entries - Get memory data entries."""
+        with self._client() as c:
+            return c.get(f"/api/v1/memories/{memory_id}/entries")
+
+    # -------------------------------------------------------------------------
+    # Bulk (additional)
+    # -------------------------------------------------------------------------
+
+    def bulk_delete_user_data(self, user: str) -> httpx.Response:
+        """DELETE /api/v1/bulk/data/user/{user} - Delete all user data."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/bulk/data/user/{user}")
+
+    def bulk_delete_memory_data(self, memory_id: str) -> httpx.Response:
+        """DELETE /api/v1/bulk/data/memory/{memory_id} - Delete memory's data."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/bulk/data/memory/{memory_id}")
+
+    # -------------------------------------------------------------------------
+    # Users (additional)
+    # -------------------------------------------------------------------------
+
+    def dump_user_data(self) -> httpx.Response:
+        """GET /api/v1/users/dump - Dump all user-owned data."""
+        with self._client() as c:
+            return c.get("/api/v1/users/dump")
+
+    def get_user_data(self, user_id: str) -> httpx.Response:
+        """GET /api/v1/users/{user_id}/data - Get user's data."""
+        with self._client() as c:
+            return c.get(f"/api/v1/users/{user_id}/data")
+
+    def create_user_data(
+        self,
+        user_id: str,
+        *,
+        file: Optional[BinaryIO] = None,
+        content: Optional[str] = None,
+    ) -> httpx.Response:
+        """POST /api/v1/users/{user_id}/data - Create data for user."""
+        if file is not None:
+            file.seek(0)
+            file_bytes = file.read()
+            with self._client() as c:
+                return c.post(
+                    f"/api/v1/users/{user_id}/data",
+                    files={"file": ("data", file_bytes, "application/octet-stream")},
+                )
+        if content is not None:
+            with self._client() as c:
+                return c.post(f"/api/v1/users/{user_id}/data", data={"content": content})
+        raise ValueError("Either file or content must be provided")
+
+    # -------------------------------------------------------------------------
+    # Channels
+    # -------------------------------------------------------------------------
+
+    def create_channel_identity(self, payload: dict[str, Any]) -> httpx.Response:
+        """POST /api/v1/channel-identities - Create or upsert channel identity."""
+        with self._client() as c:
+            return c.post("/api/v1/channel-identities", json=payload)
+
+    def get_channel_identity(self, channel_type: str, channel_unique_id: str) -> httpx.Response:
+        """GET /api/v1/channel-identities/by-channel - Get identity by channel."""
+        with self._client() as c:
+            return c.get("/api/v1/channel-identities/by-channel", params={"channel_type": channel_type, "channel_unique_id": channel_unique_id})
+
+    def update_channel_identity(self, channel_type: str, channel_unique_id: str, payload: dict[str, Any]) -> httpx.Response:
+        """PATCH /api/v1/channel-identities/by-channel - Update channel identity."""
+        with self._client() as c:
+            return c.patch("/api/v1/channel-identities/by-channel", params={"channel_type": channel_type, "channel_unique_id": channel_unique_id}, json=payload)
+
+    def delete_channel_identity(self, channel_type: str, channel_unique_id: str) -> httpx.Response:
+        """DELETE /api/v1/channel-identities/by-channel - Delete channel identity."""
+        with self._client() as c:
+            return c.delete("/api/v1/channel-identities/by-channel", params={"channel_type": channel_type, "channel_unique_id": channel_unique_id})
+
+    def list_user_channel_identities(self, user_id: str) -> httpx.Response:
+        """GET /api/v1/channel-identities/by-user/{user_id} - List identities for user."""
+        with self._client() as c:
+            return c.get(f"/api/v1/channel-identities/by-user/{user_id}")
+
+    def list_channels(self) -> httpx.Response:
+        """GET /api/v1/channels - List all channel metadata."""
+        with self._client() as c:
+            return c.get("/api/v1/channels")
+
+    def get_channel(self, channel_type: str) -> httpx.Response:
+        """GET /api/v1/channels/{channel_type} - Get channel metadata."""
+        with self._client() as c:
+            return c.get(f"/api/v1/channels/{channel_type}")
+
+    def update_channel(self, channel_type: str, payload: dict[str, Any]) -> httpx.Response:
+        """PUT /api/v1/channels/{channel_type} - Create or update channel."""
+        with self._client() as c:
+            return c.put(f"/api/v1/channels/{channel_type}", json=payload)
+
+    def delete_channel(self, channel_type: str) -> httpx.Response:
+        """DELETE /api/v1/channels/{channel_type} - Delete channel."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/channels/{channel_type}")
+
+    # -------------------------------------------------------------------------
+    # AI (additional)
+    # -------------------------------------------------------------------------
+
+    def get_system_config(self) -> httpx.Response:
+        """GET /api/v1/ai/system-config - Get system AI configuration."""
+        with self._client() as c:
+            return c.get("/api/v1/ai/system-config")
+
+    def get_model_catalog(self, *, family: Optional[str] = None, role: Optional[str] = None, max_memory_gb: Optional[float] = None) -> httpx.Response:
+        """GET /api/v1/ai/model-catalog - Get self-hostable model catalog."""
+        params: dict[str, Any] = {}
+        if family:
+            params["family"] = family
+        if role:
+            params["role"] = role
+        if max_memory_gb is not None:
+            params["max_memory_gb"] = max_memory_gb
+        with self._client() as c:
+            return c.get("/api/v1/ai/model-catalog", params=params)
+
+    def get_model_details(self, model_id: str) -> httpx.Response:
+        """GET /api/v1/ai/model-catalog/{model_id} - Get model details."""
+        with self._client() as c:
+            return c.get(f"/api/v1/ai/model-catalog/{model_id}")
+
+    def semantic_search(self, query: str, *, search_mode: Optional[str] = None, reranker: Optional[str] = None, limit: Optional[int] = None, user_id: Optional[str] = None, memory_type: Optional[str] = None, temporal_filter: Optional[str] = None) -> httpx.Response:
+        """POST /api/v1/ai/query/semantic - Semantic search (5 modes + 4 rerankers)."""
+        payload: dict[str, Any] = {"query": query}
+        if search_mode:
+            payload["search_mode"] = search_mode
+        if reranker:
+            payload["reranker"] = reranker
+        if limit is not None:
+            payload["limit"] = limit
+        if user_id:
+            payload["user_id"] = user_id
+        if memory_type:
+            payload["memory_type"] = memory_type
+        if temporal_filter:
+            payload["temporal_filter"] = temporal_filter
+        with self._client() as c:
+            return c.post("/api/v1/ai/query/semantic", json=payload)
+
+    def chat(self, query: str, *, search_mode: Optional[str] = None, reranker: Optional[str] = None, conversation_history: Optional[list[dict[str, str]]] = None, memory_type: Optional[str] = None) -> httpx.Response:
+        """POST /api/v1/ai/query/chat - RAG chat with inline citations."""
+        payload: dict[str, Any] = {"query": query}
+        if search_mode:
+            payload["search_mode"] = search_mode
+        if reranker:
+            payload["reranker"] = reranker
+        if conversation_history:
+            payload["conversation_history"] = conversation_history
+        if memory_type:
+            payload["memory_type"] = memory_type
+        with self._client() as c:
+            return c.post("/api/v1/ai/query/chat", json=payload)
+
+    def timeline_query(self, payload: dict[str, Any]) -> httpx.Response:
+        """POST /api/v1/ai/query/timeline - Query timeline data."""
+        with self._client() as c:
+            return c.post("/api/v1/ai/query/timeline", json=payload)
+
+    def ai_query_test(self) -> httpx.Response:
+        """GET /api/v1/ai/query/test - AI config status probe."""
+        with self._client() as c:
+            return c.get("/api/v1/ai/query/test")
+
+    # -------------------------------------------------------------------------
+    # Embeddings (additional)
+    # -------------------------------------------------------------------------
+
+    def list_embeddings(self, *, data_id: Optional[str] = None, user_id: Optional[str] = None, limit: Optional[int] = None, project_id: Optional[str] = None) -> httpx.Response:
+        """GET /api/v1/ai/embeddings - List embeddings."""
+        params: dict[str, Any] = {}
+        if data_id:
+            params["data_id"] = data_id
+        if user_id:
+            params["user_id"] = user_id
+        if limit is not None:
+            params["limit"] = limit
+        if project_id:
+            params["project_id"] = project_id
+        with self._client() as c:
+            return c.get("/api/v1/ai/embeddings", params=params)
+
+    def delete_embedding(self, embedding_id: str) -> httpx.Response:
+        """DELETE /api/v1/ai/embeddings/{embedding_id} - Delete embedding."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/ai/embeddings/{embedding_id}")
+
+    def get_data_embeddings(self, data_id: str) -> httpx.Response:
+        """GET /api/v1/ai/embeddings/data/{data_id} - Get data's embeddings."""
+        with self._client() as c:
+            return c.get(f"/api/v1/ai/embeddings/data/{data_id}")
+
+    def delete_data_embeddings(self, data_id: str) -> httpx.Response:
+        """DELETE /api/v1/ai/embeddings/data/{data_id} - Delete data's embeddings."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/ai/embeddings/data/{data_id}")
+
+    def bulk_delete_embeddings(self, payload: dict[str, Any]) -> httpx.Response:
+        """POST /api/v1/ai/embeddings/bulk-delete - Bulk delete embeddings."""
+        with self._client() as c:
+            return c.post("/api/v1/ai/embeddings/bulk-delete", json=payload)
+
+    # -------------------------------------------------------------------------
+    # Viewpoints (additional)
+    # -------------------------------------------------------------------------
+
+    def update_viewpoint(self, viewpoint_id: str, payload: dict[str, Any]) -> httpx.Response:
+        """PUT /api/v1/ai/viewpoints/{viewpoint_id} - Update viewpoint."""
+        with self._client() as c:
+            return c.put(f"/api/v1/ai/viewpoints/{viewpoint_id}", json=payload)
+
+    def get_viewpoint_history(self, viewpoint_id: str) -> httpx.Response:
+        """GET /api/v1/ai/viewpoints/{viewpoint_id}/history - Get viewpoint version history."""
+        with self._client() as c:
+            return c.get(f"/api/v1/ai/viewpoints/{viewpoint_id}/history")
+
+    def get_data_viewpoints(self, data_id: str) -> httpx.Response:
+        """GET /api/v1/ai/viewpoints/data/{data_id} - Get data's viewpoints."""
+        with self._client() as c:
+            return c.get(f"/api/v1/ai/viewpoints/data/{data_id}")
+
+    def bulk_delete_viewpoints(self, payload: dict[str, Any]) -> httpx.Response:
+        """POST /api/v1/ai/viewpoints/bulk-delete - Bulk delete viewpoints."""
+        with self._client() as c:
+            return c.post("/api/v1/ai/viewpoints/bulk-delete", json=payload)
+
+    # -------------------------------------------------------------------------
+    # Analysis Templates
+    # -------------------------------------------------------------------------
+
+    def list_analysis_templates(self, *, data_type: Optional[str] = None) -> httpx.Response:
+        """GET /api/v1/ai/analysis-templates - List analysis templates."""
+        params: dict[str, Any] = {}
+        if data_type:
+            params["data_type"] = data_type
+        with self._client() as c:
+            return c.get("/api/v1/ai/analysis-templates", params=params)
+
+    def create_analysis_template(self, payload: dict[str, Any]) -> httpx.Response:
+        """POST /api/v1/ai/analysis-templates - Create template."""
+        with self._client() as c:
+            return c.post("/api/v1/ai/analysis-templates", json=payload)
+
+    def seed_analysis_templates(self) -> httpx.Response:
+        """POST /api/v1/ai/analysis-templates/seed - Seed default templates."""
+        with self._client() as c:
+            return c.post("/api/v1/ai/analysis-templates/seed")
+
+    def get_analysis_template(self, template_id: str) -> httpx.Response:
+        """GET /api/v1/ai/analysis-templates/{template_id} - Get template."""
+        with self._client() as c:
+            return c.get(f"/api/v1/ai/analysis-templates/{template_id}")
+
+    def update_analysis_template(self, template_id: str, payload: dict[str, Any]) -> httpx.Response:
+        """PUT /api/v1/ai/analysis-templates/{template_id} - Update template."""
+        with self._client() as c:
+            return c.put(f"/api/v1/ai/analysis-templates/{template_id}", json=payload)
+
+    def delete_analysis_template(self, template_id: str) -> httpx.Response:
+        """DELETE /api/v1/ai/analysis-templates/{template_id} - Delete template."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/ai/analysis-templates/{template_id}")
+
+    # -------------------------------------------------------------------------
+    # Agent Configs
+    # -------------------------------------------------------------------------
+
+    def list_agent_configs(self, *, user_id: Optional[str] = None, agent_type: Optional[str] = None) -> httpx.Response:
+        """GET /api/v1/ai/agent-configs - List agent configs."""
+        params: dict[str, Any] = {}
+        if user_id:
+            params["user_id"] = user_id
+        if agent_type:
+            params["agent_type"] = agent_type
+        with self._client() as c:
+            return c.get("/api/v1/ai/agent-configs", params=params)
+
+    def create_agent_config(self, payload: dict[str, Any]) -> httpx.Response:
+        """POST /api/v1/ai/agent-configs - Create agent config."""
+        with self._client() as c:
+            return c.post("/api/v1/ai/agent-configs", json=payload)
+
+    def resolve_agent_config(self, agent_type: str, *, user_id: Optional[str] = None) -> httpx.Response:
+        """GET /api/v1/ai/agent-configs/resolve/{agent_type} - Resolve effective config."""
+        params: dict[str, Any] = {}
+        if user_id:
+            params["user_id"] = user_id
+        with self._client() as c:
+            return c.get(f"/api/v1/ai/agent-configs/resolve/{agent_type}", params=params)
+
+    def get_agent_config(self, config_id: str) -> httpx.Response:
+        """GET /api/v1/ai/agent-configs/{config_id} - Get agent config."""
+        with self._client() as c:
+            return c.get(f"/api/v1/ai/agent-configs/{config_id}")
+
+    def update_agent_config(self, config_id: str, payload: dict[str, Any]) -> httpx.Response:
+        """PUT /api/v1/ai/agent-configs/{config_id} - Update agent config."""
+        with self._client() as c:
+            return c.put(f"/api/v1/ai/agent-configs/{config_id}", json=payload)
+
+    def delete_agent_config(self, config_id: str) -> httpx.Response:
+        """DELETE /api/v1/ai/agent-configs/{config_id} - Delete agent config."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/ai/agent-configs/{config_id}")
+
+    # -------------------------------------------------------------------------
+    # Webhooks
+    # -------------------------------------------------------------------------
+
+    def create_webhook(self, payload: dict[str, Any]) -> httpx.Response:
+        """POST /api/v1/webhooks - Create webhook endpoint."""
+        with self._client() as c:
+            return c.post("/api/v1/webhooks", json=payload)
+
+    def list_webhooks(self, *, channel_type: Optional[str] = None, status: Optional[str] = None) -> httpx.Response:
+        """GET /api/v1/webhooks - List webhooks."""
+        params: dict[str, Any] = {}
+        if channel_type:
+            params["channel_type"] = channel_type
+        if status:
+            params["status"] = status
+        with self._client() as c:
+            return c.get("/api/v1/webhooks", params=params)
+
+    def get_webhook(self, webhook_id: str) -> httpx.Response:
+        """GET /api/v1/webhooks/{webhook_id} - Get webhook."""
+        with self._client() as c:
+            return c.get(f"/api/v1/webhooks/{webhook_id}")
+
+    def update_webhook(self, webhook_id: str, payload: dict[str, Any]) -> httpx.Response:
+        """PATCH /api/v1/webhooks/{webhook_id} - Update webhook."""
+        with self._client() as c:
+            return c.patch(f"/api/v1/webhooks/{webhook_id}", json=payload)
+
+    def delete_webhook(self, webhook_id: str) -> httpx.Response:
+        """DELETE /api/v1/webhooks/{webhook_id} - Soft-delete webhook."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/webhooks/{webhook_id}")
+
+    def rotate_webhook_secret(self, webhook_id: str) -> httpx.Response:
+        """POST /api/v1/webhooks/{webhook_id}/rotate-secret - Rotate HMAC secret."""
+        with self._client() as c:
+            return c.post(f"/api/v1/webhooks/{webhook_id}/rotate-secret")
+
+    def list_webhook_events(self, webhook_id: str, *, status: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> httpx.Response:
+        """GET /api/v1/webhooks/{webhook_id}/events - List webhook events."""
+        params: dict[str, Any] = {}
+        if status:
+            params["status"] = status
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
+        with self._client() as c:
+            return c.get(f"/api/v1/webhooks/{webhook_id}/events", params=params)
+
+    def get_webhook_stats(self, webhook_id: str, *, period: Optional[str] = None) -> httpx.Response:
+        """GET /api/v1/webhooks/{webhook_id}/stats - Get webhook stats."""
+        params: dict[str, Any] = {}
+        if period:
+            params["period"] = period
+        with self._client() as c:
+            return c.get(f"/api/v1/webhooks/{webhook_id}/stats", params=params)
+
+    # -------------------------------------------------------------------------
+    # Integrations
+    # -------------------------------------------------------------------------
+
+    def list_providers(self) -> httpx.Response:
+        """GET /api/v1/integrations/config - List provider configurations."""
+        with self._client() as c:
+            return c.get("/api/v1/integrations/config")
+
+    def get_provider(self, provider_key: str) -> httpx.Response:
+        """GET /api/v1/integrations/config/{provider_key} - Get provider configuration."""
+        with self._client() as c:
+            return c.get(f"/api/v1/integrations/config/{provider_key}")
+
+    def list_connections(self) -> httpx.Response:
+        """GET /api/v1/integrations/connections - List user connections."""
+        with self._client() as c:
+            return c.get("/api/v1/integrations/connections")
+
+    def create_connection(self, payload: dict[str, Any]) -> httpx.Response:
+        """POST /api/v1/integrations/connections - Create connection."""
+        with self._client() as c:
+            return c.post("/api/v1/integrations/connections", json=payload)
+
+    def get_connection(self, connection_id: str) -> httpx.Response:
+        """GET /api/v1/integrations/connections/{connection_id} - Get connection."""
+        with self._client() as c:
+            return c.get(f"/api/v1/integrations/connections/{connection_id}")
+
+    def update_connection(self, connection_id: str, payload: dict[str, Any]) -> httpx.Response:
+        """PATCH /api/v1/integrations/connections/{connection_id} - Update connection."""
+        with self._client() as c:
+            return c.patch(f"/api/v1/integrations/connections/{connection_id}", json=payload)
+
+    def delete_connection(self, connection_id: str) -> httpx.Response:
+        """DELETE /api/v1/integrations/connections/{connection_id} - Delete connection."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/integrations/connections/{connection_id}")
+
+    def get_oauth_url(self, provider_key: str, redirect_uri: str) -> httpx.Response:
+        """GET /api/v1/integrations/oauth/authorize - Get OAuth authorization URL."""
+        with self._client() as c:
+            return c.get("/api/v1/integrations/oauth/authorize", params={"provider_key": provider_key, "redirect_uri": redirect_uri})
+
+    def oauth_callback(self, code: str, state: str) -> httpx.Response:
+        """POST /api/v1/integrations/oauth/callback - Handle OAuth callback."""
+        with self._client() as c:
+            return c.post("/api/v1/integrations/oauth/callback", json={"code": code, "state": state})
+
+    # -------------------------------------------------------------------------
+    # Graph (additional)
+    # -------------------------------------------------------------------------
+
+    def delete_entity(self, entity_id: str) -> httpx.Response:
+        """DELETE /api/v1/graph/entities/{entity_id} - Delete entity."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/graph/entities/{entity_id}")
+
+    def delete_data_entities(self, data_id: str) -> httpx.Response:
+        """DELETE /api/v1/graph/data/{data_id}/entities - Delete data's entities."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/graph/data/{data_id}/entities")
+
+    def query_facts(self, *, q: Optional[str] = None, entity_id: Optional[str] = None, at: Optional[str] = None, limit: Optional[int] = None) -> httpx.Response:
+        """GET /api/v1/graph/facts - Query temporal facts (Graphiti)."""
+        params: dict[str, Any] = {}
+        if q:
+            params["q"] = q
+        if entity_id:
+            params["entity_id"] = entity_id
+        if at:
+            params["at"] = at
+        if limit is not None:
+            params["limit"] = limit
+        with self._client() as c:
+            return c.get("/api/v1/graph/facts", params=params)
+
+    def get_fact_timeline(self, entity_id: str, *, limit: Optional[int] = None) -> httpx.Response:
+        """GET /api/v1/graph/facts/timeline - Get fact history for entity."""
+        params: dict[str, Any] = {"entity_id": entity_id}
+        if limit is not None:
+            params["limit"] = limit
+        with self._client() as c:
+            return c.get("/api/v1/graph/facts/timeline", params=params)
+
+    # -------------------------------------------------------------------------
+    # Stats (additional)
+    # -------------------------------------------------------------------------
+
+    def get_data_stats(self) -> httpx.Response:
+        """GET /api/v1/stats/data - Data statistics."""
+        with self._client() as c:
+            return c.get("/api/v1/stats/data")
+
+    def get_memory_stats(self) -> httpx.Response:
+        """GET /api/v1/stats/memories - Memory statistics."""
+        with self._client() as c:
+            return c.get("/api/v1/stats/memories")
+
+    def get_embedding_stats(self) -> httpx.Response:
+        """GET /api/v1/stats/embeddings - Embedding statistics."""
+        with self._client() as c:
+            return c.get("/api/v1/stats/embeddings")
+
+    def get_viewpoint_stats(self) -> httpx.Response:
+        """GET /api/v1/stats/viewpoints - Viewpoint statistics."""
+        with self._client() as c:
+            return c.get("/api/v1/stats/viewpoints")
+
+    def refresh_stats(self) -> httpx.Response:
+        """POST /api/v1/stats/refresh - Refresh all stats."""
+        with self._client() as c:
+            return c.post("/api/v1/stats/refresh")
+
+    def refresh_user_stats(self, user_id: str) -> httpx.Response:
+        """POST /api/v1/stats/refresh/users/{user_id} - Refresh user stats."""
+        with self._client() as c:
+            return c.post(f"/api/v1/stats/refresh/users/{user_id}")
+
+    def get_agent_type_counts(self) -> httpx.Response:
+        """GET /api/v1/stats/agent-types - Get agent type counts."""
+        with self._client() as c:
+            return c.get("/api/v1/stats/agent-types")
+
+    def increment_agent_type(self, agent_type: str) -> httpx.Response:
+        """POST /api/v1/stats/agent-types/{agent_type}/increment."""
+        with self._client() as c:
+            return c.post(f"/api/v1/stats/agent-types/{agent_type}/increment")
+
+    def decrement_agent_type(self, agent_type: str) -> httpx.Response:
+        """POST /api/v1/stats/agent-types/{agent_type}/decrement."""
+        with self._client() as c:
+            return c.post(f"/api/v1/stats/agent-types/{agent_type}/decrement")
+
+    def record_token_usage(self, payload: dict[str, Any]) -> httpx.Response:
+        """POST /api/v1/stats/token-usage - Record token usage."""
+        with self._client() as c:
+            return c.post("/api/v1/stats/token-usage", json=payload)
+
+    def get_token_usage(self, user_id: str) -> httpx.Response:
+        """GET /api/v1/stats/token-usage/{user_id} - Get token usage."""
+        with self._client() as c:
+            return c.get(f"/api/v1/stats/token-usage/{user_id}")
+
+    def delete_token_usage(self, user_id: str) -> httpx.Response:
+        """DELETE /api/v1/stats/token-usage/{user_id} - Delete token usage."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/stats/token-usage/{user_id}")
+
+    # -------------------------------------------------------------------------
+    # Store
+    # -------------------------------------------------------------------------
+
+    def list_store_keys(self, *, prefix: Optional[str] = None) -> httpx.Response:
+        """GET /api/v1/store - List keys."""
+        params: dict[str, Any] = {}
+        if prefix:
+            params["prefix"] = prefix
+        with self._client() as c:
+            return c.get("/api/v1/store", params=params)
+
+    def get_store_value(self, key: str) -> httpx.Response:
+        """GET /api/v1/store/{key} - Get value by key."""
+        with self._client() as c:
+            return c.get(f"/api/v1/store/{key}")
+
+    def set_store_value(self, key: str, payload: dict[str, Any]) -> httpx.Response:
+        """PUT /api/v1/store/{key} - Set value."""
+        with self._client() as c:
+            return c.put(f"/api/v1/store/{key}", json=payload)
+
+    def delete_store_value(self, key: str) -> httpx.Response:
+        """DELETE /api/v1/store/{key} - Delete key."""
+        with self._client() as c:
+            return c.delete(f"/api/v1/store/{key}")
+
+    # -------------------------------------------------------------------------
+    # Ingest
+    # -------------------------------------------------------------------------
+
+    def ingest(self, envelope: dict[str, Any], *, direct: bool = False) -> httpx.Response:
+        """POST /api/v1/ingest - Ingest Universal Envelope."""
+        with self._client() as c:
+            return c.post("/api/v1/ingest", json={"envelope": envelope, "direct": direct})

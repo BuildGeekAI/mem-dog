@@ -656,3 +656,122 @@ func (c *MemDogClient) BulkDeleteMemories(memoryIDs []string, deleteData bool) (
 func (c *MemDogClient) Ingest(envelope map[string]any, direct bool) ([]byte, error) {
 	return c.doJSON("POST", "/api/v1/ingest", map[string]any{"envelope": envelope, "direct": direct})
 }
+
+// ========================= PROMPTS =========================
+
+func (c *MemDogClient) ListPrompts(opts *ListPromptsOptions) ([]byte, error) {
+	p := url.Values{}
+	if opts != nil {
+		setIf(p, "data_id", opts.DataID)
+		setIf(p, "category", opts.Category)
+		setIf(p, "user_id", opts.UserID)
+	}
+	return c.doGet("/api/v1/ai/prompts", p)
+}
+func (c *MemDogClient) CreatePrompt(payload map[string]any) ([]byte, error) { return c.doJSON("POST", "/api/v1/ai/prompts", payload) }
+func (c *MemDogClient) GetPrompt(promptID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/ai/prompts/%s", promptID), nil) }
+func (c *MemDogClient) UpdatePrompt(promptID string, payload map[string]any) ([]byte, error) { return c.doJSON("PUT", fmt.Sprintf("/api/v1/ai/prompts/%s", promptID), payload) }
+func (c *MemDogClient) DeletePrompt(promptID string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/ai/prompts/%s", promptID), "", nil); return err }
+
+// ========================= SKILLS =========================
+
+func (c *MemDogClient) ListSkills(opts *ListSkillsOptions) ([]byte, error) {
+	p := url.Values{}
+	if opts != nil {
+		setIf(p, "data_id", opts.DataID)
+		setIf(p, "user_id", opts.UserID)
+		setIf(p, "tag", opts.Tag)
+	}
+	return c.doGet("/api/v1/ai/skills", p)
+}
+func (c *MemDogClient) CreateSkill(payload map[string]any) ([]byte, error) { return c.doJSON("POST", "/api/v1/ai/skills", payload) }
+func (c *MemDogClient) GetSkill(skillID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/ai/skills/%s", skillID), nil) }
+func (c *MemDogClient) UpdateSkill(skillID string, payload map[string]any) ([]byte, error) { return c.doJSON("PUT", fmt.Sprintf("/api/v1/ai/skills/%s", skillID), payload) }
+func (c *MemDogClient) DeleteSkill(skillID string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/ai/skills/%s", skillID), "", nil); return err }
+
+// ========================= ANALYSIS TEMPLATES =========================
+
+func (c *MemDogClient) ListAnalysisTemplates(opts *ListAnalysisTemplatesOptions) ([]byte, error) {
+	p := url.Values{}
+	if opts != nil { setIf(p, "data_type", opts.DataType) }
+	return c.doGet("/api/v1/ai/analysis-templates", p)
+}
+func (c *MemDogClient) CreateAnalysisTemplate(payload map[string]any) ([]byte, error) { return c.doJSON("POST", "/api/v1/ai/analysis-templates", payload) }
+func (c *MemDogClient) SeedAnalysisTemplates() ([]byte, error) { return c.doJSON("POST", "/api/v1/ai/analysis-templates/seed", nil) }
+func (c *MemDogClient) GetAnalysisTemplate(templateID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/ai/analysis-templates/%s", templateID), nil) }
+func (c *MemDogClient) UpdateAnalysisTemplate(templateID string, payload map[string]any) ([]byte, error) { return c.doJSON("PUT", fmt.Sprintf("/api/v1/ai/analysis-templates/%s", templateID), payload) }
+func (c *MemDogClient) DeleteAnalysisTemplate(templateID string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/ai/analysis-templates/%s", templateID), "", nil); return err }
+
+// ========================= STORE =========================
+
+func (c *MemDogClient) ListStoreKeys(opts *ListStoreKeysOptions) ([]byte, error) {
+	p := url.Values{}
+	if opts != nil { setIf(p, "prefix", opts.Prefix) }
+	return c.doGet("/api/v1/store", p)
+}
+func (c *MemDogClient) GetStoreValue(key string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/store/%s", key), nil) }
+func (c *MemDogClient) SetStoreValue(key string, payload map[string]any) ([]byte, error) { return c.doJSON("PUT", fmt.Sprintf("/api/v1/store/%s", key), payload) }
+func (c *MemDogClient) DeleteStoreValue(key string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/store/%s", key), "", nil); return err }
+
+// ========================= CHANNELS =========================
+
+func (c *MemDogClient) CreateChannelIdentity(payload map[string]any) ([]byte, error) { return c.doJSON("POST", "/api/v1/channel-identities", payload) }
+func (c *MemDogClient) GetChannelIdentity(channelType, channelUniqueID string) ([]byte, error) {
+	p := url.Values{}
+	p.Set("channel_type", channelType)
+	p.Set("channel_unique_id", channelUniqueID)
+	return c.doGet("/api/v1/channel-identities/by-channel", p)
+}
+func (c *MemDogClient) UpdateChannelIdentity(channelType, channelUniqueID string, payload map[string]any) ([]byte, error) {
+	path := fmt.Sprintf("/api/v1/channel-identities/by-channel?channel_type=%s&channel_unique_id=%s", url.QueryEscape(channelType), url.QueryEscape(channelUniqueID))
+	return c.doJSON("PATCH", path, payload)
+}
+func (c *MemDogClient) DeleteChannelIdentity(channelType, channelUniqueID string) error {
+	path := fmt.Sprintf("/api/v1/channel-identities/by-channel?channel_type=%s&channel_unique_id=%s", url.QueryEscape(channelType), url.QueryEscape(channelUniqueID))
+	_, err := c.doRequest("DELETE", path, "", nil)
+	return err
+}
+func (c *MemDogClient) ListUserChannelIdentities(userID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/channel-identities/by-user/%s", userID), nil) }
+func (c *MemDogClient) ListChannels() ([]byte, error) { return c.doGet("/api/v1/channels", nil) }
+func (c *MemDogClient) GetChannel(channelType string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/channels/%s", channelType), nil) }
+func (c *MemDogClient) UpdateChannel(channelType string, payload map[string]any) ([]byte, error) { return c.doJSON("PUT", fmt.Sprintf("/api/v1/channels/%s", channelType), payload) }
+func (c *MemDogClient) DeleteChannel(channelType string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/channels/%s", channelType), "", nil); return err }
+
+// ========================= ADDITIONAL =========================
+
+func (c *MemDogClient) GetVersion(dataID string, version int) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/versions/%s/%d", dataID, version), nil) }
+func (c *MemDogClient) ListUserDataItem(dataID string, opts *ListUserDataItemOptions) ([]byte, error) {
+	p := url.Values{}
+	if opts != nil {
+		setIf(p, "user", opts.User)
+		setIf(p, "format", opts.Format)
+	}
+	return c.doGet(fmt.Sprintf("/api/v1/list/%s", dataID), p)
+}
+func (c *MemDogClient) GetMemoryEntries(memoryID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/memories/%s/entries", memoryID), nil) }
+func (c *MemDogClient) DumpUserData() ([]byte, error) { return c.doGet("/api/v1/users/dump", nil) }
+func (c *MemDogClient) GetUserData(userID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/users/%s/data", userID), nil) }
+func (c *MemDogClient) BulkDeleteUserData(user string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/bulk/data/user/%s", user), "", nil); return err }
+func (c *MemDogClient) BulkDeleteMemoryData(memoryID string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/bulk/data/memory/%s", memoryID), "", nil); return err }
+func (c *MemDogClient) GetDataEmbeddings(dataID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/ai/embeddings/data/%s", dataID), nil) }
+func (c *MemDogClient) DeleteDataEmbeddings(dataID string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/ai/embeddings/data/%s", dataID), "", nil); return err }
+func (c *MemDogClient) BulkDeleteEmbeddings(payload map[string]any) ([]byte, error) { return c.doJSON("POST", "/api/v1/ai/embeddings/bulk-delete", payload) }
+func (c *MemDogClient) UpdateViewpoint(viewpointID string, payload map[string]any) ([]byte, error) { return c.doJSON("PUT", fmt.Sprintf("/api/v1/ai/viewpoints/%s", viewpointID), payload) }
+func (c *MemDogClient) GetViewpointHistory(viewpointID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/ai/viewpoints/%s/history", viewpointID), nil) }
+func (c *MemDogClient) GetDataViewpoints(dataID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/ai/viewpoints/data/%s", dataID), nil) }
+func (c *MemDogClient) BulkDeleteViewpoints(payload map[string]any) ([]byte, error) { return c.doJSON("POST", "/api/v1/ai/viewpoints/bulk-delete", payload) }
+func (c *MemDogClient) DeleteDataEntities(dataID string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/graph/data/%s/entities", dataID), "", nil); return err }
+func (c *MemDogClient) TimelineQuery(payload map[string]any) ([]byte, error) { return c.doJSON("POST", "/api/v1/ai/query/timeline", payload) }
+func (c *MemDogClient) AIQueryTest() ([]byte, error) { return c.doGet("/api/v1/ai/query/test", nil) }
+func (c *MemDogClient) GetModelDetails(modelID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/ai/model-catalog/%s", modelID), nil) }
+func (c *MemDogClient) OAuthCallback(code, state string) ([]byte, error) { return c.doJSON("POST", "/api/v1/integrations/oauth/callback", map[string]any{"code": code, "state": state}) }
+func (c *MemDogClient) GetDataStats() ([]byte, error) { return c.doGet("/api/v1/stats/data", nil) }
+func (c *MemDogClient) GetMemoryStats() ([]byte, error) { return c.doGet("/api/v1/stats/memories", nil) }
+func (c *MemDogClient) GetEmbeddingStats() ([]byte, error) { return c.doGet("/api/v1/stats/embeddings", nil) }
+func (c *MemDogClient) GetViewpointStats() ([]byte, error) { return c.doGet("/api/v1/stats/viewpoints", nil) }
+func (c *MemDogClient) RefreshUserStats(userID string) ([]byte, error) { return c.doJSON("POST", fmt.Sprintf("/api/v1/stats/refresh/users/%s", userID), nil) }
+func (c *MemDogClient) GetAgentTypeCounts() ([]byte, error) { return c.doGet("/api/v1/stats/agent-types", nil) }
+func (c *MemDogClient) IncrementAgentType(agentType string) ([]byte, error) { return c.doJSON("POST", fmt.Sprintf("/api/v1/stats/agent-types/%s/increment", agentType), nil) }
+func (c *MemDogClient) DecrementAgentType(agentType string) ([]byte, error) { return c.doJSON("POST", fmt.Sprintf("/api/v1/stats/agent-types/%s/decrement", agentType), nil) }
+func (c *MemDogClient) RecordTokenUsage(payload map[string]any) ([]byte, error) { return c.doJSON("POST", "/api/v1/stats/token-usage", payload) }
+func (c *MemDogClient) DeleteTokenUsage(userID string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/stats/token-usage/%s", userID), "", nil); return err }

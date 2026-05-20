@@ -10,15 +10,14 @@ mem-dog is a multi-channel data ingestion and AI enrichment platform. Data flows
 
 **Data flow:** Channels → webhook-gateway → API (ingest) + Webhook Pipeline (NATS). The pipeline writes enriched results back to the API, which dual-writes entities to both Postgres and Neo4j (Graphiti). DigiMe (openclaw-node) is a separate AI agent that communicates with the mem-dog RAG system.
 
-- **api/** — FastAPI (Python 3.12, `pyproject.toml`) backend. Entry: `api/main.py`. Storage abstraction supports local filesystem, GCS, and Supabase backends (controlled by `STORAGE_BACKEND` env var). Supabase SQL migrations in `api/supabase/`. Neo4j/Graphiti integration for temporal knowledge graph.
+- **api/** — FastAPI (Python ≥3.11, `pyproject.toml`) backend. Entry: `api/main.py`. Storage abstraction supports local filesystem, GCS, and Supabase backends (controlled by `STORAGE_BACKEND` env var). Supabase SQL migrations in `api/supabase/`. Neo4j/Graphiti integration for temporal knowledge graph.
 - **ui/** — Next.js 14 (TypeScript) frontend. Talks to the API via proxy rewrites in `ui/next.config.js` (`/api/v1/*` → API, `/auth/v1/*` → GoTrue). `NEXT_PUBLIC_*` env vars are baked at Docker **build time**, not runtime.
 - **webhook/processor/** — NATS pull worker + ADK agent with 42 typed sub-agents for AI enrichment. Requires Python ≥3.12 and `uv` for dependency management. Sub-agent routing uses 6-layer data type detection (see `webhook/processor/webhook_agent/router.py`). Agent registry in `webhook/processor/webhook_agent/sub_agents/__init__.py`.
 - **webhook/receiver/** — HTTP receiver that publishes to NATS.
 - **webhook-gateway/** — FastAPI (Python ≥3.11, `pyproject.toml`) service that normalizes channel messages into UniversalEnvelope format. Supports multiple LLM providers via litellm, channel policies, rate limiting, and credential-injecting integration proxy. CLI entry point: `wgw`.
 - **openclaw-node/** — DigiMe AI agent (OpenClaw runtime) that communicates with the mem-dog RAG system to answer queries, search, and ingest data through conversation. Separate from the webhook pipeline.
 - **mcp-server/** — FastMCP SSE server (Python 3.12) exposing 8 tools for MCP clients (Claude Desktop, Cursor). Uses `mem_dog_client` internally. Auth via `x-api-key`. Entry: `mcp-server/app/main.py`.
-- **client/** — Python SDK (`mem_dog_client`) using httpx. Mirrors REST API with 70+ methods.
-- **clients/** — Multi-language SDKs: TypeScript (native fetch), Go (stdlib), Rust (async tokio), Ruby.
+- **clients/** — Multi-language SDKs with full API coverage (~120 methods each). Python (`mem_dog_client`, httpx, + LangChain/CrewAI/OpenAI adapters), TypeScript (native fetch), Go (stdlib), Rust (async reqwest), Ruby (faraday). Each SDK has a full client and a 7-method simple facade. Docs in `docs/clients/`.
 - **k8s/** — Kubernetes manifests for GKE + Supabase. Namespaces: `mem-dog` (API), `webhook-pipeline`, `webhook-gateway` (gateway + openclaw-node), `supabase`.
 - **testing/** — Test configs live here, separate from app code. `testing/ui/` has Jest + Playwright configs; `testing/api/` has pytest fixtures with mock storage.
 
@@ -27,10 +26,10 @@ mem-dog is a multi-channel data ingestion and AI enrichment platform. Data flows
 ### Local Development
 
 ```bash
-docker compose up                    # Start full stack (10 services)
+docker compose up                    # Start full stack (11 services)
 # UI: localhost:3000, API: localhost:8080, Gateway: localhost:8070
 # Neo4j: localhost:7474 (browser), bolt://localhost:7687
-# Includes 3 Ollama instances (small/medium/large tiers), Redis, PostgreSQL 16 + pgvector, Neo4j
+# Includes 3 Ollama instances (small/medium/large tiers), Redis, PostgreSQL 16 + pgvector, Neo4j, MCP server (8091), webhook-processor (8090)
 ```
 
 ### API (from api/)
@@ -110,7 +109,7 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 
 - When changing webhook agent code (`model_client.py`, `llm_utils.py`, `api_client/`), the webhook pipeline must also be redeployed.
 - When changing integration router/models (`api/app/routers/integrations.py`, `api/app/nango_client.py`), redeploy the API. When changing `webhook-gateway/app/credentials.py`, redeploy the webhook gateway. Nango (`nango` namespace) is independent — restart only if changing Nango config/secrets.
-- API routers live in `api/app/routers/` (33 routers). Models in `api/app/models.py`.
+- API routers live in `api/app/routers/` (34 routers). Models in `api/app/models.py`.
 - UI components in `ui/src/components/`. Path alias: `@/*` → `src/*`.
 - Shared AI config: `config/ai.env`.
 - Test configs for UI are in `testing/ui/` (separate from app code).

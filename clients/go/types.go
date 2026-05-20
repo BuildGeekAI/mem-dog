@@ -238,6 +238,31 @@ type WebhookStatsOptions struct {
 	Period string
 }
 
+type ListSkillsOptions struct {
+	DataID string
+	UserID string
+	Tag    string
+}
+
+type ListAnalysisTemplatesOptions struct {
+	DataType string
+}
+
+type ListStoreKeysOptions struct {
+	Prefix string
+}
+
+type ListPromptsOptions struct {
+	DataID   string
+	Category string
+	UserID   string
+}
+
+type ListUserDataItemOptions struct {
+	User   string
+	Format string
+}
+
 // --------------------------------------------------------------------------
 // Error
 // --------------------------------------------------------------------------

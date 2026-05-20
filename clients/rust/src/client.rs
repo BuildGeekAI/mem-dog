@@ -397,4 +397,113 @@ impl MemDogClient {
     // ========================= INGEST =========================
 
     pub async fn ingest(&self, envelope: &Value, direct: bool) -> Result<Value> { self.post_json("/api/v1/ingest", &serde_json::json!({"envelope": envelope, "direct": direct})).await }
+
+    // ========================= PROMPTS =========================
+
+    pub async fn list_prompts(&self, opts: ListPromptsOptions) -> Result<Value> {
+        let mut p = vec![];
+        if let Some(ref did) = opts.data_id { p.push(("data_id", did.clone())); }
+        if let Some(ref cat) = opts.category { p.push(("category", cat.clone())); }
+        if let Some(ref uid) = opts.user_id { p.push(("user_id", uid.clone())); }
+        self.get_json("/api/v1/ai/prompts", &p.iter().map(|(k, v)| (*k, v.clone())).collect::<Vec<_>>()).await
+    }
+    pub async fn create_prompt(&self, payload: &Value) -> Result<Value> { self.post_json("/api/v1/ai/prompts", payload).await }
+    pub async fn get_prompt(&self, id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/ai/prompts/{}", id), &[]).await }
+    pub async fn update_prompt(&self, id: &str, payload: &Value) -> Result<Value> { self.put_json(&format!("/api/v1/ai/prompts/{}", id), payload).await }
+    pub async fn delete_prompt(&self, id: &str) -> Result<()> { self.delete_path(&format!("/api/v1/ai/prompts/{}", id)).await }
+
+    // ========================= SKILLS =========================
+
+    pub async fn list_skills(&self, opts: ListSkillsOptions) -> Result<Value> {
+        let mut p = vec![];
+        if let Some(ref did) = opts.data_id { p.push(("data_id", did.clone())); }
+        if let Some(ref uid) = opts.user_id { p.push(("user_id", uid.clone())); }
+        if let Some(ref t) = opts.tag { p.push(("tag", t.clone())); }
+        self.get_json("/api/v1/ai/skills", &p.iter().map(|(k, v)| (*k, v.clone())).collect::<Vec<_>>()).await
+    }
+    pub async fn create_skill(&self, payload: &Value) -> Result<Value> { self.post_json("/api/v1/ai/skills", payload).await }
+    pub async fn get_skill(&self, id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/ai/skills/{}", id), &[]).await }
+    pub async fn update_skill(&self, id: &str, payload: &Value) -> Result<Value> { self.put_json(&format!("/api/v1/ai/skills/{}", id), payload).await }
+    pub async fn delete_skill(&self, id: &str) -> Result<()> { self.delete_path(&format!("/api/v1/ai/skills/{}", id)).await }
+
+    // ========================= ANALYSIS TEMPLATES =========================
+
+    pub async fn list_analysis_templates(&self, opts: ListAnalysisTemplatesOptions) -> Result<Value> {
+        let mut p = vec![];
+        if let Some(ref dt) = opts.data_type { p.push(("data_type", dt.clone())); }
+        self.get_json("/api/v1/ai/analysis-templates", &p.iter().map(|(k, v)| (*k, v.clone())).collect::<Vec<_>>()).await
+    }
+    pub async fn create_analysis_template(&self, payload: &Value) -> Result<Value> { self.post_json("/api/v1/ai/analysis-templates", payload).await }
+    pub async fn seed_analysis_templates(&self) -> Result<Value> { self.post_json("/api/v1/ai/analysis-templates/seed", &serde_json::json!({})).await }
+    pub async fn get_analysis_template(&self, id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/ai/analysis-templates/{}", id), &[]).await }
+    pub async fn update_analysis_template(&self, id: &str, payload: &Value) -> Result<Value> { self.put_json(&format!("/api/v1/ai/analysis-templates/{}", id), payload).await }
+    pub async fn delete_analysis_template(&self, id: &str) -> Result<()> { self.delete_path(&format!("/api/v1/ai/analysis-templates/{}", id)).await }
+
+    // ========================= STORE =========================
+
+    pub async fn list_store_keys(&self, opts: ListStoreKeysOptions) -> Result<Value> {
+        let mut p = vec![];
+        if let Some(ref pfx) = opts.prefix { p.push(("prefix", pfx.clone())); }
+        self.get_json("/api/v1/store", &p.iter().map(|(k, v)| (*k, v.clone())).collect::<Vec<_>>()).await
+    }
+    pub async fn get_store_value(&self, key: &str) -> Result<Value> { self.get_json(&format!("/api/v1/store/{}", key), &[]).await }
+    pub async fn set_store_value(&self, key: &str, payload: &Value) -> Result<Value> { self.put_json(&format!("/api/v1/store/{}", key), payload).await }
+    pub async fn delete_store_value(&self, key: &str) -> Result<()> { self.delete_path(&format!("/api/v1/store/{}", key)).await }
+
+    // ========================= CHANNELS =========================
+
+    pub async fn create_channel_identity(&self, payload: &Value) -> Result<Value> { self.post_json("/api/v1/channel-identities", payload).await }
+    pub async fn get_channel_identity(&self, channel_type: &str, channel_unique_id: &str) -> Result<Value> {
+        self.get_json("/api/v1/channel-identities/by-channel", &[("channel_type", channel_type.to_string()), ("channel_unique_id", channel_unique_id.to_string())]).await
+    }
+    pub async fn update_channel_identity(&self, channel_type: &str, channel_unique_id: &str, payload: &Value) -> Result<Value> {
+        let path = format!("/api/v1/channel-identities/by-channel?channel_type={}&channel_unique_id={}", channel_type, channel_unique_id);
+        self.patch_json(&path, payload).await
+    }
+    pub async fn delete_channel_identity(&self, channel_type: &str, channel_unique_id: &str) -> Result<()> {
+        let path = format!("/api/v1/channel-identities/by-channel?channel_type={}&channel_unique_id={}", channel_type, channel_unique_id);
+        self.delete_path(&path).await
+    }
+    pub async fn list_user_channel_identities(&self, user_id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/channel-identities/by-user/{}", user_id), &[]).await }
+    pub async fn list_channels(&self) -> Result<Value> { self.get_json("/api/v1/channels", &[]).await }
+    pub async fn get_channel(&self, channel_type: &str) -> Result<Value> { self.get_json(&format!("/api/v1/channels/{}", channel_type), &[]).await }
+    pub async fn update_channel(&self, channel_type: &str, payload: &Value) -> Result<Value> { self.put_json(&format!("/api/v1/channels/{}", channel_type), payload).await }
+    pub async fn delete_channel(&self, channel_type: &str) -> Result<()> { self.delete_path(&format!("/api/v1/channels/{}", channel_type)).await }
+
+    // ========================= ADDITIONAL =========================
+
+    pub async fn get_version(&self, data_id: &str, version: i32) -> Result<Value> { self.get_json(&format!("/api/v1/versions/{}/{}", data_id, version), &[]).await }
+    pub async fn list_user_data_item(&self, data_id: &str, user: Option<&str>, format: Option<&str>) -> Result<Value> {
+        let mut p = vec![];
+        if let Some(u) = user { p.push(("user", u.to_string())); }
+        if let Some(f) = format { p.push(("format", f.to_string())); }
+        self.get_json(&format!("/api/v1/list/{}", data_id), &p.iter().map(|(k, v)| (*k, v.clone())).collect::<Vec<_>>()).await
+    }
+    pub async fn get_memory_entries(&self, memory_id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/memories/{}/entries", memory_id), &[]).await }
+    pub async fn dump_user_data(&self) -> Result<Value> { self.get_json("/api/v1/users/dump", &[]).await }
+    pub async fn get_user_data(&self, user_id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/users/{}/data", user_id), &[]).await }
+    pub async fn bulk_delete_user_data(&self, user: &str) -> Result<()> { self.delete_path(&format!("/api/v1/bulk/data/user/{}", user)).await }
+    pub async fn bulk_delete_memory_data(&self, memory_id: &str) -> Result<()> { self.delete_path(&format!("/api/v1/bulk/data/memory/{}", memory_id)).await }
+    pub async fn get_data_embeddings(&self, data_id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/ai/embeddings/data/{}", data_id), &[]).await }
+    pub async fn delete_data_embeddings(&self, data_id: &str) -> Result<()> { self.delete_path(&format!("/api/v1/ai/embeddings/data/{}", data_id)).await }
+    pub async fn bulk_delete_embeddings(&self, payload: &Value) -> Result<Value> { self.post_json("/api/v1/ai/embeddings/bulk-delete", payload).await }
+    pub async fn update_viewpoint(&self, id: &str, payload: &Value) -> Result<Value> { self.put_json(&format!("/api/v1/ai/viewpoints/{}", id), payload).await }
+    pub async fn get_viewpoint_history(&self, id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/ai/viewpoints/{}/history", id), &[]).await }
+    pub async fn get_data_viewpoints(&self, data_id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/ai/viewpoints/data/{}", data_id), &[]).await }
+    pub async fn bulk_delete_viewpoints(&self, payload: &Value) -> Result<Value> { self.post_json("/api/v1/ai/viewpoints/bulk-delete", payload).await }
+    pub async fn delete_data_entities(&self, data_id: &str) -> Result<()> { self.delete_path(&format!("/api/v1/graph/data/{}/entities", data_id)).await }
+    pub async fn timeline_query(&self, payload: &Value) -> Result<Value> { self.post_json("/api/v1/ai/query/timeline", payload).await }
+    pub async fn ai_query_test(&self) -> Result<Value> { self.get_json("/api/v1/ai/query/test", &[]).await }
+    pub async fn get_model_details(&self, model_id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/ai/model-catalog/{}", model_id), &[]).await }
+    pub async fn oauth_callback(&self, code: &str, state: &str) -> Result<Value> { self.post_json("/api/v1/integrations/oauth/callback", &serde_json::json!({"code": code, "state": state})).await }
+    pub async fn get_data_stats(&self) -> Result<Value> { self.get_json("/api/v1/stats/data", &[]).await }
+    pub async fn get_memory_stats(&self) -> Result<Value> { self.get_json("/api/v1/stats/memories", &[]).await }
+    pub async fn get_embedding_stats(&self) -> Result<Value> { self.get_json("/api/v1/stats/embeddings", &[]).await }
+    pub async fn get_viewpoint_stats(&self) -> Result<Value> { self.get_json("/api/v1/stats/viewpoints", &[]).await }
+    pub async fn refresh_user_stats(&self, user_id: &str) -> Result<Value> { self.post_json(&format!("/api/v1/stats/refresh/users/{}", user_id), &serde_json::json!({})).await }
+    pub async fn get_agent_type_counts(&self) -> Result<Value> { self.get_json("/api/v1/stats/agent-types", &[]).await }
+    pub async fn increment_agent_type(&self, agent_type: &str) -> Result<Value> { self.post_json(&format!("/api/v1/stats/agent-types/{}/increment", agent_type), &serde_json::json!({})).await }
+    pub async fn decrement_agent_type(&self, agent_type: &str) -> Result<Value> { self.post_json(&format!("/api/v1/stats/agent-types/{}/decrement", agent_type), &serde_json::json!({})).await }
+    pub async fn record_token_usage(&self, payload: &Value) -> Result<Value> { self.post_json("/api/v1/stats/token-usage", payload).await }
+    pub async fn delete_token_usage(&self, user_id: &str) -> Result<()> { self.delete_path(&format!("/api/v1/stats/token-usage/{}", user_id)).await }
 }

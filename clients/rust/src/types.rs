@@ -224,6 +224,30 @@ pub struct SearchByTagsOptions {
     pub user_id: Option<String>,
 }
 
+#[derive(Debug, Default, Clone)]
+pub struct ListSkillsOptions {
+    pub data_id: Option<String>,
+    pub user_id: Option<String>,
+    pub tag: Option<String>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct ListAnalysisTemplatesOptions {
+    pub data_type: Option<String>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct ListStoreKeysOptions {
+    pub prefix: Option<String>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct ListPromptsOptions {
+    pub data_id: Option<String>,
+    pub category: Option<String>,
+    pub user_id: Option<String>,
+}
+
 // ---------------------------------------------------------------------------
 // Error
 // ---------------------------------------------------------------------------

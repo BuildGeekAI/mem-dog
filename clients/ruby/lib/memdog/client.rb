@@ -317,6 +317,101 @@ module MemDog
       json_post("/api/v1/ingest", { envelope: envelope, direct: direct })
     end
 
+    # ========================= PROMPTS =========================
+
+    def list_prompts(data_id: nil, category: nil, user_id: nil)
+      json_get("/api/v1/ai/prompts", compact(data_id: data_id, category: category, user_id: user_id))
+    end
+    def create_prompt(payload);        json_post("/api/v1/ai/prompts", payload); end
+    def get_prompt(prompt_id);         json_get("/api/v1/ai/prompts/#{prompt_id}"); end
+    def update_prompt(prompt_id, payload); json_put("/api/v1/ai/prompts/#{prompt_id}", payload); end
+    def delete_prompt(prompt_id);      json_delete("/api/v1/ai/prompts/#{prompt_id}"); end
+
+    # ========================= SKILLS =========================
+
+    def list_skills(data_id: nil, user_id: nil, tag: nil)
+      json_get("/api/v1/ai/skills", compact(data_id: data_id, user_id: user_id, tag: tag))
+    end
+    def create_skill(payload);         json_post("/api/v1/ai/skills", payload); end
+    def get_skill(skill_id);           json_get("/api/v1/ai/skills/#{skill_id}"); end
+    def update_skill(skill_id, payload); json_put("/api/v1/ai/skills/#{skill_id}", payload); end
+    def delete_skill(skill_id);        json_delete("/api/v1/ai/skills/#{skill_id}"); end
+
+    # ========================= ANALYSIS TEMPLATES =========================
+
+    def list_analysis_templates(data_type: nil)
+      json_get("/api/v1/ai/analysis-templates", compact(data_type: data_type))
+    end
+    def create_analysis_template(payload);  json_post("/api/v1/ai/analysis-templates", payload); end
+    def seed_analysis_templates;            json_post("/api/v1/ai/analysis-templates/seed", {}); end
+    def get_analysis_template(template_id); json_get("/api/v1/ai/analysis-templates/#{template_id}"); end
+    def update_analysis_template(template_id, payload); json_put("/api/v1/ai/analysis-templates/#{template_id}", payload); end
+    def delete_analysis_template(template_id); json_delete("/api/v1/ai/analysis-templates/#{template_id}"); end
+
+    # ========================= STORE =========================
+
+    def list_store_keys(prefix: nil);       json_get("/api/v1/store", compact(prefix: prefix)); end
+    def get_store_value(key);               json_get("/api/v1/store/#{key}"); end
+    def set_store_value(key, payload);      json_put("/api/v1/store/#{key}", payload); end
+    def delete_store_value(key);            json_delete("/api/v1/store/#{key}"); end
+
+    # ========================= CHANNELS =========================
+
+    def create_channel_identity(payload);   json_post("/api/v1/channel-identities", payload); end
+    def get_channel_identity(channel_type, channel_unique_id)
+      json_get("/api/v1/channel-identities/by-channel", { channel_type: channel_type, channel_unique_id: channel_unique_id })
+    end
+    def update_channel_identity(channel_type, channel_unique_id, payload)
+      resp = json_conn.patch("/api/v1/channel-identities/by-channel") do |req|
+        req.params = { channel_type: channel_type, channel_unique_id: channel_unique_id }
+        req.body = payload.to_json
+      end
+      check!(resp)
+      parse_json(resp)
+    end
+    def delete_channel_identity(channel_type, channel_unique_id)
+      json_delete("/api/v1/channel-identities/by-channel", channel_type: channel_type, channel_unique_id: channel_unique_id)
+    end
+    def list_user_channel_identities(user_id); json_get("/api/v1/channel-identities/by-user/#{user_id}"); end
+    def list_channels;                      json_get("/api/v1/channels"); end
+    def get_channel(channel_type);          json_get("/api/v1/channels/#{channel_type}"); end
+    def update_channel(channel_type, payload); json_put("/api/v1/channels/#{channel_type}", payload); end
+    def delete_channel(channel_type);       json_delete("/api/v1/channels/#{channel_type}"); end
+
+    # ========================= ADDITIONAL =========================
+
+    def get_version(data_id, version);      json_get("/api/v1/versions/#{data_id}/#{version}"); end
+    def list_user_data_item(data_id, user: nil, format: nil)
+      json_get("/api/v1/list/#{data_id}", compact(user: user, format: format))
+    end
+    def get_memory_entries(memory_id);      json_get("/api/v1/memories/#{memory_id}/entries"); end
+    def dump_user_data;                     json_get("/api/v1/users/dump"); end
+    def get_user_data(user_id);             json_get("/api/v1/users/#{user_id}/data"); end
+    def bulk_delete_user_data(user);        json_delete("/api/v1/bulk/data/user/#{user}"); end
+    def bulk_delete_memory_data(memory_id); json_delete("/api/v1/bulk/data/memory/#{memory_id}"); end
+    def get_data_embeddings(data_id);       json_get("/api/v1/ai/embeddings/data/#{data_id}"); end
+    def delete_data_embeddings(data_id);    json_delete("/api/v1/ai/embeddings/data/#{data_id}"); end
+    def bulk_delete_embeddings(payload);    json_post("/api/v1/ai/embeddings/bulk-delete", payload); end
+    def update_viewpoint(viewpoint_id, payload); json_put("/api/v1/ai/viewpoints/#{viewpoint_id}", payload); end
+    def get_viewpoint_history(viewpoint_id); json_get("/api/v1/ai/viewpoints/#{viewpoint_id}/history"); end
+    def get_data_viewpoints(data_id);       json_get("/api/v1/ai/viewpoints/data/#{data_id}"); end
+    def bulk_delete_viewpoints(payload);    json_post("/api/v1/ai/viewpoints/bulk-delete", payload); end
+    def delete_data_entities(data_id);      json_delete("/api/v1/graph/data/#{data_id}/entities"); end
+    def timeline_query(payload);            json_post("/api/v1/ai/query/timeline", payload); end
+    def ai_query_test;                      json_get("/api/v1/ai/query/test"); end
+    def get_model_details(model_id);        json_get("/api/v1/ai/model-catalog/#{model_id}"); end
+    def oauth_callback(code, state);        json_post("/api/v1/integrations/oauth/callback", { code: code, state: state }); end
+    def get_data_stats;                     json_get("/api/v1/stats/data"); end
+    def get_memory_stats;                   json_get("/api/v1/stats/memories"); end
+    def get_embedding_stats;                json_get("/api/v1/stats/embeddings"); end
+    def get_viewpoint_stats;                json_get("/api/v1/stats/viewpoints"); end
+    def refresh_user_stats(user_id);        json_post("/api/v1/stats/refresh/users/#{user_id}", {}); end
+    def get_agent_type_counts;              json_get("/api/v1/stats/agent-types"); end
+    def increment_agent_type(agent_type);   json_post("/api/v1/stats/agent-types/#{agent_type}/increment", {}); end
+    def decrement_agent_type(agent_type);   json_post("/api/v1/stats/agent-types/#{agent_type}/decrement", {}); end
+    def record_token_usage(payload);        json_post("/api/v1/stats/token-usage", payload); end
+    def delete_token_usage(user_id);        json_delete("/api/v1/stats/token-usage/#{user_id}"); end
+
     private
 
     # ----- HTTP helpers ------------------------------------------------
