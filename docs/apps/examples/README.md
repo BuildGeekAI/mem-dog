@@ -1,6 +1,6 @@
 # Example Applications
 
-Complete, runnable example applications demonstrating the mem-dog API across 10 different industries. Each example is a self-contained Python script with inline sample data.
+Complete, runnable example applications demonstrating the mem-dog API across 11 different industries. Each example is a self-contained Python script with inline sample data.
 
 Source code: [`examples/`](../../../examples/)
 
@@ -114,3 +114,13 @@ Complete AI infrastructure management. Browses the **model catalog**, configures
 Full data lifecycle demonstration. **Onboards users** with API keys, seeds content across **5 memory types** (session, conversation, organizational, semantic, custom), **filters and lists** memories, **compresses** stale content, **exports** user data for GDPR, and **bulk deletes** expired items.
 
 **API Features:** user management (create, API keys), 5 memory types with TTLs, memory filtering (type, category, expired), memory compression, data export (dump_user_data), bulk operations (delete data, delete memories), data reorganization
+
+---
+
+### Sales Engineering: Technical Win Room
+
+**Directory:** `examples/11_technical_win_room/`
+
+Enterprise deal knowledge for sales engineers — Slack war rooms, GitHub POC issues, security questionnaires, and CRM notes in one permissioned memory. Uses **organizational**, **factual**, **episodic**, **timeline**, and **conversation** memories; **KV store** for deal stage; **graph entities** for customer/blocker links; **hybrid/graph/full** search comparison; and **RAG chat** for SE handoff.
+
+**API Features:** organizations, projects, restricted/shared memories, multi-channel ingest, episodic/timeline memory, KV store, batch entities, semantic search (3 modes), RAG chat, AI query

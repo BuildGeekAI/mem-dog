@@ -1,6 +1,6 @@
 # Example Applications
 
-10 self-contained Python examples in the `examples/` directory demonstrate the mem-dog API across different industries. Each is a single script with inline sample data.
+11 self-contained Python examples in the `examples/` directory demonstrate the mem-dog API across different industries. Each is a single script with inline sample data.
 
 ## Prerequisites
 
@@ -24,6 +24,8 @@ export MEM_DOG_API_KEY=your-api-key
 
 **[04 - Sales CRM Knowledge Base](../../examples/04_sales_crm_knowledge/)** -- Multi-tenant CRM with organizations, projects, and access-controlled shared memories.
 
+**[11 - Technical Win Room](../../examples/11_technical_win_room/)** -- Sales engineering deal memory: Slack, GitHub, email, and CRM artifacts; episodic POC incidents; KV deal stage; graph entities; RAG handoff briefing.
+
 **[08 - Content Publishing Pipeline](../../examples/08_content_publishing/)** -- Multi-channel ingestion via Universal Envelope, duplicate detection with embeddings, editorial workflow via KV store.
 
 **[10 - Team Wiki Lifecycle](../../examples/10_team_wiki/)** -- Full data lifecycle: user onboarding, multi-type memories, compression, GDPR export, bulk cleanup.
@@ -43,31 +45,33 @@ export MEM_DOG_API_KEY=your-api-key
 | Feature | Examples |
 |---------|----------|
 | Simple facade (`MemDog`) | 01, 03, 04, 06, 10 |
-| Full client (`MemDogClient`) | 02-10 |
+| Full client (`MemDogClient`) | 02-11 |
 | LangChain adapter | 06 |
 | Timeline memory | 01, 03 |
-| Conversation memory | 04, 06, 10 |
-| Factual memory | 02, 06, 07 |
-| Organizational memory | 02, 04, 07, 10 |
+| Conversation memory | 04, 06, 10, 11 |
+| Factual memory | 02, 06, 07, 11 |
+| Episodic memory | 02, 11 |
+| Organizational memory | 02, 04, 07, 10, 11 |
 | Semantic memory | 05, 10 |
 | Tracing memory | 03 |
 | Custom memory | 08, 10 |
-| RAG chat | 01, 03, 06 |
+| RAG chat | 01, 03, 06, 11 |
 | All 5 search modes | 02 |
 | All 4 rerankers | 02 |
-| Graph search | 05, 07 |
+| Graph search | 05, 07, 11 |
+| Hybrid / full search | 11 |
 | Temporal facts | 07 |
-| Knowledge graph entities | 01, 02, 05 |
+| Knowledge graph entities | 01, 02, 05, 11 |
 | Webhooks | 03 |
-| Key-value store | 03, 08 |
+| Key-value store | 03, 08, 11 |
 | Channels / ingest | 08 |
 | Viewpoints | 05 |
 | Analysis templates | 05 |
 | AI skills | 06, 09 |
 | Agent configs | 09 |
 | Prompts | 09 |
-| Organizations | 04 |
-| Access control | 04 |
+| Organizations | 04, 11 |
+| Access control | 04, 11 |
 | User management | 10 |
 | Versioning | 07 |
 | Memory compression | 06, 10 |

@@ -1,6 +1,6 @@
 # mem-dog Example Applications
 
-10 self-contained Python examples demonstrating the mem-dog API across different industries. Each example is a single script with inline sample data — no external dependencies beyond the SDK.
+11 self-contained Python examples demonstrating the mem-dog API across different industries. Each example is a single script with inline sample data — no external dependencies beyond the SDK.
 
 ## Quick Start
 
@@ -35,6 +35,7 @@ pip install -e "clients/python[langchain]"
 | [08](08_content_publishing/) | Content Publishing Pipeline | Media | Intermediate | Channels, ingest, embeddings, tags, KV workflow |
 | [09](09_agent_config_hub/) | AI Agent Config Hub | AI/ML | Advanced | Agent configs, prompts, skills, model catalog |
 | [10](10_team_wiki/) | Team Wiki Lifecycle | Knowledge Mgmt | Intermediate | User management, bulk ops, memory lifecycle |
+| [11](11_technical_win_room/) | Technical Win Room | Sales Engineering | Intermediate | Multi-channel deal artifacts, episodic/timeline memory, KV deal stage, graph entities |
 
 ## Feature Coverage
 
@@ -45,5 +46,6 @@ Each example focuses on different API areas to collectively demonstrate the full
 - **Knowledge Graph**: entities (01, 02, 05), relationships (02, 05), temporal facts (07)
 - **Infrastructure**: webhooks (03), channels/ingest (08), KV store (03, 08)
 - **AI Config**: viewpoints (05), analysis templates (05), skills (06, 09), agent configs (09), prompts (09)
-- **Multi-tenant**: organizations (04), projects (04), access control (04), users/API keys (10)
+- **Multi-tenant**: organizations (04, 11), projects (04, 11), access control (04, 11), users/API keys (10)
+- **Sales engineering**: multi-channel ingest (11), deal KV stage (11), SE handoff RAG (11), graph entities (11)
 - **Lifecycle**: versioning (07), compression (06, 10), bulk delete (10), data export (10)
