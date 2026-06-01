@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Mail, Lock, Loader2, ChevronRight, Database, Brain, Zap, Search, Shield, Activity, Terminal, Clock, GitBranch, Cpu, Globe, MessageCircle, Users, FileSearch, ShieldCheck, Radio, Bot, FlaskConical, Upload, Webhook, Server, Sparkles, Wrench, SlidersHorizontal, Flower2, ArrowRight, Cog, Network, Code2, Puzzle, Archive, Check, X, Minus, Briefcase, GraduationCap, Heart, Scale, Camera, Newspaper, Plane, Building2, Mic, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { useAuth } from '@/lib/auth-context';
+import { isReadOnly } from '@/lib/read-only';
 
 /* ─── Data ─── */
 
@@ -391,14 +392,16 @@ export default function LoginPage() {
               </a>
             ))}
           </div>
-          <div className="flex items-center gap-3">
-            <a href="#login" className="text-sm font-medium text-white/70 hover:text-white transition-colors px-4 py-2">
-              Sign in
-            </a>
-            <a href="#login" className="text-sm font-medium transition-colors bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-4 py-2 hover:opacity-90">
-              Sign up
-            </a>
-          </div>
+          {!isReadOnly() && (
+            <div className="flex items-center gap-3">
+              <a href="#login" className="text-sm font-medium text-white/70 hover:text-white transition-colors px-4 py-2">
+                Sign in
+              </a>
+              <a href="#login" className="text-sm font-medium transition-colors bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-4 py-2 hover:opacity-90">
+                Sign up
+              </a>
+            </div>
+          )}
         </nav>
       </div>
 
@@ -443,9 +446,15 @@ export default function LoginPage() {
           transition={{ duration: 0.6, delay: 0.35 }}
           className="flex items-center justify-center gap-4"
         >
-          <a href="#login" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors">
-            Get started <ChevronRight className="w-4 h-4" />
-          </a>
+          {isReadOnly() ? (
+            <a href="https://github.com/BuildGeekAI/mem-dog" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors">
+              View on GitHub <ChevronRight className="w-4 h-4" />
+            </a>
+          ) : (
+            <a href="#login" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors">
+              Get started <ChevronRight className="w-4 h-4" />
+            </a>
+          )}
           <a href="#how-it-works" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/15 text-white/70 font-medium text-sm hover:border-white/30 hover:text-white transition-all">
             See how it works
           </a>
@@ -512,7 +521,7 @@ export default function LoginPage() {
       </section>
 
       {/* ─── Login Card (right after hero) ─── */}
-      <section id="login" className="max-w-sm mx-auto px-6 pb-16 scroll-mt-8">
+      {!isReadOnly() && <section id="login" className="max-w-sm mx-auto px-6 pb-16 scroll-mt-8">
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6 space-y-5 backdrop-blur-sm">
           <h3 className="text-lg font-semibold text-white text-center">
             {isSignUp ? 'Create account' : 'Sign in'}
@@ -576,7 +585,7 @@ export default function LoginPage() {
             </button>
           </p>
         </div>
-      </section>
+      </section>}
 
       {/* ─── Accordion Sections ─── */}
       <div className="border-t border-white/5 pt-8">

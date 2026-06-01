@@ -22,6 +22,7 @@ import InsightsDashboard from '@/components/InsightsDashboard';
 import DataChat from '@/components/DataChat';
 import McpPlayground from '@/components/McpPlayground';
 import { getCurrentUserId, setCurrentUserInfo, getUser, createUser } from '@/lib/api';
+import { isReadOnly } from '@/lib/read-only';
 import { useAuth } from '@/lib/auth-context';
 import { useProject } from '@/lib/project-context';
 import LoginPage from '@/components/LoginPage';
@@ -55,6 +56,55 @@ function TabSync({ onTab }: { onTab: (tab: TabId) => void }) {
     }
   }, [searchParams, onTab]);
   return null;
+}
+
+type MarketingTab = 'home' | 'docs';
+
+function MarketingSite() {
+  const [activeTab, setActiveTab] = useState<MarketingTab>('home');
+
+  return (
+    <main className="flex flex-col min-h-screen">
+      {/* Top Navigation */}
+      <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 via-accent-500 to-pink-500 flex items-center justify-center shadow-lg shadow-primary-500/30">
+            <Sparkles className="w-4.5 h-4.5 text-white" />
+          </div>
+          <span className="text-lg font-bold tracking-tight gradient-text">Mem-Dog</span>
+        </div>
+        <div className="flex items-center gap-1 p-1 bg-white/5 rounded-xl">
+          {([
+            { id: 'home' as const, label: 'Home' },
+            { id: 'docs' as const, label: 'Docs' },
+          ]).map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg'
+                  : 'text-white/50 hover:text-white/70 hover:bg-white/5'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="w-[120px]" /> {/* Spacer for centering */}
+      </nav>
+
+      {/* Content */}
+      <div className="flex-1">
+        {activeTab === 'home' && <LoginPage />}
+        {activeTab === 'docs' && (
+          <div className="px-4 py-8 md:px-6">
+            <DocsPage />
+          </div>
+        )}
+      </div>
+    </main>
+  );
 }
 
 export default function Home() {
@@ -149,6 +199,11 @@ export default function Home() {
   useEffect(() => {
     initRef.current = false;
   }, [session?.user?.id]);
+
+  // Read-only mode: render marketing site instead of full app
+  if (isReadOnly()) {
+    return <MarketingSite />;
+  }
 
   // Show login page when Supabase is configured and no session
   if (authLoading) {

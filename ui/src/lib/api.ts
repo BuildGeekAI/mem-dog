@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { supabase } from './supabase';
+import { isReadOnly } from './read-only';
 import type {
   DataListItem,
   DataListResponse,
@@ -48,6 +49,20 @@ if (API_KEY) console.log('[API Client] API key configured (X-API-Key header will
 
 export const api = axios.create({
   baseURL: API_URL,
+});
+
+// Block mutating requests in read-only mode (safety net)
+const READ_ONLY_ALLOWED_POSTS = ['/ai/query', '/chat-proxy'];
+api.interceptors.request.use((config) => {
+  if (isReadOnly()) {
+    const method = (config.method || '').toUpperCase();
+    const url = config.url || '';
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) &&
+        !READ_ONLY_ALLOWED_POSTS.some(p => url.includes(p))) {
+      return Promise.reject(new Error('This is a read-only demo instance.'));
+    }
+  }
+  return config;
 });
 
 // Inject X-API-Key and/or Supabase JWT Bearer token

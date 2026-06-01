@@ -37,6 +37,8 @@ set -e
 #   deploy-ui           - Build and deploy the UI. Auto-wires Testing tab and OpenClaw Chat tab.
 #                         Override: MEM_DOG_WEBHOOK_GATEWAY_URL, MEM_DOG_WEBHOOK_API_KEY,
 #                         NEXT_PUBLIC_WEBHOOK_GATEWAY_URL, NEXT_PUBLIC_WEBHOOK_API_KEY (or WGW_API_KEY).
+#   deploy-ui-read      - Build and deploy read-only UI (no login, no write operations).
+#                         Deployed as separate Cloud Run service: mem-dog-ui-read-<env>.
 #   deploy-api-docs     - Build and deploy the API (same as deploy-api)
 #   deploy-all          - Deploy API and UI
 #   deploy-model-servers [tier ...] - Deploy AI Chat model servers (default: all 4 tiers).
@@ -1657,12 +1659,25 @@ deploy_api() {
 # =============================================================================
 
 deploy_ui() {
-    print_header "Deploying UI"
-    
-    SERVICE_NAME="mem-dog-ui-${ENVIRONMENT}"
+    local READ_ONLY="${UI_READ_ONLY:-false}"
+    if [ "$READ_ONLY" = "true" ]; then
+        print_header "Deploying Read-Only UI"
+    else
+        print_header "Deploying UI"
+    fi
+
+    if [ "$READ_ONLY" = "true" ]; then
+        SERVICE_NAME="mem-dog-ui-read-${ENVIRONMENT}"
+    else
+        SERVICE_NAME="mem-dog-ui-${ENVIRONMENT}"
+    fi
     API_SERVICE_NAME="mem-dog-api"
     SA_EMAIL="mem-dog-cloud-run-${ENVIRONMENT}@${PROJECT_ID}.iam.gserviceaccount.com"
-    IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/ui:${ENVIRONMENT}-latest"
+    if [ "$READ_ONLY" = "true" ]; then
+        IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/ui-read:${ENVIRONMENT}-latest"
+    else
+        IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/mem-dog/ui:${ENVIRONMENT}-latest"
+    fi
     
     # Get API URL (override → GKE Gateway → Cloud Run project-number → gcloud)
     if [ -n "${MEM_DOG_API_URL:-}" ]; then
@@ -1747,6 +1762,23 @@ deploy_ui() {
         CLIENT_API_URL=""
     fi
 
+    # For read-only mode: skip Supabase keys (anonymous mode) and webhook args
+    local BUILD_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-}"
+    local BUILD_SUPABASE_ANON_KEY="${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}"
+    local BUILD_SUPABASE_AUTH_URL="${SUPABASE_AUTH_URL:-}"
+    local BUILD_WEBHOOK_URL="${WEBHOOK_GATEWAY_URL:-}"
+    local BUILD_WEBHOOK_KEY="${WEBHOOK_API_KEY:-}"
+    local BUILD_READ_ONLY=""
+    if [ "$READ_ONLY" = "true" ]; then
+        BUILD_SUPABASE_URL=""
+        BUILD_SUPABASE_ANON_KEY=""
+        BUILD_SUPABASE_AUTH_URL=""
+        BUILD_WEBHOOK_URL=""
+        BUILD_WEBHOOK_KEY=""
+        BUILD_READ_ONLY="true"
+        print_info "Read-only mode: Supabase auth and webhook args omitted (anonymous access)"
+    fi
+
     # Build (explicitly for linux/amd64 to ensure Cloud Run compatibility)
     print_info "Building UI Docker image for linux/amd64..."
     docker buildx build \
@@ -1754,12 +1786,13 @@ deploy_ui() {
         --platform linux/amd64 \
         --build-arg NEXT_PUBLIC_API_URL="$CLIENT_API_URL" \
         --build-arg NEXT_PUBLIC_API_KEY="${UI_API_KEY:-}" \
-        --build-arg NEXT_PUBLIC_WEBHOOK_GATEWAY_URL="${WEBHOOK_GATEWAY_URL:-}" \
-        --build-arg NEXT_PUBLIC_WEBHOOK_API_KEY="${WEBHOOK_API_KEY:-}" \
-        --build-arg NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-}" \
-        --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" \
-        --build-arg SUPABASE_AUTH_URL="${SUPABASE_AUTH_URL:-}" \
+        --build-arg NEXT_PUBLIC_WEBHOOK_GATEWAY_URL="${BUILD_WEBHOOK_URL}" \
+        --build-arg NEXT_PUBLIC_WEBHOOK_API_KEY="${BUILD_WEBHOOK_KEY}" \
+        --build-arg NEXT_PUBLIC_SUPABASE_URL="${BUILD_SUPABASE_URL}" \
+        --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="${BUILD_SUPABASE_ANON_KEY}" \
+        --build-arg SUPABASE_AUTH_URL="${BUILD_SUPABASE_AUTH_URL}" \
         --build-arg API_URL="${SERVER_API_URL:-}" \
+        --build-arg NEXT_PUBLIC_READ_ONLY="${BUILD_READ_ONLY}" \
         -t "$IMAGE_TAG" \
         --load \
         .
@@ -4521,7 +4554,7 @@ while [[ $# -gt 0 ]]; do
             VM_INSTANCE_MODEL="$2"
             shift 2
             ;;
-        setup-env|setup-postgres|destroy-postgres|setup-redis|setup-supabase|deploy-redis|deploy-api|deploy-ui|deploy-api-docs|deploy-all|deploy-model-servers|deploy-vm-instance|setup-webhook|deploy-model-server|deploy-agent|deploy-webhook|deploy-webhook-gateway|deploy-webhook-gateway-gke|deploy-openclaw-node-gke|deploy-supabase-gke|redeploy-supabase-gke|seed-supabase-gke|destroy-supabase-data-gke|destroy-supabase-gke|deploy-api-gke|deploy-webhook-pipeline-gke|deploy-mcp-server-gke|setup-autoscaling|restart-gke|status)
+        setup-env|setup-postgres|destroy-postgres|setup-redis|setup-supabase|deploy-redis|deploy-api|deploy-ui|deploy-ui-read|deploy-api-docs|deploy-all|deploy-model-servers|deploy-vm-instance|setup-webhook|deploy-model-server|deploy-agent|deploy-webhook|deploy-webhook-gateway|deploy-webhook-gateway-gke|deploy-openclaw-node-gke|deploy-supabase-gke|redeploy-supabase-gke|seed-supabase-gke|destroy-supabase-data-gke|destroy-supabase-gke|deploy-api-gke|deploy-webhook-pipeline-gke|deploy-mcp-server-gke|setup-autoscaling|restart-gke|status)
             COMMAND="$1"
             shift
             ;;
@@ -4609,6 +4642,9 @@ case $COMMAND in
         ;;
     deploy-ui)
         deploy_ui
+        ;;
+    deploy-ui-read)
+        UI_READ_ONLY=true deploy_ui
         ;;
     deploy-api-docs)
         deploy_api_docs
