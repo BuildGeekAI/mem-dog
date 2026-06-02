@@ -58,7 +58,168 @@ function TabSync({ onTab }: { onTab: (tab: TabId) => void }) {
   return null;
 }
 
-type MarketingTab = 'home' | 'docs';
+type MarketingTab = 'home' | 'pricing' | 'docs';
+
+const PRICING_TIERS = [
+  {
+    name: 'Community',
+    price: 'Free',
+    sub: 'Apache 2.0 — forever',
+    highlight: false,
+    features: [
+      'Full platform — all features, no limits',
+      'Self-hosted on your hardware',
+      '42 AI agents + 5 model tiers',
+      '300+ app integrations (Nango)',
+      '5 search modes + knowledge graph',
+      'Community support (GitHub Issues)',
+    ],
+    cta: { label: 'Get Started', href: 'https://github.com/BuildGeekAI/mem-dog' },
+  },
+  {
+    name: 'Pro',
+    price: '$1,500',
+    sub: '/ month',
+    highlight: true,
+    features: [
+      'Everything in Community',
+      'Email support — 48h SLA',
+      'Priority updates & hotfixes',
+      'Full audit logs',
+      'Onboarding session (1h)',
+      'Deployment guidance',
+    ],
+    cta: { label: 'Contact Us', href: 'mailto:pagarwal@buildgeek.ai?subject=Mem-Dog%20Pro' },
+  },
+  {
+    name: 'Enterprise',
+    price: 'Custom',
+    sub: 'tailored to your needs',
+    highlight: false,
+    features: [
+      'Everything in Pro',
+      'Dedicated support — 4h SLA',
+      'SSO / SAML integration',
+      'Multi-cluster deployment',
+      'Custom AI agent development',
+      'White-glove onboarding & training',
+      'Managed hosting option',
+      'SIEM-ready audit export',
+      '99.9% SLA guarantee',
+    ],
+    cta: { label: 'Request Demo', href: 'mailto:pagarwal@buildgeek.ai?subject=Mem-Dog%20Enterprise%20Demo' },
+  },
+];
+
+function PricingPage() {
+  return (
+    <div className="max-w-5xl mx-auto px-6 py-16">
+      <div className="text-center mb-16">
+        <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+          Simple, <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">transparent</span> pricing
+        </h1>
+        <p className="text-white/40 max-w-xl mx-auto">
+          The full platform is free and open source. Pay only when you need enterprise support, SLAs, or managed hosting.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6 mb-16">
+        {PRICING_TIERS.map((tier) => (
+          <div
+            key={tier.name}
+            className={`relative rounded-2xl p-8 flex flex-col ${
+              tier.highlight
+                ? 'border-2 border-cyan-500/40 bg-gradient-to-b from-cyan-500/[0.08] to-transparent shadow-lg shadow-cyan-500/10'
+                : 'border border-white/10 bg-white/[0.02]'
+            }`}
+          >
+            {tier.highlight && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 text-[11px] font-semibold text-white uppercase tracking-wider">
+                Most Popular
+              </div>
+            )}
+            <div className="mb-6">
+              <h3 className="text-lg font-bold text-white mb-2">{tier.name}</h3>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-bold text-white">{tier.price}</span>
+                <span className="text-sm text-white/30">{tier.sub}</span>
+              </div>
+            </div>
+            <ul className="space-y-3 mb-8 flex-1">
+              {tier.features.map((f) => (
+                <li key={f} className="flex items-start gap-2.5 text-sm text-white/50">
+                  <svg className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <a
+              href={tier.cta.href}
+              target={tier.cta.href.startsWith('http') ? '_blank' : undefined}
+              rel={tier.cta.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              className={`block text-center py-3 rounded-xl font-semibold text-sm transition-all ${
+                tier.highlight
+                  ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:opacity-90'
+                  : 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              {tier.cta.label}
+            </a>
+          </div>
+        ))}
+      </div>
+
+      {/* Add-ons */}
+      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 mb-16">
+        <h2 className="text-xl font-bold text-white mb-6">Available Add-ons</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            { title: 'Managed Hosting', desc: 'We run mem-dog in your cloud account or ours. Per-node pricing, full ops coverage.', price: 'From $2K/mo' },
+            { title: 'Custom Agent Development', desc: 'Industry-specific AI agents (healthcare, legal, financial compliance) built for your workflow.', price: 'From $10K' },
+            { title: 'Training & Onboarding', desc: 'Deployment assistance, model tuning, integration setup, and team training.', price: 'From $5K' },
+          ].map((addon) => (
+            <div key={addon.title} className="space-y-2">
+              <h3 className="text-sm font-semibold text-white">{addon.title}</h3>
+              <p className="text-xs text-white/35 leading-relaxed">{addon.desc}</p>
+              <p className="text-xs font-medium text-cyan-400/70">{addon.price}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* FAQ */}
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-xl font-bold text-white mb-6 text-center">Pricing FAQ</h2>
+        <div className="space-y-3">
+          {[
+            { q: 'Is the Community tier really free with no limits?', a: 'Yes. Every feature, every agent, every integration — no usage caps, no feature gates, no telemetry. Apache 2.0 licensed.' },
+            { q: 'What do I get with paid tiers that I can\'t get for free?', a: 'Support SLAs, priority updates, SSO/SAML, managed hosting, and custom agent development. The software itself is identical.' },
+            { q: 'Can I start free and upgrade later?', a: 'Absolutely. Most teams start with Community and upgrade when they need production SLAs or enterprise security features like SSO.' },
+            { q: 'Do you offer annual pricing?', a: 'Yes — 2 months free on annual plans. Contact us for details.' },
+          ].map((item, i) => (
+            <details key={i} className="group rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+              <summary className="flex items-center justify-between px-5 py-3.5 cursor-pointer text-sm font-medium text-white/80 hover:text-white transition-colors list-none">
+                {item.q}
+                <svg className="w-4 h-4 text-white/30 transition-transform group-open:rotate-90 flex-shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </summary>
+              <div className="px-5 pb-4 text-sm text-white/50 leading-relaxed">{item.a}</div>
+            </details>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div className="text-center mt-16">
+        <p className="text-white/30 text-sm mb-4">Questions? Let&apos;s talk.</p>
+        <a href="mailto:pagarwal@buildgeek.ai?subject=Mem-Dog%20Pricing%20Question"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold text-sm hover:opacity-90 transition-colors"
+        >
+          Contact Us
+        </a>
+      </div>
+    </div>
+  );
+}
 
 function MarketingSite() {
   const [activeTab, setActiveTab] = useState<MarketingTab>('home');
@@ -76,6 +237,7 @@ function MarketingSite() {
         <div className="flex items-center gap-1 p-1 bg-white/5 rounded-xl">
           {([
             { id: 'home' as const, label: 'Home' },
+            { id: 'pricing' as const, label: 'Pricing' },
             { id: 'docs' as const, label: 'Docs' },
           ]).map(tab => (
             <button
@@ -101,6 +263,7 @@ function MarketingSite() {
       {/* Content */}
       <div className="flex-1">
         {activeTab === 'home' && <LoginPage />}
+        {activeTab === 'pricing' && <PricingPage />}
         {activeTab === 'docs' && (
           <div className="px-4 py-8 md:px-6">
             <DocsPage />
