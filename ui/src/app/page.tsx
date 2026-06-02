@@ -77,35 +77,20 @@ const PRICING_TIERS = [
     cta: { label: 'Get Started', href: 'https://github.com/BuildGeekAI/mem-dog' },
   },
   {
-    name: 'Pro',
-    price: '$1,500',
-    sub: '/ month',
+    name: 'Enterprise',
+    price: 'Let\u2019s talk',
+    sub: 'tailored to your organization',
     highlight: true,
     features: [
       'Everything in Community',
-      'Email support — 48h SLA',
+      'Dedicated support with SLA',
       'Priority updates & hotfixes',
-      'Full audit logs',
-      'Onboarding session (1h)',
-      'Deployment guidance',
-    ],
-    cta: { label: 'Contact Us', href: 'mailto:pagarwal@buildgeek.ai?subject=Mem-Dog%20Pro' },
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    sub: 'tailored to your needs',
-    highlight: false,
-    features: [
-      'Everything in Pro',
-      'Dedicated support — 4h SLA',
       'SSO / SAML integration',
+      'Full audit logs & SIEM export',
       'Multi-cluster deployment',
       'Custom AI agent development',
       'White-glove onboarding & training',
       'Managed hosting option',
-      'SIEM-ready audit export',
-      '99.9% SLA guarantee',
     ],
     cta: { label: 'Request Demo', href: 'mailto:pagarwal@buildgeek.ai?subject=Mem-Dog%20Enterprise%20Demo' },
   },
@@ -119,11 +104,11 @@ function PricingPage() {
           Simple, <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">transparent</span> pricing
         </h1>
         <p className="text-white/40 max-w-xl mx-auto">
-          The full platform is free and open source. Pay only when you need enterprise support, SLAs, or managed hosting.
+          The full platform is free and open source. Enterprise support, SLAs, and managed hosting available for organizations.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6 mb-16">
+      <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-16">
         {PRICING_TIERS.map((tier) => (
           <div
             key={tier.name}
@@ -174,14 +159,13 @@ function PricingPage() {
         <h2 className="text-xl font-bold text-white mb-6">Available Add-ons</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { title: 'Managed Hosting', desc: 'We run mem-dog in your cloud account or ours. Per-node pricing, full ops coverage.', price: 'From $2K/mo' },
-            { title: 'Custom Agent Development', desc: 'Industry-specific AI agents (healthcare, legal, financial compliance) built for your workflow.', price: 'From $10K' },
-            { title: 'Training & Onboarding', desc: 'Deployment assistance, model tuning, integration setup, and team training.', price: 'From $5K' },
+            { title: 'Managed Hosting', desc: 'We run mem-dog in your cloud account or ours. Full ops coverage and monitoring.' },
+            { title: 'Custom Agent Development', desc: 'Industry-specific AI agents (healthcare, legal, financial compliance) built for your workflow.' },
+            { title: 'Training & Onboarding', desc: 'Deployment assistance, model tuning, integration setup, and team training.' },
           ].map((addon) => (
             <div key={addon.title} className="space-y-2">
               <h3 className="text-sm font-semibold text-white">{addon.title}</h3>
               <p className="text-xs text-white/35 leading-relaxed">{addon.desc}</p>
-              <p className="text-xs font-medium text-cyan-400/70">{addon.price}</p>
             </div>
           ))}
         </div>
@@ -193,9 +177,9 @@ function PricingPage() {
         <div className="space-y-3">
           {[
             { q: 'Is the Community tier really free with no limits?', a: 'Yes. Every feature, every agent, every integration — no usage caps, no feature gates, no telemetry. Apache 2.0 licensed.' },
-            { q: 'What do I get with paid tiers that I can\'t get for free?', a: 'Support SLAs, priority updates, SSO/SAML, managed hosting, and custom agent development. The software itself is identical.' },
-            { q: 'Can I start free and upgrade later?', a: 'Absolutely. Most teams start with Community and upgrade when they need production SLAs or enterprise security features like SSO.' },
-            { q: 'Do you offer annual pricing?', a: 'Yes — 2 months free on annual plans. Contact us for details.' },
+            { q: 'What does Enterprise include beyond Community?', a: 'Dedicated support with SLAs, priority updates, SSO/SAML, managed hosting, custom agent development, and white-glove onboarding. The software itself is identical.' },
+            { q: 'Can I start free and upgrade later?', a: 'Absolutely. Most teams start with Community and reach out when they need production SLAs or enterprise security features like SSO.' },
+            { q: 'How do I get started with Enterprise?', a: 'Reach out to us for a demo. We\u2019ll understand your needs and put together a tailored plan.' },
           ].map((item, i) => (
             <details key={i} className="group rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
               <summary className="flex items-center justify-between px-5 py-3.5 cursor-pointer text-sm font-medium text-white/80 hover:text-white transition-colors list-none">
