@@ -4,6 +4,7 @@ import { AuthProvider } from '@/lib/auth-context';
 import { ProjectProvider } from '@/lib/project-context';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://mem-dog.dev'),
   title: 'Mem-Dog — Private AI System for Individuals & Organizations',
   description: 'Ingest data from 300+ apps, enrich with 42 AI agents, and query with 5 search modes powered by a temporal knowledge graph. Self-hosted, free, open source (Apache 2.0).',
   icons: {
