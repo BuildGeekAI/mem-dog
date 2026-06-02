@@ -362,8 +362,8 @@ export default function LoginPage() {
       {/* Gradient glow — top center */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(68,213,227,0.12) 0%, rgba(95,181,251,0.08) 30%, rgba(181,150,250,0.06) 60%, transparent 80%)' }} />
 
-      {/* ─── Nav ─── */}
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-lg border-b border-white/5">
+      {/* ─── Nav (hidden in read-only mode — MarketingSite has its own top nav) ─── */}
+      {!isReadOnly() && <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-lg border-b border-white/5">
         <nav className="flex items-center justify-between max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-500 flex items-center justify-center">
@@ -404,7 +404,7 @@ export default function LoginPage() {
             </div>
           )}
         </nav>
-      </div>
+      </div>}
 
       {/* ─── Hero ─── */}
       <section className="relative max-w-4xl mx-auto px-6 pt-20 pb-24 text-center">
