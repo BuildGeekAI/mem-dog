@@ -57,7 +57,7 @@ const CONCEPTS = [
   {
     title: 'AI Pipeline',
     icon: Cpu,
-    desc: 'A 40-agent webhook pipeline powered by NATS streaming. When data is ingested, it flows through 6-layer type detection (explicit field → LLM classifier → MIME registry → URL extension → content sniffing → BinaryBlobAgent fallback) to route to the correct specialist agent. Agents use tiered AI models — small (Gemma3:4b) for simple tasks, medium (12b) for standard analysis, large (27b) for complex reasoning, multimodal (Qwen3-VL) for images/video, and omni (Qwen3.5) for cross-modal tasks. Outputs include embeddings, viewpoints (structured analyses), entity extraction, summaries, and classifications.',
+    desc: 'A 42-agent webhook pipeline powered by NATS streaming. When data is ingested, it flows through 6-layer type detection (explicit field → LLM classifier → MIME registry → URL extension → content sniffing → BinaryBlobAgent fallback) to route to the correct specialist agent. Agents use tiered AI models — small (Gemma3:4b) for simple tasks, medium (12b) for standard analysis, large (27b) for complex reasoning, multimodal (Qwen3-VL) for images/video, and omni (Qwen3.5) for cross-modal tasks. Outputs include embeddings, viewpoints (structured analyses), entity extraction, summaries, and classifications.',
   },
   {
     title: 'Apps',
@@ -603,7 +603,7 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: 'How does AI enrichment work?',
-    a: 'When data is ingested, it flows through a 40-agent webhook pipeline powered by NATS. Each agent specializes in a specific data type (e.g., TextAgent, ImageAgent, CodeAgent, MedicalAgent, LegalAgent). Agents classify the content, extract entities, generate summaries, produce structured viewpoints (analysis documents), and create vector embeddings for semantic search. The pipeline runs asynchronously — you can check processing status via the AI queue endpoints.',
+    a: 'When data is ingested, it flows through a 42-agent webhook pipeline powered by NATS. Each agent specializes in a specific data type (e.g., TextAgent, ImageAgent, CodeAgent, MedicalAgent, LegalAgent). Agents classify the content, extract entities, generate summaries, produce structured viewpoints (analysis documents), and create vector embeddings for semantic search. The pipeline runs asynchronously — you can check processing status via the AI queue endpoints.',
   },
   {
     q: 'What are the 10 memory types and how do they map to categories?',
@@ -753,7 +753,7 @@ export default function DocsPage() {
               Mem-Dog is a multi-channel data ingestion and AI enrichment platform designed to capture, organize,
               and understand your data at scale. Data flows from 300+ apps across 15 categories
               through a normalizing webhook gateway, gets stored via a comprehensive REST API with versioning and
-              access control, and is automatically processed by a 40-agent AI pipeline for classification, entity
+              access control, and is automatically processed by a 42-agent AI pipeline for classification, entity
               extraction, summarization, and vector embedding generation. The result is a searchable, queryable
               knowledge base accessible through semantic search, hybrid search, and conversational RAG with citations.
             </p>

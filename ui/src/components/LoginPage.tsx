@@ -935,99 +935,27 @@ export default function LoginPage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Flexible. Powerful. <span className="nango-gradient-text">Complete.</span>
           </h2>
-          <p className="text-white/40 max-w-xl mx-auto">
+          <p className="text-white/40 max-w-xl mx-auto mb-8">
             Everything you need to build a private AI system for your data.
           </p>
+          {/* Compact feature highlights */}
+          <div className="flex flex-wrap items-center justify-center gap-3 max-w-3xl mx-auto">
+            {CAPABILITIES.map((cap) => (
+              <span key={cap.title} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/5 bg-white/[0.02] text-xs text-white/50">
+                <cap.icon className="w-3.5 h-3.5 text-white/40" />
+                {cap.title}
+              </span>
+            ))}
+          </div>
         </motion.div>
 
-        {/* ── Capabilities ── */}
-        <div className="mb-20">
-          <motion.h3
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.5 }}
-            className="text-xl sm:text-2xl font-bold mb-2 text-center"
-          >
-            Core <span className="nango-gradient-text">Capabilities</span>
-          </motion.h3>
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-white/40 text-center mb-10 max-w-xl mx-auto text-sm"
-          >
-            Versioned storage, AI enrichment, semantic search, and more — all built in.
-          </motion.p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {CAPABILITIES.map((cap, i) => (
-              <motion.div
-                key={cap.title}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-50px' }}
-                variants={fadeUp}
-                className="group p-6 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04] transition-all duration-300"
-              >
-                <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:border-white/20 transition-colors">
-                  <cap.icon className="w-5 h-5 text-white/50 group-hover:text-white/70 transition-colors" />
-                </div>
-                <h3 className="text-sm font-semibold text-white mb-2">{cap.title}</h3>
-                <p className="text-xs text-white/35 leading-relaxed">{cap.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── AI Engine ── */}
+        {/* ── DigiMe ── */}
         <div>
-          <motion.h3
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.5 }}
-            className="text-xl sm:text-2xl font-bold mb-2 text-center"
-          >
-            Intelligent <span className="nango-gradient-text">AI Engine</span>
-          </motion.h3>
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-white/40 text-center mb-10 max-w-xl mx-auto text-sm"
-          >
-            5 model tiers, smart routing per data type, configurable prompts, and pluggable skills — all fully customizable from the UI.
-          </motion.p>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {AI_ENGINE_CARDS.map((item, i) => (
-              <motion.div
-                key={item.title}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-50px' }}
-                variants={fadeUp}
-                className="group p-6 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04] transition-all duration-300"
-              >
-                <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:border-white/20 transition-colors">
-                  <item.icon className="w-5 h-5 text-white/50 group-hover:text-white/70 transition-colors" />
-                </div>
-                <h3 className="text-sm font-semibold text-white mb-2">{item.title}</h3>
-                <p className="text-xs text-white/35 leading-relaxed">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* DigiMe sub-section */}
           <div className="mt-20">
             <motion.h3
               initial={{ opacity: 0, y: 16 }}
@@ -1139,95 +1067,60 @@ export default function LoginPage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Built for <span className="nango-gradient-text">developers</span>
           </h2>
           <p className="text-white/40 max-w-xl mx-auto">
-            Graph memory, simple SDK, agent framework adapters, and memory compression — drop-in features that close the gap with mem0.
+            SDKs in 5 languages, agent framework adapters, and a full REST API. Get started in minutes.
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 gap-6">
-          {DEVELOPER_FEATURES.map((item, i) => (
-            <motion.div
-              key={item.title}
-              custom={i}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-50px' }}
-              variants={fadeUp}
-              className="group p-6 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04] transition-all duration-300"
-            >
-              <div className="flex items-start gap-4 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 group-hover:border-white/20 transition-colors">
-                  <item.icon className="w-5 h-5 text-white/50 group-hover:text-white/70 transition-colors" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-white mb-1">{item.title}</h3>
-                  <p className="text-xs text-white/35 leading-relaxed">{item.desc}</p>
-                </div>
-              </div>
-              {/* Code preview */}
-              <div className="rounded-lg bg-black/40 border border-white/5 p-3 mb-3 font-mono text-[11px] text-cyan-400/70 whitespace-pre overflow-x-auto">
-                {item.code}
-              </div>
-              {/* Badges */}
-              <div className="flex flex-wrap gap-1.5">
-                {item.badges.map(b => (
-                  <span key={b} className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-[10px] text-white/40">
-                    {b}
-                  </span>
-                ))}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* ── Playground ── */}
-        <div className="mt-20">
-          <motion.h3
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
+        {/* Quick start + SDK highlights */}
+        <div className="grid md:grid-cols-2 gap-6 mb-10">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-xl sm:text-2xl font-bold mb-2 text-center"
+            className="p-6 rounded-xl border border-white/10 bg-[#0d1117]"
           >
-            Interactive <span className="nango-gradient-text">Playground</span>
-          </motion.h3>
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            <div className="flex items-center gap-2 mb-4">
+              <Terminal className="w-4 h-4 text-white/40" />
+              <span className="text-xs text-white/40 font-mono">Quick Start</span>
+            </div>
+            <div className="font-mono text-[12px] text-cyan-400/80 space-y-1">
+              <div><span className="text-white/30">$</span> git clone https://github.com/BuildGeekAI/mem-dog</div>
+              <div><span className="text-white/30">$</span> cd mem-dog &amp;&amp; docker compose up</div>
+              <div className="text-white/20 mt-3"># UI: localhost:3000 | API: localhost:8080</div>
+              <div className="text-white/20"># Neo4j: localhost:7474 | 3 Ollama tiers</div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-white/40 text-center mb-10 max-w-xl mx-auto text-sm"
+            className="p-6 rounded-xl border border-white/5 bg-white/[0.02] space-y-4"
           >
-            Test the full ingestion pipeline, upload data in any format, and chat with your knowledge base — all from one place.
-          </motion.p>
-          <div className="grid sm:grid-cols-3 gap-5">
-            {[
-              { icon: Webhook, title: 'Channel to Webhook', desc: 'Simulate webhook messages across 10+ channel types (Slack, WhatsApp, Email, Telegram, Discord, and more). Test the full gateway-to-pipeline flow with text and file attachments.' },
-              { icon: Upload, title: 'Data Insert', desc: 'Ingest data via 6 input modes: text with dictation, file drag-and-drop, URL import, camera capture, voice recording, and video recording. Attach to sessions and memories.' },
-              { icon: MessageCircle, title: 'Knowledge Chat', desc: 'RAG-powered chat interface over your stored data. Ask questions in natural language, get AI answers with inline citations, and scope queries to specific memories.' },
-            ].map((item, i) => (
-              <motion.div
-                key={item.title}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-50px' }}
-                variants={fadeUp}
-                className="group p-6 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04] transition-all duration-300"
-              >
-                <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:border-white/20 transition-colors">
-                  <item.icon className="w-5 h-5 text-white/50 group-hover:text-white/70 transition-colors" />
+            <h3 className="text-sm font-semibold text-white">Developer Highlights</h3>
+            <div className="space-y-3">
+              {[
+                { icon: Code2, text: 'SDKs: Python, TypeScript, Go, Rust, Ruby — full API coverage' },
+                { icon: Puzzle, text: 'Adapters: LangChain, CrewAI, OpenAI Agents SDK' },
+                { icon: Network, text: 'Graph Memory: Temporal knowledge graph with Neo4j + Graphiti' },
+                { icon: Archive, text: 'Memory Compression: LLM-powered summarization for long-term recall' },
+                { icon: Server, text: 'MCP Server: 8 tools for Claude Desktop, Cursor, and more' },
+              ].map((item) => (
+                <div key={item.text} className="flex items-start gap-3">
+                  <item.icon className="w-4 h-4 text-white/30 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-white/50">{item.text}</span>
                 </div>
-                <h3 className="text-sm font-semibold text-white mb-2">{item.title}</h3>
-                <p className="text-xs text-white/35 leading-relaxed">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </div>
       </SectionAccordion>
@@ -1266,92 +1159,6 @@ export default function LoginPage() {
               </div>
               <div className="text-sm font-medium text-white/70 mb-1">{stat.label}</div>
               <div className="text-xs text-white/30">{stat.sub}</div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Hosting cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          {HOSTING_OPTIONS.map((item, i) => (
-            <motion.div
-              key={item.title}
-              custom={i}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-50px' }}
-              variants={fadeUp}
-              className="group p-6 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04] transition-all duration-300"
-            >
-              <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:border-white/20 transition-colors">
-                <item.icon className="w-5 h-5 text-white/50 group-hover:text-white/70 transition-colors" />
-              </div>
-              <h3 className="text-sm font-semibold text-white mb-2">{item.title}</h3>
-              <p className="text-xs text-white/35 leading-relaxed mb-4">{item.desc}</p>
-              <ul className="space-y-1.5">
-                {item.features.map(f => (
-                  <li key={f} className="flex items-center gap-2 text-xs text-white/40">
-                    <ChevronRight className="w-3 h-3 text-cyan-400/50 flex-shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Mac Mini callout */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mb-16 p-6 rounded-xl border border-white/5 bg-white/[0.02] relative overflow-hidden"
-        >
-          <div className="absolute -inset-2 -z-10 opacity-30" style={{ background: 'radial-gradient(ellipse at 70% 50%, rgba(68,213,227,0.12) 0%, transparent 60%)' }} />
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-lg">
-                <Cpu className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Runs on a Mac Mini</h3>
-                <p className="text-xs text-white/35">Full production stack on your desk</p>
-              </div>
-            </div>
-            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { icon: Cpu, label: 'Apple Silicon', sub: 'Native GPU inference' },
-                { icon: Database, label: 'Self-Hosted DB', sub: 'Supabase + pgvector' },
-                { icon: Brain, label: 'Local AI', sub: 'Ollama on-device' },
-                { icon: Shield, label: 'Your Data', sub: 'Never leaves home' },
-              ].map(item => (
-                <div key={item.label} className="flex items-start gap-2">
-                  <item.icon className="w-4 h-4 text-white/30 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <div className="text-xs font-medium text-white/70">{item.label}</div>
-                    <div className="text-[10px] text-white/30">{item.sub}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Trust badges */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {TRUST_ITEMS.map((item, i) => (
-            <motion.div
-              key={item.title}
-              custom={i}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeUp}
-              className="text-center p-6 rounded-xl border border-white/5 bg-white/[0.02]"
-            >
-              <item.icon className="w-6 h-6 text-white/30 mx-auto mb-3" />
-              <div className="text-sm font-medium text-white/80 mb-1">{item.title}</div>
-              <div className="text-xs text-white/30">{item.desc}</div>
             </motion.div>
           ))}
         </div>
