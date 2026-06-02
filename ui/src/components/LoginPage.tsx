@@ -11,14 +11,14 @@ import { isReadOnly } from '@/lib/read-only';
 const ROTATING_PHRASES = [
   'Your AI. Your hardware. Your rules.',
   'Local models. Real-time speed. Zero data leakage.',
-  '40 agents that never phone home.',
+  '42 agents that never phone home.',
   'Enterprise-grade AI on a Mac Mini.',
   'Private by architecture, not by promise.',
 ];
 
 const CAPABILITIES = [
   { icon: Database, title: 'Versioned Storage', desc: 'Every mutation tracked. Full version history with diffs, rollback, and audit trail out of the box.' },
-  { icon: Brain, title: 'AI Enrichment', desc: '40+ specialized agents classify, analyze, and generate embeddings automatically on ingest.' },
+  { icon: Brain, title: 'AI Enrichment', desc: '42 specialized agents classify, analyze, and generate embeddings automatically on ingest.' },
   { icon: Globe, title: '300+ Apps', desc: 'Powered by Nango — connect to Slack, WhatsApp, Salesforce, GitHub, and 300+ more services with automatic OAuth token refresh. Per-user webhook endpoints (whk_<ulid>) for inbound channels.' },
   { icon: Cpu, title: 'DigiMe Agent', desc: 'OpenClaw-powered AI agent that lives in your channels — query, search, and ingest data through natural conversation with the mem-dog RAG system.' },
   { icon: Zap, title: 'Real-Time Pipeline', desc: 'NATS-powered streaming with per-user webhook endpoints (whk_<ulid>), 6-layer data classification, and tiered LLM routing (4b → 27b → multimodal).' },
@@ -28,7 +28,7 @@ const CAPABILITIES = [
 
 const INFRA_STATS = [
   { value: '300+', label: 'Apps', sub: '15 categories' },
-  { value: '40+', label: 'AI Agents', sub: '6-layer routing pipeline' },
+  { value: '42', label: 'AI Agents', sub: '6-layer routing pipeline' },
   { value: '5', label: 'Model Tiers', sub: 'Small to multimodal' },
   { value: '10', label: 'Memory Types', sub: 'Timeline to semantic' },
   { value: '70+', label: 'API Endpoints', sub: 'Full REST coverage' },
@@ -62,7 +62,7 @@ const AGENT_MESSAGES = [
 
 const AI_ENGINE_CARDS = [
   { icon: Zap, title: 'Smart Routing', desc: 'Automatically assigns the right model tier (4b → 12b → 27b → multimodal → omni) based on data type. Per-type overrides via Settings.' },
-  { icon: SlidersHorizontal, title: 'Configurable Prompts', desc: 'Customize system prompts per agent type. Tune extraction rules, analysis depth, and output format for each of the 40+ AI agents.' },
+  { icon: SlidersHorizontal, title: 'Configurable Prompts', desc: 'Customize system prompts per agent type. Tune extraction rules, analysis depth, and output format for each of the 42 AI agents.' },
   { icon: Wrench, title: 'Skills & Templates', desc: 'Define reusable AI skills and prompt templates. Attach skills to agents for specialized behavior like entity extraction or sentiment analysis.' },
   { icon: Sparkles, title: '5 Model Tiers', desc: 'Small (Gemma3:4b), Medium (12b), Large (27b), Multimodal (Qwen3-VL), and Omni (Qwen3.5). Fallback chains: Ollama Cloud → Gemini → self-hosted.' },
   { icon: Flower2, title: 'Model Garden', desc: 'Connect your own AI providers — OpenAI, Anthropic, Gemini, Ollama, and more. Encrypted API key storage, one-click connectivity tests, and automatic model discovery.' },
@@ -145,7 +145,7 @@ const COMPARISON_FEATURES: { category: string; features: { name: string; values:
   {
     category: 'AI & Intelligence',
     features: [
-      { name: '40+ specialized AI agents', values: ['yes', 'partial', 'no', 'no', 'no'] },
+      { name: '42 specialized AI agents', values: ['yes', 'partial', 'no', 'no', 'no'] },
       { name: '5 model tiers with smart routing', values: ['yes', 'partial', 'no', 'no', 'no'] },
       { name: 'Knowledge graph (Neo4j/Graphiti)', values: ['yes', 'no', 'no', 'yes', 'no'] },
       { name: 'Temporal fact tracking (valid_at/invalid_at)', values: ['yes', 'no', 'no', 'yes', 'no'] },
@@ -202,7 +202,7 @@ const PIPELINE_STEPS = [
   {
     icon: Brain,
     title: 'AI Processing',
-    desc: '40+ agents',
+    desc: '42 agents',
     items: ['6-Layer Classification', 'Smart Model Routing', 'Viewpoint Generation', 'Embedding Creation'],
     color: 'from-purple-400 to-purple-500',
     glow: 'rgba(181,150,250,0.15)',
@@ -378,6 +378,7 @@ export default function LoginPage() {
               { href: 'features', label: 'Features' },
               { href: 'developer', label: 'Developer' },
               { href: 'platform', label: 'Platform' },
+              { href: 'faq', label: 'FAQ' },
             ].map(link => (
               <a
                 key={link.href}
@@ -408,9 +409,20 @@ export default function LoginPage() {
       {/* ─── Hero ─── */}
       <section className="relative max-w-4xl mx-auto px-6 pt-20 pb-24 text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs text-white/50 mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs text-white/50 mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             Private AI System — self-hosted, fast, cost-efficient
+          </div>
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-xs font-medium text-emerald-400">
+              <Scale className="w-3 h-3" /> Apache 2.0
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-xs font-medium text-cyan-400">
+              Free Forever
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-xs font-medium text-purple-400">
+              Self-Hosted
+            </span>
           </div>
         </motion.div>
 
@@ -460,6 +472,20 @@ export default function LoginPage() {
           </a>
         </motion.div>
 
+        {/* Quick Start Snippet */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="mt-8 max-w-md mx-auto"
+        >
+          <p className="text-xs text-white/30 mb-2">Run locally in one command:</p>
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-black/40 border border-white/10 font-mono text-sm text-emerald-400">
+            <Terminal className="w-4 h-4 text-white/30 flex-shrink-0" />
+            <span>git clone &amp;&amp; docker compose up</span>
+          </div>
+        </motion.div>
+
         {/* The Vision */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -477,7 +503,7 @@ export default function LoginPage() {
                 Every time you ask an AI a question, your data travels to a distant data center, gets processed on someone else&apos;s hardware, and a record of your query lives on infrastructure you&apos;ll never audit. For individuals, that means your personal thoughts, health records, financial details, and private conversations are one breach away from exposure. For enterprises, it means trade secrets, customer data, and proprietary research flowing through third-party systems with opaque data-retention policies.
               </p>
               <p>
-                <span className="text-white font-bold">We&apos;re building Mem-Dog to end that trade-off.</span> A complete AI system — 40 specialized agents, semantic search, a temporal knowledge graph, 300+ integrations — that runs entirely on hardware you control. Your laptop, a Mac Mini on your desk, or a server rack in your office. The AI never phones home because there&apos;s no home to phone.
+                <span className="text-white font-bold">We&apos;re building Mem-Dog to end that trade-off.</span> A complete AI system — 42 specialized agents, semantic search, a temporal knowledge graph, 300+ integrations — that runs entirely on hardware you control. Your laptop, a Mac Mini on your desk, or a server rack in your office. The AI never phones home because there&apos;s no home to phone.
               </p>
               <p>
                 <span className="text-white/80 font-medium">Speed through smarter architecture.</span> Instead of routing every request to a massive cloud model, Mem-Dog uses a 6-layer classification pipeline that matches each piece of data to the smallest model that can handle it well. A simple text note gets a fast 4-billion-parameter model. A complex document gets a 27-billion-parameter one. Multimodal content gets a vision model. This tiered routing means most queries finish in milliseconds on modest hardware — because you&apos;re not waiting for a 200B model to parse a grocery list.
@@ -486,7 +512,7 @@ export default function LoginPage() {
                 <span className="text-white/80 font-medium">Cost efficiency through local inference.</span> Cloud AI bills grow linearly with usage — every token costs money. With local models running on Ollama, the marginal cost of a query is the electricity to run it. For individuals, that means unlimited personal AI for the price of a home server. For enterprises, it means predictable infrastructure costs that don&apos;t scale with headcount or query volume. No per-seat licensing. No surprise invoices.
               </p>
               <p>
-                <span className="text-white/80 font-medium">Intelligence through better data processing.</span> Privacy doesn&apos;t have to mean dumb. Mem-Dog&apos;s 40 agents work in concert — classifying, extracting entities, generating embeddings, building knowledge graphs, and creating AI-powered viewpoints — all locally. The result is a system that gets smarter the more you use it, building a private knowledge base that understands relationships between your data, tracks how facts change over time, and surfaces insights through multi-signal search that combines vector similarity, keyword matching, and graph traversal.
+                <span className="text-white/80 font-medium">Intelligence through better data processing.</span> Privacy doesn&apos;t have to mean dumb. Mem-Dog&apos;s 42 agents work in concert — classifying, extracting entities, generating embeddings, building knowledge graphs, and creating AI-powered viewpoints — all locally. The result is a system that gets smarter the more you use it, building a private knowledge base that understands relationships between your data, tracks how facts change over time, and surfaces insights through multi-signal search that combines vector similarity, keyword matching, and graph traversal.
               </p>
             </div>
             {/* Key pillars */}
@@ -495,7 +521,7 @@ export default function LoginPage() {
                 { icon: Shield, label: 'Private by Design', sub: 'Data never leaves your network' },
                 { icon: Zap, label: 'Fast Locally', sub: 'Tiered models, millisecond routing' },
                 { icon: Cpu, label: 'Cost Efficient', sub: 'No per-token fees, ever' },
-                { icon: Brain, label: 'Genuinely Smart', sub: '40 agents, knowledge graph, RAG' },
+                { icon: Brain, label: 'Genuinely Smart', sub: '42 agents, knowledge graph, RAG' },
               ].map(item => (
                 <div key={item.label} className="p-3 rounded-lg border border-white/5 bg-white/[0.02] text-center">
                   <item.icon className="w-4 h-4 text-cyan-400/60 mx-auto mb-1.5" />
@@ -590,7 +616,7 @@ export default function LoginPage() {
       {/* ─── Accordion Sections ─── */}
       <div className="border-t border-white/5 pt-8">
 
-      <SectionAccordion id="how-it-works" title="How it Works" icon={Cog}>
+      <SectionAccordion id="how-it-works" title="How it Works" icon={Cog} defaultOpen>
         <div className="relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -785,7 +811,7 @@ export default function LoginPage() {
               <div className="p-3 rounded-lg border border-yellow-500/20 bg-yellow-500/5 text-center">
                 <Brain className="w-4 h-4 text-yellow-400/70 mx-auto mb-1" />
                 <div className="text-xs font-semibold text-white/70">NATS Pipeline</div>
-                <div className="text-[10px] text-white/30">40 AI Agents</div>
+                <div className="text-[10px] text-white/30">42 AI Agents</div>
               </div>
               <div className="p-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 text-center">
                 <Database className="w-4 h-4 text-emerald-400/70 mx-auto mb-1" />
@@ -863,7 +889,7 @@ export default function LoginPage() {
       </div>
       </SectionAccordion>
 
-      <SectionAccordion id="use-cases" title="Use Cases" icon={Users}>
+      <SectionAccordion id="use-cases" title="Use Cases" icon={Users} defaultOpen>
         <div className="relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -902,7 +928,7 @@ export default function LoginPage() {
       </div>
       </SectionAccordion>
 
-      <SectionAccordion id="features" title="Features" icon={Sparkles}>
+      <SectionAccordion id="features" title="Features" icon={Sparkles} defaultOpen>
         <div className="relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1106,7 +1132,7 @@ export default function LoginPage() {
       </div>
       </SectionAccordion>
 
-      <SectionAccordion id="developer" title="Developer" icon={Code2}>
+      <SectionAccordion id="developer" title="Developer" icon={Code2} defaultOpen>
         <div className="relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1206,7 +1232,7 @@ export default function LoginPage() {
       </div>
       </SectionAccordion>
 
-      <SectionAccordion id="platform" title="Platform" icon={Globe}>
+      <SectionAccordion id="platform" title="Platform" icon={Globe} defaultOpen>
         <div className="relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1452,24 +1478,82 @@ export default function LoginPage() {
 
       </div>{/* end accordion wrapper */}
 
-      {/* Login card is now at the top — removed duplicate here */}
+      {/* ─── FAQ Section ─── */}
+      <section id="faq" className="max-w-3xl mx-auto px-6 py-16">
+        <h2 className="text-2xl font-bold text-white mb-8 text-center">Frequently Asked Questions</h2>
+        <div className="space-y-4">
+          {[
+            { q: 'What hardware do I need to run mem-dog?', a: 'A laptop or any machine with Docker. For production, a Mac Mini (M2/M4) with 16 GB RAM runs the full stack including local AI models. For cloud, any GKE/EKS/AKS cluster works.' },
+            { q: 'Is mem-dog free and open source?', a: 'Yes. Mem-dog is Apache 2.0 licensed — free forever, no usage limits, no telemetry. Self-host on your own hardware or cloud. No vendor lock-in.' },
+            { q: 'How is this different from ChatGPT memory or Notion AI?', a: 'ChatGPT memory is locked inside OpenAI. Notion AI only works with Notion data. Mem-dog ingests from 300+ apps, runs 42 AI agents on your hardware, and gives you a temporal knowledge graph with 5 search modes. You own everything.' },
+            { q: 'What data formats are supported?', a: 'Text, Markdown, HTML, JSON, CSV, PDF, images, audio, video, and binary blobs. The 42-agent pipeline auto-detects the format and routes to the right agent for classification, analysis, and embedding.' },
+            { q: 'Can I use my own AI models?', a: 'Yes. Model Garden supports 10+ providers with per-user routing and fallback chains: Ollama (local), Ollama Cloud, Google Gemini, OpenAI, Anthropic, and more. You can run fully offline with local Ollama models.' },
+            { q: 'How do I get started?', a: 'Clone the repo and run docker compose up. That starts the full stack: API, UI, PostgreSQL + pgvector, Neo4j, Redis, 3 Ollama instances, and the webhook pipeline. UI at localhost:3000, API at localhost:8080.' },
+            { q: 'Does mem-dog send my data anywhere?', a: 'No. There is no telemetry, no analytics, no phone-home. All processing happens on your machine. The AI models run locally via Ollama. External providers (Gemini, OpenAI) are opt-in only.' },
+          ].map((item, i) => (
+            <details key={i} className="group rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+              <summary className="flex items-center justify-between px-6 py-4 cursor-pointer text-sm font-medium text-white/80 hover:text-white transition-colors list-none">
+                {item.q}
+                <ChevronRight className="w-4 h-4 text-white/30 transition-transform group-open:rotate-90 flex-shrink-0 ml-4" />
+              </summary>
+              <div className="px-6 pb-4 text-sm text-white/50 leading-relaxed">{item.a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── Bottom CTA Band ─── */}
+      <section className="relative border-t border-white/5 py-20">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary-500/5 to-transparent pointer-events-none" />
+        <div className="relative max-w-3xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold text-white mb-3">Ready to try mem-dog?</h2>
+          <p className="text-white/50 mb-8 text-sm">Get running in under 2 minutes. No account needed.</p>
+
+          <div className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-black/50 border border-white/10 font-mono text-sm text-emerald-400 max-w-lg mx-auto mb-8">
+            <Terminal className="w-4 h-4 text-white/30 flex-shrink-0" />
+            <span>git clone https://github.com/BuildGeekAI/mem-dog &amp;&amp; cd mem-dog &amp;&amp; docker compose up</span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <a href="https://github.com/BuildGeekAI/mem-dog" target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+              Star on GitHub
+            </a>
+            <a href="#how-it-works"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/15 text-white/70 font-medium text-sm hover:border-white/30 hover:text-white transition-all">
+              See how it works
+            </a>
+          </div>
+        </div>
+      </section>
 
       {/* ─── Footer ─── */}
-      <footer className="border-t border-white/5">
-        <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-white/30 text-sm">
-            <div className="w-5 h-5 rounded bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center">
-              <Brain className="w-3 h-3 text-white" />
+      <footer className="border-t border-white/[0.06] bg-black/20">
+        <div className="max-w-5xl mx-auto px-6 py-10">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2 text-white/30 text-sm">
+              <div className="w-5 h-5 rounded bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center">
+                <Brain className="w-3 h-3 text-white" />
+              </div>
+              <span className="font-semibold">Mem-Dog</span>
+              <span className="text-white/15">|</span>
+              <span>Private AI System</span>
             </div>
-            <span>Mem-Dog</span>
-            <span className="text-white/15">|</span>
-            <span>Private AI System</span>
+            <div className="flex items-center gap-6 text-xs text-white/25">
+              <a href="#how-it-works" className="hover:text-white/50 transition-colors">How it Works</a>
+              <a href="#features" className="hover:text-white/50 transition-colors">Features</a>
+              <a href="#developer" className="hover:text-white/50 transition-colors">Developer</a>
+              <a href="#faq" className="hover:text-white/50 transition-colors">FAQ</a>
+              <a href="https://github.com/BuildGeekAI/mem-dog" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">GitHub</a>
+            </div>
           </div>
-          <div className="flex items-center gap-6 text-xs text-white/20">
-            <a href="#how-it-works" className="hover:text-white/50 transition-colors">How it Works</a>
-            <a href="#features" className="hover:text-white/50 transition-colors">Features</a>
-            <a href="#developer" className="hover:text-white/50 transition-colors">Developer</a>
-            <a href="#platform" className="hover:text-white/50 transition-colors">Platform</a>
+          <div className="mt-6 pt-6 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-white/15">
+            <span>&copy; {new Date().getFullYear()} BuildGeek AI. Apache 2.0 License.</span>
+            <div className="flex items-center gap-4">
+              <a href="https://github.com/BuildGeekAI/mem-dog/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="hover:text-white/30 transition-colors">License</a>
+              <a href="https://github.com/BuildGeekAI/mem-dog" target="_blank" rel="noopener noreferrer" className="hover:text-white/30 transition-colors">Source Code</a>
+            </div>
           </div>
         </div>
       </footer>

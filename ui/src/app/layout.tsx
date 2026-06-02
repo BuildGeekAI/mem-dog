@@ -4,10 +4,16 @@ import { AuthProvider } from '@/lib/auth-context';
 import { ProjectProvider } from '@/lib/project-context';
 
 export const metadata: Metadata = {
-  title: 'Mem-Dog - Intelligent Memory System',
-  description: 'Beautiful versioned data storage powered by Google Cloud',
+  title: 'Mem-Dog — Private AI System for Individuals & Organizations',
+  description: 'Ingest data from 300+ apps, enrich with 42 AI agents, and query with 5 search modes powered by a temporal knowledge graph. Self-hosted, free, open source (Apache 2.0).',
   icons: {
     icon: '/favicon.ico',
+  },
+  openGraph: {
+    title: 'Mem-Dog — Private AI System',
+    description: 'Ingest from 300+ apps, enrich with 42 AI agents, query with 5 search modes. Self-hosted, free, Apache 2.0.',
+    type: 'website',
+    siteName: 'Mem-Dog',
   },
 };
 
