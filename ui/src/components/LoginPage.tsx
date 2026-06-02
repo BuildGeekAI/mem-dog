@@ -376,6 +376,7 @@ export default function LoginPage() {
               { href: 'how-it-works', label: 'How it Works' },
               { href: 'use-cases', label: 'Use Cases' },
               { href: 'features', label: 'Features' },
+              { href: 'digime', label: 'DigiMe' },
               { href: 'developer', label: 'Developer' },
               { href: 'platform', label: 'Platform' },
               { href: 'faq', label: 'FAQ' },
@@ -954,109 +955,145 @@ export default function LoginPage() {
           </div>
         </motion.div>
 
-        {/* ── DigiMe ── */}
-        <div>
-          <div className="mt-20">
-            <motion.h3
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.5 }}
-              className="text-2xl sm:text-3xl font-bold mb-2 text-center"
-            >
-              Meet <span className="nango-gradient-text">DigiMe</span>
-            </motion.h3>
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-white/40 text-center mb-12 max-w-xl mx-auto"
-            >
-              Your AI memory assistant, powered by OpenClaw
-            </motion.p>
+      </div>
+      </SectionAccordion>
 
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: '-80px' }}
-                transition={{ duration: 0.6 }}
-              >
-                <p className="text-white/35 mb-8 leading-relaxed text-sm">
-                  DigiMe lives inside your messaging apps as an AI agent — ask questions, search memories, and ingest data through natural conversation with the mem-dog RAG system. No context switching, no extra tools.
-                </p>
-                <div className="space-y-4">
-                  {[
-                    { icon: MessageCircle, text: 'Lives in WhatsApp, Telegram, Signal, Slack, Discord, Matrix, 15+ more' },
-                    { icon: Search, text: 'Natural language queries against the mem-dog RAG system' },
-                    { icon: Brain, text: 'Semantic search across all ingested data' },
-                    { icon: Zap, text: 'Ingest new data directly from conversations' },
-                    { icon: Database, text: 'Retrieve and summarize memories on demand' },
-                  ].map((item, i) => (
-                    <motion.div
-                      key={item.text}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
-                      className="flex items-start gap-3"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <item.icon className="w-3.5 h-3.5 text-white/50" />
-                      </div>
-                      <span className="text-sm text-white/50">{item.text}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
+      <SectionAccordion id="digime" title="DigiMe by OpenClaw" icon={Bot} defaultOpen>
+        <div className="relative">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-xs text-cyan-400 mb-6">
+            <Bot className="w-3.5 h-3.5" />
+            Powered by OpenClaw Runtime
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            Meet <span className="nango-gradient-text">DigiMe</span>
+          </h2>
+          <p className="text-white/40 max-w-2xl mx-auto">
+            Your AI memory assistant that lives inside your messaging apps. Built on the <a href="https://github.com/nicholascpark/openclaw" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 transition-colors">OpenClaw</a> agent runtime — ask questions, search your knowledge base, and ingest data through natural conversation. No context switching, no extra tools.
+          </p>
+        </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: '-80px' }}
-                transition={{ duration: 0.6, delay: 0.15 }}
-                className="relative"
-              >
-                {/* Chat window */}
-                <div className="rounded-xl border border-white/10 bg-[#0d1117] overflow-hidden shadow-2xl shadow-black/50">
-                  <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
-                    <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-                    <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
-                    <div className="w-3 h-3 rounded-full bg-[#28c840]" />
-                    <span className="ml-3 text-xs text-white/25 font-mono flex items-center gap-1.5">
-                      <Bot className="w-3 h-3" /> DigiMe · WhatsApp
-                    </span>
+        <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.6 }}
+          >
+            <h3 className="text-lg font-bold text-white mb-6">Talk to your data from anywhere</h3>
+            <div className="space-y-4">
+              {[
+                { icon: MessageCircle, text: 'Lives in WhatsApp, Telegram, Signal, Slack, Discord, Matrix, and 15+ more channels' },
+                { icon: Search, text: 'Natural language queries against the full mem-dog RAG system with cited answers' },
+                { icon: Brain, text: 'Semantic search across all ingested data — vector, keyword, hybrid, and graph modes' },
+                { icon: Zap, text: 'Ingest new data directly from conversations — forward a message to save it' },
+                { icon: Database, text: 'Retrieve and summarize memories, timelines, and facts on demand' },
+                { icon: Shield, text: 'Runs on your infrastructure — your conversations never leave your network' },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.text}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
+                  className="flex items-start gap-3"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <item.icon className="w-3.5 h-3.5 text-white/50" />
                   </div>
-                  <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
-                    {AGENT_MESSAGES.map((msg, i) => (
-                      <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed ${
-                          msg.role === 'user'
-                            ? 'bg-cyan-500/15 border border-cyan-500/20 text-white/80'
-                            : 'bg-white/5 border border-white/10 text-white/60'
-                        }`}>
-                          <div className="whitespace-pre-line">{msg.text}</div>
-                          {'badges' in msg && msg.badges && (
-                            <div className="flex gap-1.5 mt-2">
-                              {msg.badges.map(b => (
-                                <span key={b} className="px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-mono">
-                                  [{b}]
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                  <span className="text-sm text-white/50">{item.text}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="relative"
+          >
+            {/* Chat window */}
+            <div className="rounded-xl border border-white/10 bg-[#0d1117] overflow-hidden shadow-2xl shadow-black/50">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+                <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+                <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+                <span className="ml-3 text-xs text-white/25 font-mono flex items-center gap-1.5">
+                  <Bot className="w-3 h-3" /> DigiMe · WhatsApp
+                </span>
+              </div>
+              <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
+                {AGENT_MESSAGES.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'bg-cyan-500/15 border border-cyan-500/20 text-white/80'
+                        : 'bg-white/5 border border-white/10 text-white/60'
+                    }`}>
+                      <div className="whitespace-pre-line">{msg.text}</div>
+                      {'badges' in msg && msg.badges && (
+                        <div className="flex gap-1.5 mt-2">
+                          {msg.badges.map(b => (
+                            <span key={b} className="px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-mono">
+                              [{b}]
+                            </span>
+                          ))}
                         </div>
-                      </div>
-                    ))}
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Glow behind */}
+            <div className="absolute -inset-4 -z-10 rounded-2xl opacity-30" style={{ background: 'radial-gradient(ellipse at center, rgba(68,213,227,0.15) 0%, transparent 70%)' }} />
+          </motion.div>
+        </div>
+
+        {/* OpenClaw details */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="p-6 rounded-xl border border-white/10 bg-gradient-to-r from-cyan-500/[0.04] via-purple-500/[0.04] to-transparent"
+        >
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center shadow-lg">
+                <Bot className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Built on OpenClaw</h3>
+                <p className="text-xs text-white/35">Open-source AI agent runtime</p>
+              </div>
+            </div>
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { icon: Globe, label: '15+ Channels', sub: 'WhatsApp, Slack, Telegram...' },
+                { icon: Brain, label: 'RAG-Powered', sub: 'Cited answers from your data' },
+                { icon: Zap, label: 'Real-Time', sub: 'Instant responses via webhook' },
+                { icon: Shield, label: 'Self-Hosted', sub: 'Runs alongside mem-dog' },
+              ].map(item => (
+                <div key={item.label} className="flex items-start gap-2">
+                  <item.icon className="w-4 h-4 text-white/30 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-xs font-medium text-white/70">{item.label}</div>
+                    <div className="text-[10px] text-white/30">{item.sub}</div>
                   </div>
                 </div>
-                {/* Glow behind */}
-                <div className="absolute -inset-4 -z-10 rounded-2xl opacity-30" style={{ background: 'radial-gradient(ellipse at center, rgba(68,213,227,0.15) 0%, transparent 70%)' }} />
-              </motion.div>
+              ))}
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
       </SectionAccordion>
 
