@@ -224,6 +224,14 @@ const PIPELINE_STEPS = [
     glow: 'rgba(52,211,153,0.15)',
   },
   {
+    icon: Bot,
+    title: 'DigiMe (OpenClaw)',
+    desc: 'Chat agent',
+    items: ['15+ Channels', 'WhatsApp · Slack · Telegram', 'Conversational RAG', 'Ingest via Chat'],
+    color: 'from-amber-400 to-amber-500',
+    glow: 'rgba(251,191,36,0.15)',
+  },
+  {
     icon: Server,
     title: 'MCP Server',
     desc: 'Agent access',
@@ -832,17 +840,22 @@ export default function LoginPage() {
                 <ChevronRight className="w-3 h-3 text-white/20 rotate-90" />
               </div>
             </div>
-            {/* MCP Server + Search layer */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Search + DigiMe + MCP layer */}
+            <div className="grid grid-cols-3 gap-3">
               <div className="p-3 rounded-lg border border-white/10 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-emerald-500/5 text-center">
                 <Search className="w-4 h-4 text-white/50 mx-auto mb-1" />
-                <div className="text-xs font-semibold text-white/70">Multi-Signal Search + RAG Chat</div>
-                <div className="text-[10px] text-white/30">Vector · FTS · Graph · Hybrid · Citations</div>
+                <div className="text-xs font-semibold text-white/70">Search + RAG</div>
+                <div className="text-[10px] text-white/30">Vector · FTS · Graph · Hybrid</div>
+              </div>
+              <div className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/5 text-center">
+                <Bot className="w-4 h-4 text-amber-400/70 mx-auto mb-1" />
+                <div className="text-xs font-semibold text-white/70">DigiMe (OpenClaw)</div>
+                <div className="text-[10px] text-white/30">WhatsApp · Slack · 15+ channels</div>
               </div>
               <div className="p-3 rounded-lg border border-rose-500/20 bg-rose-500/5 text-center">
                 <Server className="w-4 h-4 text-rose-400/70 mx-auto mb-1" />
                 <div className="text-xs font-semibold text-white/70">MCP Server</div>
-                <div className="text-[10px] text-white/30">Claude Desktop · Cursor · SSE</div>
+                <div className="text-[10px] text-white/30">Claude Desktop · Cursor</div>
               </div>
             </div>
             {/* Background glow */}
