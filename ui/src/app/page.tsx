@@ -91,7 +91,11 @@ function MarketingSite() {
             </button>
           ))}
         </div>
-        <div className="w-[120px]" /> {/* Spacer for centering */}
+        <a href="mailto:pagarwal@buildgeek.ai?subject=Mem-Dog%20Enterprise%20Demo"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium text-sm hover:opacity-90 transition-colors"
+        >
+          Contact
+        </a>
       </nav>
 
       {/* Content */}
