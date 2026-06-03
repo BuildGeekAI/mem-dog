@@ -103,6 +103,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: Sid
               {section.items.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
+                  data-testid={`sidebar-tab-${id}`}
                   onClick={() => handleTabChange(id)}
                   className={`
                     flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300
@@ -124,6 +125,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: Sid
         <div className="mt-auto pt-2">
           <div className="mx-2 mb-2 border-t border-white/[0.06]" />
           <button
+            data-testid="sidebar-tab-settings"
             onClick={() => handleTabChange('settings')}
             className={`
               flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300

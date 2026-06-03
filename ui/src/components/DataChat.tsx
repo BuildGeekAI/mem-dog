@@ -336,6 +336,7 @@ export default function DataChat() {
                 {(['vector', 'hybrid', 'graph', 'full'] as const).map((mode) => (
                   <button
                     key={mode}
+                    data-testid={mode === 'hybrid' ? 'knowledge-search-hybrid' : undefined}
                     onClick={() => setSearchMode(mode)}
                     className={`px-2 py-1 text-[11px] transition-colors ${
                       searchMode === mode
@@ -394,6 +395,7 @@ export default function DataChat() {
         <div className="max-w-3xl mx-auto flex items-end gap-2">
           <div className="flex-1 relative">
             <textarea
+              data-testid="knowledge-chat-input"
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -404,6 +406,7 @@ export default function DataChat() {
             />
           </div>
           <button
+            data-testid="knowledge-chat-send"
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || loading}
             className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-violet-500/25 transition-all"

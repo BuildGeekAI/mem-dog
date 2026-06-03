@@ -536,6 +536,7 @@ export default function Home() {
                     ]).map(tab => (
                       <button
                         key={tab.id}
+                        data-testid={`playground-tab-${tab.id === 'chat' ? 'channel' : tab.id}`}
                         onClick={() => setTestingSubTab(tab.id)}
                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
                           testingSubTab === tab.id
