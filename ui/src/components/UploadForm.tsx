@@ -821,6 +821,7 @@ export default function UploadForm({ onSuccess }: UploadFormProps) {
 
               <div className="relative">
                 <textarea
+                  data-testid="upload-textarea"
                   className="textarea-modern"
                   value={textContent}
                   onChange={(e) => setTextContent(e.target.value)}
@@ -983,6 +984,7 @@ export default function UploadForm({ onSuccess }: UploadFormProps) {
 
           <button
             type="submit"
+            data-testid="upload-submit"
             disabled={loading}
             className="btn-premium w-full flex items-center justify-center gap-2"
           >

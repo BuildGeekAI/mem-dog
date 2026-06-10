@@ -255,6 +255,7 @@ export default function ChannelChat() {
             <div>
               <label className="block text-xs font-medium text-white/50 mb-1">Gateway URL</label>
               <input
+                data-testid="channel-gateway-url"
                 type="url"
                 value={gatewayUrl}
                 onChange={e => setGatewayUrl(e.target.value)}
@@ -429,6 +430,7 @@ export default function ChannelChat() {
 
         <div className="flex-1 relative">
           <textarea
+            data-testid="channel-message-input"
             ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
@@ -447,6 +449,7 @@ export default function ChannelChat() {
         </div>
 
         <button
+          data-testid="channel-send"
           onClick={sendMessage}
           disabled={(!input.trim() && attachments.length === 0) || !gatewayUrl || sending}
           className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-r from-primary-500 to-accent-500 flex items-center justify-center text-white shadow-lg shadow-primary-500/30 disabled:opacity-30 disabled:shadow-none hover:brightness-110 transition-all"

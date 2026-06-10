@@ -11,11 +11,17 @@
     "test:unit": "jest -c ../testing/ui/jest.config.ts",
     "test:unit:watch": "jest -c ../testing/ui/jest.config.ts --watch",
     "test:unit:coverage": "jest -c ../testing/ui/jest.config.ts --coverage",
-    "test:e2e": "playwright test -c ../testing/ui/playwright.config.ts"
+    "test:e2e": "playwright test -c ../testing/ui/playwright.config.ts",
+    "record:install-browsers": "playwright install chromium",
+    "record:verify-browser": "tsx ../testing/ui/recording/verify-browser.ts",
+    "record:webapp": "tsx ../testing/ui/recording/record-webapp.ts",
+    "record:preflight": "tsx ../testing/ui/recording/preflight-gcp.ts",
+    "record:seed": "tsx ../testing/ui/recording/seed-${RECORDING_PROFILE:-local}.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.1",
     "axios": "1.6.5",
+    "dotenv": "^17.4.2",
     "framer-motion": "11.0.3",
     "lucide-react": "0.316.0",
     "next": "14.1.0",
@@ -24,7 +30,7 @@
     "react-markdown": "^9.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "1.41.0",
+    "@playwright/test": "1.49.1",
     "@testing-library/jest-dom": "6.4.0",
     "@testing-library/react": "14.2.0",
     "@testing-library/user-event": "14.5.2",
@@ -36,9 +42,11 @@
     "identity-obj-proxy": "3.0.0",
     "jest": "29.7.0",
     "jest-environment-jsdom": "29.7.0",
+    "playwright": "1.49.1",
     "postcss": "8.4.35",
     "tailwindcss": "3.4.1",
     "ts-jest": "29.1.2",
+    "tsx": "^4.20.6",
     "typescript": "5.3.3"
   }
 }

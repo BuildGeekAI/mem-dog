@@ -168,7 +168,7 @@ class TestClassifyMessageLitellm:
     async def test_litellm_error_returns_fallback(self):
         with patch("app.llm.config") as cfg, \
              patch("litellm.acompletion", new_callable=AsyncMock, side_effect=RuntimeError("API down")):
-            _mock_litellm_config(cfg, provider="anthropic", model="anthropic/claude-sonnet-4-20250514")
+            _mock_litellm_config(cfg, provider="anthropic", model="anthropic/claude-sonnet-4-6-20250514")
             result = await classify_message("test")
         assert result["intent"] == "unknown"
 

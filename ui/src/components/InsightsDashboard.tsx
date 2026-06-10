@@ -33,7 +33,7 @@ function StatCard({ icon: Icon, label, value, sub, color }: {
   color: string;
 }) {
   return (
-    <div className="glass-card p-5">
+    <div className="glass-card p-5" data-testid="insights-stat-card">
       <div className="relative z-10 flex items-start gap-4">
         <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shadow-lg`}>
           <Icon className="w-6 h-6 text-white" />
@@ -96,7 +96,7 @@ function SectionCard({ title, icon: Icon, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="glass-card p-6">
+    <div className="glass-card p-6" data-testid="insights-section-card">
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-4">
           <Icon className="w-5 h-5 text-white/60" />
@@ -199,7 +199,7 @@ export default function InsightsDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex items-center justify-center py-20" data-testid="insights-loading">
         <Loader2 className="w-8 h-8 text-white/40 animate-spin" />
         <span className="ml-3 text-white/40">Loading insights...</span>
       </div>
@@ -207,7 +207,7 @@ export default function InsightsDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="insights-dashboard">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -222,6 +222,8 @@ export default function InsightsDashboard() {
           )}
         </div>
         <button
+          type="button"
+          data-testid="insights-refresh"
           onClick={handleRefresh}
           disabled={refreshing}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg shadow-primary-500/30 hover:shadow-primary-500/50 disabled:opacity-50"

@@ -19,7 +19,7 @@ mem-dog is a multi-channel data ingestion and AI enrichment platform. Data flows
 - **mcp-server/** — FastMCP SSE server (Python 3.12) exposing 8 tools for MCP clients (Claude Desktop, Cursor). Uses `mem_dog_client` internally. Auth via `x-api-key`. Entry: `mcp-server/app/main.py`.
 - **clients/** — Multi-language SDKs with full API coverage (~120 methods each). Python (`mem_dog_client`, httpx, + LangChain/CrewAI/OpenAI adapters), TypeScript (native fetch), Go (stdlib), Rust (async reqwest), Ruby (faraday). Each SDK has a full client and a 7-method simple facade. Docs in `docs/clients/`.
 - **k8s/** — Kubernetes manifests for GKE + Supabase. Namespaces: `mem-dog` (API), `webhook-pipeline`, `webhook-gateway` (gateway + openclaw-node), `supabase`.
-- **testing/** — Test configs live here, separate from app code. `testing/ui/` has Jest + Playwright configs; `testing/api/` has pytest fixtures with mock storage.
+- **testing/** — Test configs live here, separate from app code. `testing/ui/` has Jest + Playwright e2e; `testing/ui/recording/` is the demo video harness (scenes, seed, `record:*` from `ui/`); `testing/api/` has pytest fixtures with mock storage.
 
 ## Common Commands
 
@@ -112,4 +112,4 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 - API routers live in `api/app/routers/` (34 routers). Models in `api/app/models.py`.
 - UI components in `ui/src/components/`. Path alias: `@/*` → `src/*`.
 - Shared AI config: `config/ai.env`.
-- Test configs for UI are in `testing/ui/` (separate from app code).
+- Test configs for UI are in `testing/ui/` (e2e); demo recording is in `testing/ui/recording/` — see `README.md` there.

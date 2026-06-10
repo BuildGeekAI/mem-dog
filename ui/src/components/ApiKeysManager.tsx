@@ -94,6 +94,7 @@ export default function ApiKeysManager() {
           <div className="flex-1">
             <label className="block text-sm font-medium text-white/70 mb-1.5">Name</label>
             <input
+              data-testid="api-key-name"
               type="text"
               value={name}
               onChange={(e) => { setName(e.target.value); setError(null); }}
@@ -115,6 +116,7 @@ export default function ApiKeysManager() {
             </select>
           </div>
           <button
+            data-testid="api-key-create"
             onClick={handleCreate}
             disabled={creating}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-primary-500 to-accent-500 text-white hover:shadow-lg hover:shadow-primary-500/25 transition-all disabled:opacity-50 whitespace-nowrap"

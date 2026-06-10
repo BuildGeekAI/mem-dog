@@ -236,6 +236,7 @@ export function SettingsManager({ apiBaseUrl }: SettingsManagerProps) {
         {tabs.map(tab => (
           <button
             key={tab.id}
+            data-testid={`settings-tab-${tab.id}`}
             onClick={() => setSubTab(tab.id)}
             className={`flex items-center justify-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
               subTab === tab.id
