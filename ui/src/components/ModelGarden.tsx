@@ -75,9 +75,9 @@ const PROVIDER_MODEL_CARDS: Record<string, ModelCapability[]> = {
     { name: 'text-embedding-3-large', displayName: 'Embedding 3 Large', provider: 'openai', tier: 'embedding', multimodal: false, code: false, reasoning: false, structured_output: false, long_context: false, context_window: 8191, best_for: ['high-accuracy embeddings', 'similarity', 'clustering'] },
   ],
   anthropic: [
-    { name: 'claude-opus-4-20250514', displayName: 'Claude Opus 4', provider: 'anthropic', tier: 'large', multimodal: true, code: true, reasoning: true, structured_output: true, long_context: true, context_window: 200000, best_for: ['complex analysis', 'creative writing', 'research'] },
-    { name: 'claude-sonnet-4-20250514', displayName: 'Claude Sonnet 4', provider: 'anthropic', tier: 'medium', multimodal: true, code: true, reasoning: true, structured_output: true, long_context: true, context_window: 200000, best_for: ['balanced performance', 'coding', 'analysis'] },
-    { name: 'claude-haiku-4-20250414', displayName: 'Claude Haiku 4', provider: 'anthropic', tier: 'small', multimodal: true, code: true, reasoning: false, structured_output: true, long_context: true, context_window: 200000, best_for: ['fast responses', 'classification', 'simple tasks'] },
+    { name: 'claude-opus-4-6-20250605', displayName: 'Claude Opus 4.6', provider: 'anthropic', tier: 'large', multimodal: true, code: true, reasoning: true, structured_output: true, long_context: true, context_window: 1000000, best_for: ['complex analysis', 'creative writing', 'research'] },
+    { name: 'claude-sonnet-4-6-20250514', displayName: 'Claude Sonnet 4.6', provider: 'anthropic', tier: 'medium', multimodal: true, code: true, reasoning: true, structured_output: true, long_context: true, context_window: 200000, best_for: ['balanced performance', 'coding', 'analysis'] },
+    { name: 'claude-haiku-4-5-20251001', displayName: 'Claude Haiku 4.5', provider: 'anthropic', tier: 'small', multimodal: true, code: true, reasoning: false, structured_output: true, long_context: true, context_window: 200000, best_for: ['fast responses', 'classification', 'simple tasks'] },
     { name: 'claude-3-5-sonnet-20241022', displayName: 'Claude 3.5 Sonnet', provider: 'anthropic', tier: 'medium', multimodal: true, code: true, reasoning: true, structured_output: true, long_context: true, context_window: 200000, best_for: ['coding', 'analysis', 'general purpose'] },
     { name: 'claude-3-5-haiku-20241022', displayName: 'Claude 3.5 Haiku', provider: 'anthropic', tier: 'small', multimodal: false, code: true, reasoning: false, structured_output: true, long_context: true, context_window: 200000, best_for: ['fast tasks', 'extraction', 'classification'] },
   ],
@@ -99,7 +99,7 @@ const PROVIDER_MODEL_CARDS: Record<string, ModelCapability[]> = {
   ],
   openrouter: [
     { name: 'openai/gpt-4o', displayName: 'GPT-4o (via OpenRouter)', provider: 'openrouter', tier: 'large', multimodal: true, code: true, reasoning: true, structured_output: true, long_context: true, context_window: 128000, best_for: ['general purpose', 'vision', 'complex tasks'] },
-    { name: 'anthropic/claude-sonnet-4', displayName: 'Claude Sonnet 4 (via OpenRouter)', provider: 'openrouter', tier: 'medium', multimodal: true, code: true, reasoning: true, structured_output: true, long_context: true, context_window: 200000, best_for: ['coding', 'analysis', 'balanced quality'] },
+    { name: 'anthropic/claude-sonnet-4.6', displayName: 'Claude Sonnet 4.6 (via OpenRouter)', provider: 'openrouter', tier: 'medium', multimodal: true, code: true, reasoning: true, structured_output: true, long_context: true, context_window: 200000, best_for: ['coding', 'analysis', 'balanced quality'] },
     { name: 'google/gemini-2.5-flash', displayName: 'Gemini 2.5 Flash (via OpenRouter)', provider: 'openrouter', tier: 'medium', multimodal: true, code: true, reasoning: true, structured_output: true, long_context: true, context_window: 1048576, best_for: ['fast inference', 'multimodal', 'cost-effective'] },
     { name: 'meta-llama/llama-3.1-70b-instruct', displayName: 'Llama 3.1 70B (via OpenRouter)', provider: 'openrouter', tier: 'large', multimodal: false, code: true, reasoning: true, structured_output: true, long_context: true, context_window: 131072, best_for: ['open-source', 'coding', 'reasoning'] },
   ],

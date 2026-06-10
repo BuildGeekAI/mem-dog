@@ -31,7 +31,7 @@ LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")
 
 # Model identifier.  For native Gemini this is the bare model name.
 # For litellm providers use the litellm model format, e.g.:
-#   openai/gpt-4o, anthropic/claude-sonnet-4-20250514, ollama/llama3,
+#   openai/gpt-4o, anthropic/claude-sonnet-4-6-20250514, ollama/llama3,
 #   mistral/mistral-large-latest, together_ai/meta-llama/Llama-3-70b, etc.
 # When LLM_PROVIDER != "gemini" and LLM_MODEL does not contain a "/",
 # the provider is prepended automatically (e.g. "gpt-4o" → "openai/gpt-4o").
