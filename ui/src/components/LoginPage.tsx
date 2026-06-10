@@ -443,7 +443,7 @@ export default function LoginPage() {
         >
           <span className="nango-gradient-text">The Private</span>
           <br />
-          <span className="nango-gradient-text">AI System.</span>
+          <span className="nango-gradient-text">AI Memory Platform.</span>
         </motion.h1>
 
         <div className="h-8 mb-8">
@@ -512,7 +512,7 @@ export default function LoginPage() {
                 Every time you ask an AI a question, your data travels to a distant data center, gets processed on someone else&apos;s hardware, and a record of your query lives on infrastructure you&apos;ll never audit. For individuals, that means your personal thoughts, health records, financial details, and private conversations are one breach away from exposure. For enterprises, it means trade secrets, customer data, and proprietary research flowing through third-party systems with opaque data-retention policies.
               </p>
               <p>
-                <span className="text-white font-bold">We&apos;re building Mem-Dog to end that trade-off.</span> A complete AI system — 42 specialized agents, semantic search, a temporal knowledge graph, 300+ integrations — that runs entirely on hardware you control. Your laptop, a Mac Mini on your desk, or a server rack in your office. The AI never phones home because there&apos;s no home to phone.
+                <span className="text-white font-bold">We&apos;re building Mem-Dog to end that trade-off.</span> A complete AI memory platform — 42 specialized agents, semantic search, a temporal knowledge graph, 300+ integrations — that runs entirely on hardware you control. Your laptop, a Mac Mini on your desk, or a server rack in your office. The AI never phones home because there&apos;s no home to phone.
               </p>
               <p>
                 <span className="text-white/80 font-medium">Speed through smarter architecture.</span> Instead of routing every request to a massive cloud model, Mem-Dog uses a 6-layer classification pipeline that matches each piece of data to the smallest model that can handle it well. A simple text note gets a fast 4-billion-parameter model. A complex document gets a 27-billion-parameter one. Multimodal content gets a vision model. This tiered routing means most queries finish in milliseconds on modest hardware — because you&apos;re not waiting for a 200B model to parse a grocery list.
