@@ -39,6 +39,11 @@ uvicorn main:app --reload --port 8080    # Dev server
 pytest                                    # All tests (uses pytest-asyncio)
 pytest tests/test_foo.py -v               # Single test file
 pytest tests/test_foo.py::test_bar -v     # Single test
+
+# Database migrations (requires POSTGRES_URL env var)
+alembic upgrade head                      # Apply all migrations
+alembic revision --autogenerate -m "msg"  # Create migration from model changes
+alembic downgrade -1                      # Rollback last migration
 ```
 
 ### UI (from ui/)
@@ -50,6 +55,15 @@ npm run test:unit            # Jest unit tests
 npm run test:unit:watch      # Watch mode
 npm run test:e2e             # Playwright E2E tests
 npm run lint                 # ESLint
+```
+
+### Webhook Gateway (from webhook-gateway/)
+
+```bash
+pip install -e ".[dev]"                   # Install with dev deps
+uvicorn app.main:app --reload --port 8070 # Dev server
+pytest                                    # Run tests
+wgw                                       # CLI entry point (after install)
 ```
 
 ### Webhook Processor (from webhook/processor/)
