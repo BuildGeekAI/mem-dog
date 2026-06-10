@@ -9,7 +9,7 @@ mem-dog uses Nango as its integration backend. Nango handles OAuth flows, token 
 ## Architecture
 
 ```
-mem-dog (private AI system)
+mem-dog (private AI memory platform)
   │
   ├── Webhook Gateway (per-user webhooks, channel normalization)
   ├── API (70+ endpoints, storage, search, AI config)
@@ -73,4 +73,4 @@ The API and webhook gateway communicate with Nango via in-cluster DNS: `nango-se
 
 ## Compared to Standalone Nango
 
-If you only need API integrations (OAuth, sync, proxy), standalone Nango is the right choice. mem-dog is for when you need integrations **plus** AI enrichment, knowledge graph, semantic search, and memory — a complete private AI system.
+If you only need API integrations (OAuth, sync, proxy), standalone Nango is the right choice. mem-dog is for when you need integrations **plus** AI enrichment, knowledge graph, semantic search, and memory — a complete private AI memory platform.

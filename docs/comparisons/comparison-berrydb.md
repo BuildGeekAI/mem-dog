@@ -10,7 +10,7 @@ BerryDB (berrydb.io) is a multi-modal knowledge graph database with ML workflow 
 
 | | mem-dog | BerryDB |
 |-|---------|---------|
-| **What it is** | Private AI system with multi-channel ingestion, 40-agent enrichment pipeline, and RAG query engine | Multi-modal knowledge graph database with ML workflow management |
+| **What it is** | Private AI memory platform with multi-channel ingestion, 40-agent enrichment pipeline, and RAG query engine | Multi-modal knowledge graph database with ML workflow management |
 | **Focus** | End-to-end data lifecycle: ingest from channels → AI enrichment → store → search/RAG | Store multi-modal data, build knowledge graphs, annotate, train models |
 | **Deployment** | Self-hosted only (Docker Compose, GKE, Mac Mini) | SaaS only (30-day free trial) |
 | **License** | Proprietary | Proprietary |

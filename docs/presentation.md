@@ -1,4 +1,4 @@
-# Mem-Dog: The Private AI System
+# Mem-Dog: The Private AI Memory Platform
 
 **AI should be private. Not as a feature — as the foundation.**
 
@@ -22,7 +22,7 @@ The AI industry has normalized this fragmentation. You get intelligence, but you
 
 ## Slide 2 — What is Mem-Dog?
 
-A complete, self-hosted AI system that ingests data from 33 channel adapters and 300+ apps, enriches it with 42 specialized AI agents, stores it in a temporal knowledge graph, and makes it searchable through 5 search modes with RAG chat — all running on hardware you control.
+A complete, self-hosted AI memory platform that ingests data from 33 channel adapters and 300+ apps, enriches it with 42 specialized AI agents, stores it in a temporal knowledge graph, and makes it searchable through 5 search modes with RAG chat — all running on hardware you control.
 
 Your laptop. A Mac Mini on your desk. A server rack in your office. A Kubernetes cluster in your cloud account. The AI never phones home because there's no home to phone.
 
@@ -877,7 +877,7 @@ GKE_CLUSTER=open-jaw GKE_ZONE=us-central1-a \
 
 ## Slide 23 — Summary
 
-### The Private AI System
+### The Private AI Memory Platform
 
 Mem-Dog is the only platform that combines all of these in a single, self-hosted system:
 

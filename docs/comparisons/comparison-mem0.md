@@ -10,7 +10,7 @@ mem0 is the most popular AI memory framework (49.8k GitHub stars, $24M Series A,
 
 | | mem-dog | mem0 |
 |-|---------|------|
-| **What it is** | Private AI system with multi-channel ingestion, AI pipeline, and query engine | Memory layer SDK for adding persistent memory to AI agents |
+| **What it is** | Private AI memory platform with multi-channel ingestion, AI pipeline, and query engine | Memory layer SDK for adding persistent memory to AI agents |
 | **Focus** | End-to-end data lifecycle: ingest, enrich, store, query | Memory CRUD: add, search, get, update, delete |
 | **Deployment** | Self-hosted only (Docker, GKE, Mac Mini) | Managed cloud + self-hosted open source |
 | **License** | Proprietary | Apache 2.0 |
@@ -269,7 +269,7 @@ mem-dog is free but requires self-hosting (compute costs for GKE/Cloud Run or a 
 
 **mem0** is the right choice if you want a simple, drop-in memory layer for an AI agent — add 5 lines of code and memories persist across sessions. The managed platform handles infrastructure, and enterprise compliance is built in.
 
-**mem-dog** is the right choice if you want a complete private AI system — multi-channel ingestion, automatic AI enrichment of any data type, temporal knowledge graph (Graphiti + Neo4j), 5-mode search with reranking, built-in RAG chat with citations, and full infrastructure ownership. It does more, but requires self-hosting.
+**mem-dog** is the right choice if you want a complete private AI memory platform — multi-channel ingestion, automatic AI enrichment of any data type, temporal knowledge graph (Graphiti + Neo4j), 5-mode search with reranking, built-in RAG chat with citations, and full infrastructure ownership. It does more, but requires self-hosting.
 
 They solve different problems at different scales:
 - mem0 = **memory for your agent** (SDK)

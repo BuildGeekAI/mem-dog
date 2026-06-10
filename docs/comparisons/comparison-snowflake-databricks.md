@@ -10,7 +10,7 @@ Snowflake is a cloud-native AI Data Cloud with SQL-centric analytics, Cortex AI,
 
 | | mem-dog | Snowflake | Databricks |
 |-|---------|-----------|------------|
-| **What it is** | Private AI system with multi-channel ingestion, 40-agent enrichment pipeline, and RAG query engine | Cloud AI Data Cloud — warehouse, lake, AI, and data sharing | Unified data intelligence platform — lakehouse, ML, and AI |
+| **What it is** | Private AI memory platform with multi-channel ingestion, 40-agent enrichment pipeline, and RAG query engine | Cloud AI Data Cloud — warehouse, lake, AI, and data sharing | Unified data intelligence platform — lakehouse, ML, and AI |
 | **Focus** | End-to-end personal/team data lifecycle: ingest → AI enrich → store → search/RAG | Enterprise analytics, data sharing, and AI at warehouse scale | Enterprise data engineering, ML/AI, and lakehouse analytics |
 | **Deployment** | Self-hosted (Docker Compose, GKE, Mac Mini) | SaaS only (AWS, Azure, GCP) | SaaS (AWS, Azure, GCP), some self-managed |
 | **License** | Proprietary | Proprietary (SaaS) | Proprietary + open-source components (Spark, Delta Lake, MLflow, Unity Catalog) |
@@ -242,7 +242,7 @@ Delta Sharing | Genie (NL to SQL) | Apps
 ## When to Use What
 
 ### Choose mem-dog when:
-- You want a **private AI system** on your own hardware
+- You want a **private AI memory platform** on your own hardware
 - Data comes from **messaging channels and integrations** (not data lakes)
 - You need **$0 AI costs** with local Ollama models
 - You want a **conversational agent** (DigiMe) that works across WhatsApp, Signal, Slack, etc.

@@ -220,7 +220,7 @@ Dual-layer: **Postgres** (always active, zero infra) + **Graphiti/Neo4j** (optio
 
 | | mem-dog | mem0 | Zep | Dify.ai | LangMem |
 |-|---------|------|-----|---------|---------|
-| **Focus** | Private AI system | Memory SDK | Context engine | LLM app builder | LangChain memory |
+| **Focus** | Private AI memory platform | Memory SDK | Context engine | LLM app builder | LangChain memory |
 | **Ingestion** | 300+ apps (Nango) + webhooks + UI | API only | API only | File upload | API only |
 | **AI enrichment** | 42 agents, 60+ types | Fact extraction | Fact extraction | Workflow agents | None |
 | **Knowledge graph** | Postgres + Graphiti/Neo4j | None | Graphiti/Neo4j | None | None |

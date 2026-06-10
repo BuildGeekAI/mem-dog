@@ -10,7 +10,7 @@ Zep is a context engineering platform built on temporal knowledge graphs (open-s
 
 | | mem-dog | Zep |
 |-|---------|-----|
-| **What it is** | Private AI system with multi-channel ingestion, AI pipeline, and query engine | Context engineering platform built on temporal knowledge graphs |
+| **What it is** | Private AI memory platform with multi-channel ingestion, AI pipeline, and query engine | Context engineering platform built on temporal knowledge graphs |
 | **Focus** | End-to-end data lifecycle: ingest, enrich, store, query | Assembling personalized context for AI agents from conversations and business data |
 | **Deployment** | Self-hosted only (Docker, GKE, Mac Mini) | Zep Cloud (managed) + self-hosted |
 | **License** | Proprietary | Open-source (Graphiti) + proprietary cloud |
@@ -215,7 +215,7 @@ Zep is a context engineering platform built on temporal knowledge graphs (open-s
 
 **Zep** is the right choice if you're building AI agents that need sophisticated conversational memory with temporal awareness — it understands that facts change over time, automatically assembles context, and its graph search combines semantic, keyword, and structural retrieval. The managed cloud eliminates ops. Best for: chat agents, customer support bots, personal assistants.
 
-**mem-dog** is the right choice if you need a complete private AI system — multi-channel ingestion, AI enrichment of any data type, built-in RAG chat, full web UI, and cost-effective self-hosted deployment. Best for: organizational knowledge management, multi-modal data processing, privacy-sensitive deployments.
+**mem-dog** is the right choice if you need a complete private AI memory platform — multi-channel ingestion, AI enrichment of any data type, built-in RAG chat, full web UI, and cost-effective self-hosted deployment. Best for: organizational knowledge management, multi-modal data processing, privacy-sensitive deployments.
 
 Key differentiator: mem-dog now integrates Graphiti (Zep's own open-source engine) for temporal knowledge graphs, closing the graph sophistication gap. mem-dog adds 5 search modes, 4 reranking strategies, and temporal fact queries on top of its existing breadth (25+ channels, 60+ data types, 40 agents, 5 SDKs, full web UI). Zep still leads on context assembly (`memory.get()` returns prompt-ready strings) and managed cloud deployment.
 
