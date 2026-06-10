@@ -420,7 +420,7 @@ export default function LoginPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs text-white/50 mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Private AI System — self-hosted, fast, cost-efficient
+            Private AI Memory — self-hosted, fast, cost-efficient
           </div>
           <div className="flex items-center justify-center gap-3 mb-8">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-xs font-medium text-emerald-400">
@@ -955,7 +955,7 @@ export default function LoginPage() {
             Flexible. Powerful. <span className="nango-gradient-text">Complete.</span>
           </h2>
           <p className="text-white/40 max-w-xl mx-auto mb-8">
-            Everything you need to build a private AI system for your data.
+            Everything you need to build private AI memory for your data.
           </p>
           {/* Compact feature highlights */}
           <div className="flex flex-wrap items-center justify-center gap-3 max-w-3xl mx-auto">
@@ -1397,7 +1397,7 @@ export default function LoginPage() {
               </div>
               <span className="font-semibold">Mem-Dog</span>
               <span className="text-white/15">|</span>
-              <span>Private AI System</span>
+              <span>Private AI Memory</span>
             </div>
             <div className="flex items-center gap-6 text-xs text-white/25">
               <a href="#how-it-works" className="hover:text-white/50 transition-colors">How it Works</a>

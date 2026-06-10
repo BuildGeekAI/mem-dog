@@ -1,6 +1,6 @@
 # @mem-dog/client
 
-TypeScript SDK for the [mem-dog](https://github.com/mem-dog/mem-dog) private AI system. Zero runtime dependencies — uses native `fetch`.
+TypeScript SDK for the [mem-dog](https://github.com/mem-dog/mem-dog) private AI memory platform. Zero runtime dependencies — uses native `fetch`.
 
 ## Requirements
 

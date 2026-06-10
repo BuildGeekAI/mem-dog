@@ -1,6 +1,6 @@
 # Mem-Dog API
 
-Python FastAPI backend for the Mem-Dog private AI system.
+Python FastAPI backend for the Mem-Dog private AI memory platform.
 
 **Version:** 4.0.0
 

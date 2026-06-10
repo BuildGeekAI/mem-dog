@@ -1,6 +1,6 @@
 # Mem-Dog Python Client
 
-Python client for the Mem-Dog private AI system API. Talks to the API layer via REST, matching the [OpenAPI specification](../docs/openapi.yaml).
+Python client for the Mem-Dog private AI memory platform API. Talks to the API layer via REST, matching the [OpenAPI specification](../docs/openapi.yaml).
 
 ## Installation
 

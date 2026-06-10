@@ -4,7 +4,7 @@
 
 [![Docker Compose](https://img.shields.io/badge/Docker_Compose-ready-blue.svg)](docker-compose.yml)
 
-**The private AI system for individuals and organizations.**
+**The private AI memory for individuals and organizations.**
 
 Ingest data from 300+ apps, enrich it with a 42-agent AI pipeline, store it with versioning and access control, and query it with 5 search modes powered by a temporal knowledge graph.
 

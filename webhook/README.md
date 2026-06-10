@@ -1,6 +1,6 @@
 # Webhook Pipeline
 
-Ingest external data into the mem-dog private AI system via a serverless webhook pipeline on Google Cloud.  All model inference uses open-source Gemma 3 GGUF models — no external AI API keys required.
+Ingest external data into the mem-dog private AI memory platform via a serverless webhook pipeline on Google Cloud.  All model inference uses open-source Gemma 3 GGUF models — no external AI API keys required.
 
 ---
 

@@ -5,13 +5,13 @@ import { ProjectProvider } from '@/lib/project-context';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://mem-dog.dev'),
-  title: 'Mem-Dog — Private AI System for Individuals & Organizations',
+  title: 'Mem-Dog — Private AI Memory for Individuals & Organizations',
   description: 'Ingest data from 300+ apps, enrich with 42 AI agents, and query with 5 search modes powered by a temporal knowledge graph. Self-hosted, free, open source (Apache 2.0).',
   icons: {
     icon: '/favicon.ico',
   },
   openGraph: {
-    title: 'Mem-Dog — Private AI System',
+    title: 'Mem-Dog — Private AI Memory',
     description: 'Ingest from 300+ apps, enrich with 42 AI agents, query with 5 search modes. Self-hosted, free, Apache 2.0.',
     type: 'website',
     siteName: 'Mem-Dog',

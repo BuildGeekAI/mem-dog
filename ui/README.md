@@ -1,6 +1,6 @@
 # Mem-Dog UI
 
-Next.js frontend for the Mem-Dog private AI system.
+Next.js frontend for the Mem-Dog private AI memory platform.
 
 ## Features
 
