@@ -1,4 +1,4 @@
-# mem-dog: The Private AI Memory Platform
+# Mem-Dog: The Private AI Memory Platform
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
