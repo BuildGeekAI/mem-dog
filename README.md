@@ -8,6 +8,8 @@
 
 Ingest data from 300+ apps, enrich it with a 42-agent AI pipeline, store it with versioning and access control, and query it with 5 search modes powered by a temporal knowledge graph.
 
+<img width="943" height="929" alt="WhatsApp Image 2026-06-10 at 15 46 53" src="https://github.com/user-attachments/assets/db72f807-be5f-4a33-bf16-4155f598dfc4" />
+
 <img width="2752" height="1536" alt="unnamed (8)" src="https://github.com/user-attachments/assets/3d8b362e-7b3b-4cae-9c23-ef7d1ad6fbda" />
 
 
