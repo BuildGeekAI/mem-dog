@@ -33,7 +33,7 @@ Once connected, Claude is available as an LLM provider. Query via the proxy:
 curl -X POST https://<your-api>/api/v1/integrations/proxy/anthropic/v1/messages \
   -H "Authorization: Bearer <your-jwt>" \
   -H "Content-Type: application/json" \
-  -d '{"model": "claude-sonnet-4-20250514", "max_tokens": 1024, "messages": [{"role": "user", "content": "Hello"}]}'
+  -d '{"model": "claude-sonnet-4-6-20250514", "max_tokens": 1024, "messages": [{"role": "user", "content": "Hello"}]}'
 ```
 
 ## What Gets Ingested

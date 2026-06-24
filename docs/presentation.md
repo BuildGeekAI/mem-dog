@@ -238,7 +238,7 @@ AI Studio is Mem-Dog's unified control center for all AI capabilities, accessibl
 | **Ollama Cloud** | Managed | Hosted Ollama, pay-per-use |
 | **Google Gemini** | Cloud | gemini-2.5-flash, embedding-001, reranker |
 | **OpenAI** | Cloud | GPT-4o, GPT-4o-mini, o1, o3-mini, embeddings |
-| **Anthropic** | Cloud | Claude 4, Sonnet, Haiku |
+| **Anthropic** | Cloud | Claude 4.6 Opus, Sonnet, Haiku 4.5 |
 | **Groq** | Cloud | Ultra-fast inference |
 | **Mistral** | Cloud | Open-weight models |
 | **Cohere** | Cloud | Command, Embed, Rerank |

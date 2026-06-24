@@ -88,7 +88,9 @@ PUBLIC_LLM_PROVIDER_MODELS: dict[str, list[dict[str, str]]] = {
         {"id": "o3-mini", "name": "O3 Mini"},
     ],
     "anthropic": [
-        {"id": "claude-sonnet-4-20250514", "name": "Claude Sonnet 4 (2025-05-14)"},
+        {"id": "claude-opus-4-6-20250605", "name": "Claude Opus 4.6 (2025-06-05)"},
+        {"id": "claude-sonnet-4-6-20250514", "name": "Claude Sonnet 4.6 (2025-05-14)"},
+        {"id": "claude-haiku-4-5-20251001", "name": "Claude Haiku 4.5"},
         {"id": "claude-3-5-sonnet-20241022", "name": "Claude 3.5 Sonnet"},
         {"id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku"},
         {"id": "claude-3-opus-20240229", "name": "Claude 3 Opus"},
@@ -279,7 +281,7 @@ PUBLIC_LLM_PROVIDER_MODELS: dict[str, list[dict[str, str]]] = {
         {"id": "openai/gpt-4o", "name": "OpenAI GPT-4o"},
         {"id": "openai/gpt-4o-mini", "name": "OpenAI GPT-4o mini"},
         {"id": "anthropic/claude-3.5-sonnet", "name": "Anthropic Claude 3.5 Sonnet"},
-        {"id": "anthropic/claude-4-sonnet", "name": "Anthropic Claude 4 Sonnet"},
+        {"id": "anthropic/claude-sonnet-4.6", "name": "Anthropic Claude Sonnet 4.6"},
         {"id": "google/gemini-2.5-flash", "name": "Google Gemini 2.5 Flash"},
     ],
     "minimax": [

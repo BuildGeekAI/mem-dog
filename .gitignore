@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Demo video recording (canonical: testing/ui/recording/)
+/testing/ui/recording/recordings/
+/testing/ui/recording/.env.recording
+# Legacy paths (pre-consolidation)
+/testing/ui/recordings/
+/testing/ui/.env.recording
+# Accidental mirror when RECORDING_OUTPUT_DIR was cwd-relative from ui/
+/ui/testing/
+/.env.recording
+.cursor-control/
+.cursor/

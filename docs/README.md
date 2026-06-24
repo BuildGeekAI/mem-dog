@@ -52,6 +52,7 @@
 | [Azure](deployment/azure.md) | ACI, SQL, Blob deployment |
 | [Mac Mini](deployment/gke-setup-mac.md) | Mac Mini home server setup |
 | [Resource Requirements](deployment/resource-requirements.mdx) | CPU/memory specs per component |
+| [Demo Video Recording](../testing/ui/recording/README.md) | Run guide (`record:*` from `ui/`); [scene plan](../testing/ui/recording/PLAN.md) |
 
 ## SDKs
 
