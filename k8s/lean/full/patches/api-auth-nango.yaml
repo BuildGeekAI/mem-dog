@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-auth-secret
+  namespace: mem-dog
+type: Opaque
+stringData:
+  NANGO_SECRET_KEY: "ncLyB5dUqjsoDzw6DHKeYj5CENL4I4C8SOcL8yMJp1U="

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-agent
+  namespace: webhook-pipeline
+spec:
+  template:
+    spec:
+      containers:
+        - name: agent
+          image: webhook-agent:local
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi

@@ -1,0 +1,47 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Core lean (≤10GB Docker Desktop): data plane + app + ADK agent.
+# Addons: see ../full/
+
+resources:
+  - ../namespace-data.yaml
+  - ../namespace-webhook-pipeline.yaml
+  - ../../namespace.yaml
+  - ../../neo4j/namespace.yaml
+  - ../../webhook-gateway/namespace.yaml
+
+  - ../postgres.yaml
+  - ../redis.yaml
+  - ../neo4j-pvc.yaml
+  - ../../neo4j/secret.yaml
+  - ../../neo4j/deployment.yaml
+  - ../../neo4j/service.yaml
+
+  - ../../api-sa.yaml
+  - ../api-configmap.yaml
+  - ../api-auth-secret.yaml
+  - ../../api-pvc.yaml
+  - ../../api-deployment.yaml
+  - ../../api-service.yaml
+  - ../../ui-deployment.yaml
+  - ../../ui-service.yaml
+  - ../mcp-server-configmap.yaml
+  - ../../mcp-server-deployment.yaml
+  - ../../mcp-server-service.yaml
+
+  - ../webhook-gateway-configmap.yaml
+  - ../webhook-gateway-secret.yaml
+  - ../../webhook-gateway/deployment.yaml
+  - ../../webhook-gateway/service.yaml
+
+  - ../webhook-processor-configmap.yaml
+  - ../webhook-pipeline-secret.yaml
+  - ../webhook-processor.yaml
+
+patches:
+  - path: ../patches/api-deployment.yaml
+  - path: ../patches/ui-deployment.yaml
+  - path: ../patches/mcp-server-deployment.yaml
+  - path: ../patches/webhook-gateway-deployment.yaml
+  - path: ../patches/neo4j-deployment.yaml

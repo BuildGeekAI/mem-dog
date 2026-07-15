@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: mem-dog
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: lean-local
+data:
+  STORAGE_BACKEND: "local"
+  MEM_DOG_DATA_DIR: "/data"
+  ENVIRONMENT: "development"
+  LOG_LEVEL: "INFO"
+  POSTGRES_URL: "postgresql+psycopg2://memdog:memdog@postgres.data.svc.cluster.local:5432/memdog"
+  REDIS_URL: "redis://redis.data.svc.cluster.local:6379/0"
+  DEPLOYMENT_MODE: "local"
+  OLLAMA_TIER: "false"
+  NEO4J_URI: "bolt://neo4j.neo4j.svc.cluster.local:7687"
+  NEO4J_USER: "neo4j"
+  NEO4J_PASSWORD: "memdog_neo4j"
+  # Host Ollama when no cloud key; API prefers OLLAMA_CLOUD / SYSTEM_GEMINI when set.
+  OLLAMA_LOCAL_API_BASE: "http://host.docker.internal:11434"
+  OLLAMA_LOCAL_MODEL_EMBEDDING: "embeddinggemma"
+  MODEL_SERVER_URL: "http://host.docker.internal:11434"
+  MODEL_SERVER_URL_SMALL: "http://host.docker.internal:11434"
+  MODEL_SERVER_URL_MEDIUM: "http://host.docker.internal:11434"
+  MODEL_SERVER_URL_LARGE: "http://host.docker.internal:11434"
+  MODEL_SERVER_MODEL: "llama3.2:1b"
+  WEBHOOK_GATEWAY_URL: "http://webhook-gateway.webhook-gateway.svc.cluster.local:8080"

@@ -3536,7 +3536,9 @@ deploy_webhook_pipeline_gke() {
     print_success "Receiver image pushed"
 
     print_info "Building webhook agent image..."
-    docker build --no-cache --platform linux/amd64 -t "$AGENT_IMAGE" -f webhook/processor/Dockerfile webhook/processor/
+    docker build --no-cache --platform linux/amd64 \
+      --build-arg "INSTALL_DOCLING=${INSTALL_DOCLING:-false}" \
+      -t "$AGENT_IMAGE" -f webhook/processor/Dockerfile webhook/processor/
     docker push "$AGENT_IMAGE"
     print_success "Agent image pushed"
 

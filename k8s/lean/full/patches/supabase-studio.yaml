@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-studio
+  namespace: supabase
+spec:
+  template:
+    spec:
+      containers:
+        - name: studio
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            # Next.js binds to pod hostname by default — required for kubectl port-forward
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: SUPABASE_PUBLIC_URL
+              value: "http://localhost:8000"
+            - name: SUPABASE_URL
+              value: "http://supabase-kong.supabase.svc.cluster.local:8000"
+            - name: STUDIO_PG_META_URL
+              value: "http://supabase-meta.supabase.svc.cluster.local:8080"

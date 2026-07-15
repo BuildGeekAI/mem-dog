@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+  namespace: mem-dog
+spec:
+  template:
+    spec:
+      containers:
+        - name: ui
+          image: mem-dog-ui:local
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: API_URL
+              value: "http://api.mem-dog.svc.cluster.local:8080"
+            - name: CHAT_API_URL
+              value: "http://api.mem-dog.svc.cluster.local:8080"
+            # Server routes (e.g. /api/chat-proxy); client bundle still needs rebuild with NEXT_PUBLIC_API_KEY
+            - name: API_KEY
+              value: "dev-local-key"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi

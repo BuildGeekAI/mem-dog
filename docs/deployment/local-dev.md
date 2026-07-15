@@ -45,6 +45,64 @@ Skip: `ollama-*` only. Overlay: [`docker-compose.lean.yml`](../../docker-compose
 
 UI: [http://localhost:3000](http://localhost:3000) · API: [http://localhost:8080](http://localhost:8080) · Neo4j: [http://localhost:7474](http://localhost:7474) · MCP SSE: [http://localhost:8091/mcp/sse](http://localhost:8091/mcp/sse) (`x-api-key`).
 
+### Profile: lean on Kubernetes (Docker Desktop)
+
+Two profiles — still **no in-cluster Ollama** (host Metal at `http://host.docker.internal:11434`).
+
+| Profile | Fits | Includes |
+|---------|------|----------|
+| **`core`** (default) | **~10 GB** | postgres, redis, neo4j, api, ui, mcp, gateway, HTTP ADK processor |
+| **`full`** | **12–16 GB** | core base + **NATS pipeline** (receiver / pull-worker / agent) + Nango + Supabase (Kong/GoTrue/PostgREST/**Meta/Realtime/Studio/seed**) + OpenClaw |
+
+#### `core` pods
+
+| Pod | Port-forward | RAM budget |
+|-----|--------------|------------|
+| `postgres` / `redis` | — | 1.5 Gi / 128 Mi |
+| `neo4j` | 7474 | 1.5 Gi |
+| `api` / `ui` / `mcp-server` | 8080 / 3000 / 8091 | 1 Gi / 768 Mi / 256 Mi |
+| `webhook-gateway` | 8070 | 512 Mi |
+| `webhook-processor` (HTTP ADK) | 8090 | 2 Gi |
+
+#### `full` adds / changes
+
+| Pod | Port-forward | Notes |
+|-----|--------------|--------|
+| `nats` / `webhook-receiver` / `webhook-pull-worker` / `webhook-agent` | 8092 / 8090 | Prod-like pipeline; HTTP processor scaled to **0** |
+| `nango-db` / `nango-server` | 3003 | Integrations OAuth |
+| Supabase `db`/`kong`/`auth`/`rest`/`meta`/`realtime`/`studio` + seed | 8000 / Studio 54323 | Full self-hosted minus GKE routes; Studio uses `HOSTNAME=0.0.0.0` for port-forward; seed waits for Postgres |
+| `openclaw-node` | 18789 | DigiMe (cap 1 Gi) |
+
+**Still skipped vs GKE:** in-cluster Ollama, Gateway HTTPRoutes/ReferenceGrants, KEDA autoscaling.
+
+**Prerequisites:** Docker Desktop Kubernetes, context `docker-desktop`, host Ollama on `:11434` with `embeddinggemma` + `llama3.2:1b`. For `full`, set `GEMINI_API_KEY` in `api/.env` for OpenClaw / gateway / pipeline LLM fallback.
+
+```bash
+# ≤10 GB — core only:
+./scripts/dev-lean-k8s.sh up              # same as: up core
+./scripts/dev-lean-k8s.sh up core --no-build
+
+# 12–16 GB — NATS pipeline + Nango + Supabase + OpenClaw:
+./scripts/dev-lean-k8s.sh up full
+# (script rolls webhook-gateway + api after apply so ConfigMap env like WEBHOOK_GATEWAY_URL is live)
+
+./scripts/dev-lean-k8s.sh down            # tear down everything
+```
+
+Manifests: [`k8s/lean/core/`](../../k8s/lean/core/), [`k8s/lean/full/`](../../k8s/lean/full/). `STORAGE_BACKEND` stays `local`. On `full`, gateway forwards envelopes to the in-cluster receiver (`WEBHOOK_GATEWAY_URL` → NATS path).
+
+Compose lean vs k8s lean:
+
+| | Compose (`dev-lean.sh`) | Kubernetes (`dev-lean-k8s.sh`) |
+|--|----------------------|-------------------------------|
+| Processor | `LOCAL_DEV` HTTP | `core`: HTTP processor · `full`: NATS + agent |
+| Ollama | `host.docker.internal:11434` | Same |
+| Postgres / Redis | Compose services | `data` namespace pods |
+| Supabase / Nango / OpenClaw | Not in Compose lean | `up full` |
+| UI server URL | `http://api:8080` | `http://api.mem-dog.svc.cluster.local:8080` |
+| API auth | Usually unset (open) | `API_KEY=dev-local-key`; gateway + processor use matching `MEM_DOG_API_KEY` / `WEBHOOK_API_KEY`; UI build gets `NEXT_PUBLIC_API_KEY` |
+| Embeddings | Host Ollama if no cloud key; `OLLAMA_CLOUD` / `SYSTEM_GEMINI` win when set | Same |
+
 ### Services (full stack)
 
 | Service | Port | Description |
@@ -72,13 +130,15 @@ UI: [http://localhost:3000](http://localhost:3000) · API: [http://localhost:808
 
 ## Skaffold
 
-For local Kubernetes dev (minikube):
+For minimal local Kubernetes dev (API + UI only):
 
 ```bash
 skaffold dev
 ```
 
 Port-forwards `api` → :8080, `ui` → :3000. Ingress at `mem-dog.local` / `api.mem-dog.local`.
+
+For lean on Docker Desktop: `./scripts/dev-lean-k8s.sh up` (core, ≤10GB) or `up full` (NATS pipeline + Nango/Supabase/OpenClaw) — see **Profile: lean on Kubernetes** above.
 
 ## Environment Files
 
