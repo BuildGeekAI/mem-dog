@@ -255,11 +255,10 @@ services:
   webhook-processor:
     build: ./webhook/processor
     ports:
-      - "8090:8090"
+      # Host 8090 → container 8080 (same pattern as gateway 8070:8080, mcp 8091:8080)
+      - "8090:8080"
     environment:
       - MEM_DOG_API_URL=http://api:8080
-      # Entrypoint defaults to 8080; host maps 8090:8090
-      - PORT=8090
       - MODEL_SERVER_URL=http://ollama-medium:11434
       - MODEL_SERVER_URL_SMALL=http://ollama-small:11434
       - MODEL_SERVER_URL_MEDIUM=http://ollama-medium:11434
