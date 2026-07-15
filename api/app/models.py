@@ -615,6 +615,20 @@ class CreateDataResponse(BaseModel):
     message: str
 
 
+class ParsedDocumentStoreRequest(BaseModel):
+    """Request body for POST /data/{data_id}/parsed (webhook processor)."""
+    markdown: str = ""
+    document: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ParsedDocumentStoreResponse(BaseModel):
+    data_id: str
+    version_label: str
+    parse_status: str = "ready"
+    markdown_path: str
+    json_path: str
+
+
 class UpdateDataResponse(BaseModel):
     data_id: str
     version: int

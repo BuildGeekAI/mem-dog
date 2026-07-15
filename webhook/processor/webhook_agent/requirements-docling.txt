@@ -1,0 +1,8 @@
+# Optional Docling PDF extract (no torch DocumentConverter).
+# Not installed in the default GKE/processor image — keeps builds lighter.
+#
+#   pip install -r requirements-docling.txt
+#   # or Docker: docker build --build-arg INSTALL_DOCLING=true ...
+#   DOCUMENT_PARSER=docling
+#
+docling-slim[format-pdf]>=2.0.0

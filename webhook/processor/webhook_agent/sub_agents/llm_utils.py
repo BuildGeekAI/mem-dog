@@ -320,6 +320,7 @@ def _inject_urls_from_meta(payload: dict, payload_meta: dict | None) -> None:
 # The full content is always stored in GCS regardless of this limit.
 _MAX_CONTENT_CHARS: int = 4_000
 # Large/very-large tier models (gemma3:27b+) can handle more context.
+# Phase 0 baseline caps: docs/adr/0001-document-parsing-baseline.md
 _MAX_CONTENT_CHARS_LARGE: int = 8_000
 
 # Per-agent-type prompts — each instructs the model on what to extract / summarise
@@ -989,85 +990,11 @@ def analyse_media_payload(
 def _extract_document_text(content_bytes: bytes, mime_type: str) -> str:
     """Extract readable text from a document binary (PDF, DOCX, XLSX, PPTX).
 
-    Returns extracted text, or empty string if extraction fails.
+    Delegates to :mod:`document_parse` (``DOCUMENT_PARSER`` flag).
     """
-    mime_lower = (mime_type or "").lower()
+    from ..document_parse import parse_document
 
-    # PDF
-    if "pdf" in mime_lower:
-        try:
-            from pypdf import PdfReader
-            reader = PdfReader(io.BytesIO(content_bytes))
-            pages = reader.pages[:20]  # cap at 20 pages
-            text_parts = []
-            for i, page in enumerate(pages):
-                page_text = page.extract_text() or ""
-                if page_text.strip():
-                    text_parts.append(f"[Page {i + 1}]\n{page_text}")
-            return "\n\n".join(text_parts)
-        except Exception as exc:
-            logger.warning("PDF text extraction failed: %s", exc)
-            return ""
-
-    # DOCX
-    if "wordprocessingml" in mime_lower or mime_lower == "application/msword":
-        if "msword" in mime_lower and "officedocument" not in mime_lower:
-            # Legacy .doc — no pure-Python parser without heavy deps
-            return "[Legacy .doc format — metadata only] File size: {} bytes".format(len(content_bytes))
-        try:
-            from docx import Document
-            doc = Document(io.BytesIO(content_bytes))
-            return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
-        except Exception as exc:
-            logger.warning("DOCX text extraction failed: %s", exc)
-            return ""
-
-    # XLSX
-    if "spreadsheetml" in mime_lower or "ms-excel" in mime_lower:
-        if "ms-excel" in mime_lower and "officedocument" not in mime_lower:
-            return "[Legacy .xls format — metadata only] File size: {} bytes".format(len(content_bytes))
-        try:
-            from openpyxl import load_workbook
-            wb = load_workbook(io.BytesIO(content_bytes), read_only=True, data_only=True)
-            parts = []
-            for sheet_name in wb.sheetnames[:10]:
-                ws = wb[sheet_name]
-                rows = []
-                for row in ws.iter_rows(max_row=100, values_only=True):
-                    row_text = ", ".join(str(c) for c in row if c is not None)
-                    if row_text:
-                        rows.append(row_text)
-                if rows:
-                    parts.append(f"[Sheet: {sheet_name}]\n" + "\n".join(rows))
-            wb.close()
-            return "\n\n".join(parts)
-        except Exception as exc:
-            logger.warning("XLSX text extraction failed: %s", exc)
-            return ""
-
-    # PPTX
-    if "presentationml" in mime_lower or "ms-powerpoint" in mime_lower:
-        if "ms-powerpoint" in mime_lower and "officedocument" not in mime_lower:
-            return "[Legacy .ppt format — metadata only] File size: {} bytes".format(len(content_bytes))
-        try:
-            from pptx import Presentation
-            prs = Presentation(io.BytesIO(content_bytes))
-            parts = []
-            for i, slide in enumerate(prs.slides):
-                texts = []
-                for shape in slide.shapes:
-                    if shape.has_text_frame:
-                        for para in shape.text_frame.paragraphs:
-                            if para.text.strip():
-                                texts.append(para.text)
-                if texts:
-                    parts.append(f"[Slide {i + 1}]\n" + "\n".join(texts))
-            return "\n\n".join(parts)
-        except Exception as exc:
-            logger.warning("PPTX text extraction failed: %s", exc)
-            return ""
-
-    return ""
+    return parse_document(content_bytes, mime_type).markdown
 
 
 # ---------------------------------------------------------------------------
@@ -1130,9 +1057,23 @@ def analyse_document_payload(
             "error": f"[staging_error] {type(exc).__name__}: {exc}",
         }
 
-    # 3. Extract text from the document
+    # 3. Parse document → markdown + persist artifacts
     mime_type = (payload_meta or {}).get("mime_type", "")
-    extracted_text = _extract_document_text(content_bytes, mime_type)
+    from ..document_parse import parse_document
+    from ..document_parse.persist import persist_parsed_document
+
+    parsed_doc = parse_document(content_bytes, mime_type)
+    extracted_text = parsed_doc.markdown
+    owner_uid = group_context.user_id if group_context else None
+    parsed_store = persist_parsed_document(data_id, parsed_doc, user_id=owner_uid)
+    logger.info(
+        "[%s] document parse | parser=%s pages=%s chars=%d persist=%s",
+        agent_type,
+        parsed_doc.parser,
+        parsed_doc.page_count,
+        len(extracted_text),
+        parsed_store.get("parse_status", parsed_store.get("status")),
+    )
 
     if len(extracted_text.strip()) < 50:
         # Scanned / image-heavy document — fall back to Gemini vision
@@ -1223,6 +1164,8 @@ def analyse_document_payload(
         "viewpoint": viewpoint,
         "embedding": embedding,
         "metadata": metadata,
+        "parsed": parsed_doc.to_dict(),
+        "parsed_store": parsed_store,
     }
 
 

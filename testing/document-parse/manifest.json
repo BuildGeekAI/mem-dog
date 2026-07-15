@@ -1,0 +1,23 @@
+{
+  "description": "Gold fixtures for document-parse baseline (files under gold/ are gitignored).",
+  "caps": {
+    "pdf_max_pages": 20,
+    "llm_max_chars": 4000,
+    "chunk_size": 1000,
+    "chunk_overlap": 200
+  },
+  "fixtures": [
+    {
+      "file": "HomePolicyDocument.pdf",
+      "kind": "clean_pdf",
+      "mime": "application/pdf",
+      "notes": "Digital home policy PDF for extract coverage baseline"
+    },
+    {
+      "file": "car_insurance.pdf",
+      "kind": "clean_pdf",
+      "mime": "application/pdf",
+      "notes": "Digital car insurance PDF for extract coverage baseline"
+    }
+  ]
+}

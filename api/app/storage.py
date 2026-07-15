@@ -539,6 +539,88 @@ class BaseStorage(ABC):
                 _storage_errors_counter.add(1, {"operation": "get_raw", "error": "not_found"})
                 return None
 
+    def store_parsed_artifacts(
+        self,
+        data_id: str,
+        user_id: str,
+        markdown: str,
+        document: dict,
+        version: Optional[int] = None,
+    ) -> dict:
+        """Persist parsed markdown + JSON next to the raw blob for a data version.
+
+        Paths:
+          ``{user_id}/{data_id}/{version_label}/parsed/document.md``
+          ``{user_id}/{data_id}/{version_label}/parsed/document.json``
+        """
+        user_id = (user_id or "").strip() or config.DEFAULT_USER_ID
+        metadata = self.get_metadata(data_id, user_id)
+        if metadata is None:
+            raise FileNotFoundError(f"Data not found: {data_id}")
+
+        ver = version if version is not None else metadata.current_version
+        version_info = next((v for v in metadata.versions if v.version == ver), None)
+        vl = getattr(version_info, "version_label", None) if version_info else None
+        if not vl:
+            vl = metadata.data_version_label
+        if not vl:
+            raise FileNotFoundError(f"No version_label for data_id={data_id} version={ver}")
+
+        vl = _sanitize_version_label(vl)
+        base = f"{user_id}/{data_id}/{vl}/parsed"
+        md_path = f"{base}/document.md"
+        json_path = f"{base}/document.json"
+
+        doc_payload = dict(document)
+        doc_payload.setdefault("parse_status", "ready")
+        doc_payload.setdefault("markdown_uri", md_path)
+
+        self.raw_store.write(md_path, markdown.encode("utf-8"), "text/markdown; charset=utf-8")
+        self.raw_store.write(
+            json_path,
+            json.dumps(doc_payload, indent=2).encode("utf-8"),
+            "application/json",
+        )
+        logger.info("Stored parsed artifacts for %s at %s", data_id, base)
+        return {
+            "data_id": data_id,
+            "version_label": vl,
+            "parse_status": doc_payload.get("parse_status", "ready"),
+            "markdown_path": md_path,
+            "json_path": json_path,
+        }
+
+    def get_parsed_artifact(
+        self,
+        data_id: str,
+        user_id: str,
+        fmt: str = "markdown",
+        version: Optional[int] = None,
+    ) -> Optional[Tuple[bytes, str]]:
+        """Return parsed body bytes and content-type (markdown or json)."""
+        user_id = (user_id or "").strip() or config.DEFAULT_USER_ID
+        metadata = self.get_metadata(data_id, user_id)
+        if metadata is None:
+            return None
+
+        ver = version if version is not None else metadata.current_version
+        version_info = next((v for v in metadata.versions if v.version == ver), None)
+        vl = getattr(version_info, "version_label", None) if version_info else None
+        if not vl:
+            vl = metadata.data_version_label
+        if not vl:
+            return None
+
+        vl = _sanitize_version_label(vl)
+        suffix = "document.json" if fmt == "json" else "document.md"
+        blob_path = f"{user_id}/{data_id}/{vl}/parsed/{suffix}"
+        try:
+            content = self.raw_store.read(blob_path)
+            content_type = self.raw_store.get_content_type(blob_path)
+            return content, content_type
+        except FileNotFoundError:
+            return None
+
     def store_metadata(self, metadata: DataMetadata) -> None:
         """Store metadata in the blob store.
 
