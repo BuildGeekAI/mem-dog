@@ -6,16 +6,46 @@
 docker compose up
 ```
 
-Neo4j / Graphiti is **opt-in** (saves RAM on ≤16GB machines):
+Full `docker compose up` starts **everything**, including Neo4j and 3× Ollama. That needs roughly a **32GB** machine (see [resource-requirements](resource-requirements.mdx)). On a **16GB Mac mini**, use the **lean** profile below instead.
+
+### Profile: lean (≤16GB / Mac mini M2 Pro)
+
+Local stack for ingest / enrich / embeddings / UI / MCP / Graphiti **without** in-cluster Ollama. Use host Ollama or cloud keys for AI. Neo4j is included (1.5 Gi cap); `NEO4J_*` inherits from base compose.
+
+| Service | Port | RAM budget (overlay) |
+|---------|------|----------------------|
+| `db` | 5432 | 1.5 Gi |
+| `redis` | 6379 | 128 Mi |
+| `neo4j` | 7474 / 7687 | 1.5 Gi |
+| `api` | 8080 | 1 Gi |
+| `ui` | 3000 | 768 Mi |
+| `mcp-server` | 8091 | 256 Mi |
+| `webhook-gateway` | 8070 | 512 Mi |
+| `webhook-processor` | 8090 | 3 Gi (room for optional Docling) |
+
+**Document parser:** lean defaults to `DOCUMENT_PARSER=pypdf`. Docling PDF extract is **opt-in** (`DOCUMENT_PARSER=docling`, PDF-only via `docling-slim`). `DOCUMENT_OCR_ENABLED` / `DOCUMENT_HARD_PARSER` are Phase 3 stubs (accepted, not wired yet).
 
 ```bash
-docker compose --profile graph up
-# or: COMPOSE_PROFILES=graph docker compose up
+# Docker Desktop → Resources → Memory: set 10–12 GB (8 GB is too tight)
+cp api/.env.example api/.env
+# Edit api/.env — for Ollama Cloud embeddings:
+#   OLLAMA_CLOUD_API_KEY=...
+# (Compose loads api/.env into api, webhook-gateway, and webhook-processor.)
+
+./scripts/dev-lean.sh up -d
+# equivalent:
+# docker compose -f docker-compose.yml -f docker-compose.lean.yml \
+#   up -d db redis neo4j api ui mcp-server webhook-gateway webhook-processor
+
+# Optional Docling PDF path (recreate processor after setting):
+# DOCUMENT_PARSER=docling ./scripts/dev-lean.sh up -d webhook-processor
 ```
 
-API starts without Neo4j; Graphiti init is skipped when the DB is unreachable.
+Skip: `ollama-*` only. Overlay: [`docker-compose.lean.yml`](../../docker-compose.lean.yml). Related: [`document-parsing-upgrade`](../plans/document-parsing-upgrade.md).
 
-### Services
+UI: [http://localhost:3000](http://localhost:3000) · API: [http://localhost:8080](http://localhost:8080) · Neo4j: [http://localhost:7474](http://localhost:7474) · MCP SSE: [http://localhost:8091/mcp/sse](http://localhost:8091/mcp/sse) (`x-api-key`).
+
+### Services (full stack)
 
 | Service | Port | Description |
 |---------|------|-------------|
@@ -28,7 +58,7 @@ API starts without Neo4j; Graphiti init is skipped when the DB is unreachable.
 | `ollama-large` | 8083 | Large model tier |
 | `webhook-gateway` | 8070 | Channel adapter gateway |
 | `webhook-processor` | 8090 | Local webhook processor (`8090:8080`) |
-| `neo4j` | 7474 / 7687 | Graphiti — profile `graph` only |
+| `neo4j` | 7474 / 7687 | Graphiti (included in lean; omitted only if you leave it out of `up`) |
 | `mcp-server` | 8091 | MCP SSE |
 
 ### Differences from production
@@ -38,7 +68,7 @@ API starts without Neo4j; Graphiti init is skipped when the DB is unreachable.
 - `LOCAL_DEV=true` on processor — HTTP trigger instead of NATS
 - API mounts Docker socket for Ollama container management
 - UI uses Next.js rewrites to proxy `/api/v1/*` (no CORS)
-- Neo4j is compose profile `graph` (not started by default)
+- Lean overlay skips `ollama-*`, caps Neo4j/processor RAM, and sets `OLLAMA_TIER=false` (host Ollama or cloud)
 
 ## Skaffold
 

@@ -69,7 +69,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      # Optional: only waits when neo4j is in the active compose profile (see neo4j service)
+      # required:false so api can still start if neo4j is omitted from `up`
       neo4j:
         condition: service_healthy
         required: false
@@ -100,11 +100,18 @@ services:
     build:
       context: ./ui
       args:
+        # Browser-facing (host machine). Server-side proxies use API_URL / CHAT_API_URL below.
         NEXT_PUBLIC_API_URL: http://localhost:8080
         NEXT_PUBLIC_WEBHOOK_GATEWAY_URL: ${NEXT_PUBLIC_WEBHOOK_GATEWAY_URL:-http://localhost:8070}
         NEXT_PUBLIC_WEBHOOK_API_KEY: ${NEXT_PUBLIC_WEBHOOK_API_KEY:-${WGW_API_KEY:-}}
+        # Server-side rewrite base baked at build; overridden at runtime by env below.
+        API_URL: http://api:8080
     ports:
       - "3000:8080"
+    environment:
+      # Runtime server-side fetch (chat-proxy + any Node route) must use the compose DNS name.
+      - API_URL=http://api:8080
+      - CHAT_API_URL=http://api:8080
     depends_on:
       api:
         condition: service_healthy
@@ -154,12 +161,9 @@ services:
 
   # ---------------------------------------------------------------------------
   # Neo4j — knowledge graph database for Graphiti temporal graph
-  # Opt-in via Compose profile so lean stacks (docs-parse, API-only) skip ~1–2GB.
-  #   docker compose --profile graph up
-  #   COMPOSE_PROFILES=graph docker compose up
+  # Started by default with plain `docker compose up`. Lean overlay gates it off.
   # ---------------------------------------------------------------------------
   neo4j:
-    profiles: ["graph"]
     image: neo4j:5.26-community
     ports:
       - "7474:7474"   # HTTP browser
