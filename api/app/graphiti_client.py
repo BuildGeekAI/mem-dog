@@ -197,6 +197,91 @@ async def get_graphiti():
     return _graphiti
 
 
+def build_valid_at_search_filter(at):
+    """Build a Graphiti SearchFilters for facts valid at *at* (datetime).
+
+    Returns None when *at* is falsy.
+    """
+    if not at:
+        return None
+    from graphiti_core.search.search_filters import (
+        ComparisonOperator,
+        DateFilter,
+        SearchFilters,
+    )
+
+    return SearchFilters(
+        valid_at=[
+            [
+                DateFilter(
+                    date=at,
+                    comparison_operator=ComparisonOperator.less_than_equal,
+                )
+            ]
+        ]
+    )
+
+
+def build_temporal_search_filter(
+    *,
+    valid_at=None,
+    valid_after=None,
+    valid_before=None,
+):
+    """Build SearchFilters from optional temporal datetime bounds."""
+    from graphiti_core.search.search_filters import (
+        ComparisonOperator,
+        DateFilter,
+        SearchFilters,
+    )
+
+    date_filters = []
+    if valid_at is not None:
+        date_filters.append(
+            DateFilter(
+                date=valid_at,
+                comparison_operator=ComparisonOperator.less_than_equal,
+            )
+        )
+    if valid_after is not None:
+        date_filters.append(
+            DateFilter(
+                date=valid_after,
+                comparison_operator=ComparisonOperator.greater_than_equal,
+            )
+        )
+    if valid_before is not None:
+        date_filters.append(
+            DateFilter(
+                date=valid_before,
+                comparison_operator=ComparisonOperator.less_than_equal,
+            )
+        )
+    if not date_filters:
+        return None
+    return SearchFilters(valid_at=[date_filters])
+
+
+async def search_edges(
+    query: str,
+    *,
+    limit: int = 10,
+    search_filter=None,
+):
+    """Hybrid edge search via Graphiti's current ``search()`` API.
+
+    Current graphiti_core exposes:
+      search(query, num_results=…, search_filter=…) -> list[EntityEdge]
+
+    Older callers used the deprecated ``config=`` / ``filters=`` kwargs.
+    """
+    graphiti = await get_graphiti()
+    kwargs: dict = {"query": query, "num_results": limit}
+    if search_filter is not None:
+        kwargs["search_filter"] = search_filter
+    return await graphiti.search(**kwargs)
+
+
 async def close_graphiti():
     """Close the Graphiti client and Neo4j driver."""
     global _graphiti

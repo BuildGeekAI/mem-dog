@@ -103,3 +103,37 @@ class TestBuildGraphitiClients:
         monkeypatch.setattr(config, "OLLAMA_LOCAL_MODEL_EMBEDDING", "embeddinggemma")
         with pytest.raises(RuntimeError, match="MODEL_SERVER_MODEL"):
             _build_graphiti_clients()
+
+
+class TestSearchFilterHelpers:
+    def test_build_valid_at_none(self):
+        from app.graphiti_client import build_valid_at_search_filter
+
+        assert build_valid_at_search_filter(None) is None
+
+    def test_build_valid_at_filter(self):
+        from datetime import datetime, timezone
+
+        from app.graphiti_client import build_valid_at_search_filter
+        from graphiti_core.search.search_filters import ComparisonOperator
+
+        at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        filt = build_valid_at_search_filter(at)
+        assert filt is not None
+        assert filt.valid_at is not None
+        assert filt.valid_at[0][0].comparison_operator == ComparisonOperator.less_than_equal
+
+    def test_build_temporal_search_filter(self):
+        from datetime import datetime, timezone
+
+        from app.graphiti_client import build_temporal_search_filter
+        from graphiti_core.search.search_filters import ComparisonOperator
+
+        after = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        before = datetime(2024, 12, 31, tzinfo=timezone.utc)
+        filt = build_temporal_search_filter(valid_after=after, valid_before=before)
+        assert filt is not None
+        assert len(filt.valid_at[0]) == 2
+        ops = {f.comparison_operator for f in filt.valid_at[0]}
+        assert ComparisonOperator.greater_than_equal in ops
+        assert ComparisonOperator.less_than_equal in ops

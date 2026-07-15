@@ -1030,7 +1030,11 @@ async def _graphiti_search(
 
     Raises HTTPException(400) if Neo4j is not configured.
     """
-    from app.graphiti_client import is_graphiti_enabled, get_graphiti
+    from app.graphiti_client import (
+        build_temporal_search_filter,
+        is_graphiti_enabled,
+        search_edges,
+    )
 
     if not is_graphiti_enabled():
         raise HTTPException(
@@ -1038,35 +1042,18 @@ async def _graphiti_search(
             detail="Graph search requires NEO4J_URI to be configured",
         )
 
-    graphiti = await get_graphiti()
-
     try:
-        from graphiti_core.search.search_config_recipes import EDGE_HYBRID_SEARCH_RRF
-        search_config = EDGE_HYBRID_SEARCH_RRF.model_copy(deep=True)
-        search_config.limit = limit
-
-        kwargs: dict = {"query": query, "config": search_config}
-
-        # Apply temporal filters if provided
+        search_filter = None
         if temporal:
-            from graphiti_core.search.search_config import SearchFilters, DateFilter, ComparisonOperator
-            date_filters = []
-            if temporal.valid_at:
-                date_filters.append(
-                    DateFilter(date=temporal.valid_at, comparison_operator=ComparisonOperator.less_than_or_equal)
-                )
-            if temporal.valid_after:
-                date_filters.append(
-                    DateFilter(date=temporal.valid_after, comparison_operator=ComparisonOperator.greater_than_or_equal)
-                )
-            if temporal.valid_before:
-                date_filters.append(
-                    DateFilter(date=temporal.valid_before, comparison_operator=ComparisonOperator.less_than_or_equal)
-                )
-            if date_filters:
-                kwargs["filters"] = SearchFilters(valid_at=[date_filters])
+            search_filter = build_temporal_search_filter(
+                valid_at=temporal.valid_at,
+                valid_after=temporal.valid_after,
+                valid_before=temporal.valid_before,
+            )
 
-        results = await graphiti.search(**kwargs)
+        results = await search_edges(
+            query, limit=limit, search_filter=search_filter
+        )
 
         # Normalize Graphiti edges to mem-dog search result format
         normalized: list[dict] = []

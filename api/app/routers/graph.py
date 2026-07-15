@@ -215,36 +215,31 @@ async def query_facts(
     Supports point-in-time queries (``at`` parameter) to see what was known
     at a specific moment.
     """
-    from app.graphiti_client import is_graphiti_enabled, get_graphiti
+    from app.graphiti_client import is_graphiti_enabled
     if not is_graphiti_enabled():
         raise HTTPException(status_code=400, detail="Graph search requires NEO4J_URI to be configured")
-
-    graphiti = await get_graphiti()
 
     search_query = q or entity_id or "recent facts"
 
     try:
-        from graphiti_core.search.search_config_recipes import EDGE_HYBRID_SEARCH_RRF
-        search_config = EDGE_HYBRID_SEARCH_RRF.model_copy(deep=True)
-        search_config.limit = limit
+        from app.graphiti_client import build_valid_at_search_filter, search_edges
 
-        kwargs: dict = {"query": search_query, "config": search_config}
-
+        search_filter = None
         if at:
-            from graphiti_core.search.search_config import SearchFilters, DateFilter, ComparisonOperator
-            valid_at_dt = datetime.fromisoformat(at)
-            kwargs["filters"] = SearchFilters(
-                valid_at=[[DateFilter(date=valid_at_dt, comparison_operator=ComparisonOperator.less_than_or_equal)]]
-            )
+            search_filter = build_valid_at_search_filter(datetime.fromisoformat(at))
 
-        results = await graphiti.search(**kwargs)
+        results = await search_edges(
+            search_query, limit=limit, search_filter=search_filter
+        )
 
         facts = []
         for edge in results:
             facts.append(FactResult(
                 fact=getattr(edge, "fact", "") or str(edge),
-                source_entity=getattr(edge, "source_node_name", None),
-                target_entity=getattr(edge, "target_node_name", None),
+                source_entity=getattr(edge, "source_node_name", None)
+                or getattr(edge, "source_node_uuid", None),
+                target_entity=getattr(edge, "target_node_name", None)
+                or getattr(edge, "target_node_uuid", None),
                 valid_at=str(getattr(edge, "valid_at", "")) if getattr(edge, "valid_at", None) else None,
                 invalid_at=str(getattr(edge, "invalid_at", "")) if getattr(edge, "invalid_at", None) else None,
                 episode_name=getattr(edge, "episode_name", None) or getattr(edge, "name", None),
@@ -261,28 +256,26 @@ async def fact_timeline(
     limit: int = Query(default=20, le=100),
 ):
     """Get the fact history/timeline for an entity from the knowledge graph."""
-    from app.graphiti_client import is_graphiti_enabled, get_graphiti
+    from app.graphiti_client import is_graphiti_enabled
     if not is_graphiti_enabled():
         raise HTTPException(status_code=400, detail="Graph search requires NEO4J_URI to be configured")
 
     if not entity_id:
         raise HTTPException(status_code=400, detail="entity_id is required")
 
-    graphiti = await get_graphiti()
-
     try:
-        from graphiti_core.search.search_config_recipes import EDGE_HYBRID_SEARCH_RRF
-        search_config = EDGE_HYBRID_SEARCH_RRF.model_copy(deep=True)
-        search_config.limit = limit
+        from app.graphiti_client import search_edges
 
-        results = await graphiti.search(query=entity_id, config=search_config)
+        results = await search_edges(entity_id, limit=limit)
 
         facts = []
         for edge in results:
             facts.append(FactResult(
                 fact=getattr(edge, "fact", "") or str(edge),
-                source_entity=getattr(edge, "source_node_name", None),
-                target_entity=getattr(edge, "target_node_name", None),
+                source_entity=getattr(edge, "source_node_name", None)
+                or getattr(edge, "source_node_uuid", None),
+                target_entity=getattr(edge, "target_node_name", None)
+                or getattr(edge, "target_node_uuid", None),
                 valid_at=str(getattr(edge, "valid_at", "")) if getattr(edge, "valid_at", None) else None,
                 invalid_at=str(getattr(edge, "invalid_at", "")) if getattr(edge, "invalid_at", None) else None,
                 episode_name=getattr(edge, "episode_name", None) or getattr(edge, "name", None),
