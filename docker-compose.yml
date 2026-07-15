@@ -69,8 +69,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      # Optional: only waits when neo4j is in the active compose profile (see neo4j service)
       neo4j:
         condition: service_healthy
+        required: false
     volumes:
       - mem-dog-data:/data
       # Shared model weights volume (legacy; Ollama uses per-tier volumes)
@@ -152,8 +154,12 @@ services:
 
   # ---------------------------------------------------------------------------
   # Neo4j — knowledge graph database for Graphiti temporal graph
+  # Opt-in via Compose profile so lean stacks (docs-parse, API-only) skip ~1–2GB.
+  #   docker compose --profile graph up
+  #   COMPOSE_PROFILES=graph docker compose up
   # ---------------------------------------------------------------------------
   neo4j:
+    profiles: ["graph"]
     image: neo4j:5.26-community
     ports:
       - "7474:7474"   # HTTP browser

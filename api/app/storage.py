@@ -3816,7 +3816,7 @@ class BaseStorage(ABC):
             display_name=display_name,
             role=UserRole.USER,
             status=UserStatus.ACTIVE,
-            metadata=None,
+            metadata={},
             data_count=0,
             storage_used_bytes=0,
             created_at=now,

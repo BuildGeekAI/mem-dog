@@ -6,6 +6,15 @@
 docker compose up
 ```
 
+Neo4j / Graphiti is **opt-in** (saves RAM on ≤16GB machines):
+
+```bash
+docker compose --profile graph up
+# or: COMPOSE_PROFILES=graph docker compose up
+```
+
+API starts without Neo4j; Graphiti init is skipped when the DB is unreachable.
+
 ### Services
 
 | Service | Port | Description |
@@ -18,7 +27,9 @@ docker compose up
 | `ollama-medium` | 8082 | Medium model tier |
 | `ollama-large` | 8083 | Large model tier |
 | `webhook-gateway` | 8070 | Channel adapter gateway |
-| `webhook-processor` | 8090 | Local webhook processor |
+| `webhook-processor` | 8090 | Local webhook processor (`8090:8080`) |
+| `neo4j` | 7474 / 7687 | Graphiti — profile `graph` only |
+| `mcp-server` | 8091 | MCP SSE |
 
 ### Differences from production
 
@@ -27,6 +38,7 @@ docker compose up
 - `LOCAL_DEV=true` on processor — HTTP trigger instead of NATS
 - API mounts Docker socket for Ollama container management
 - UI uses Next.js rewrites to proxy `/api/v1/*` (no CORS)
+- Neo4j is compose profile `graph` (not started by default)
 
 ## Skaffold
 
