@@ -30,20 +30,35 @@ router = APIRouter(prefix="/api/v1/ai", tags=["AI Configuration"])
 async def get_system_ai_config():
     """
     Get system AI configuration.
-    
-    Returns whether AI features are enabled and if system keys are available.
+
+    Returns whether AI features are available without a user API key
+    (system Gemini key and/or local model server).
     """
-    available = config.is_system_ai_available()
+    if config.is_system_gemini_available():
+        return SystemAIConfigResponse(
+            system_ai_available=True,
+            system_engine_type="gemini",
+            system_embedding_model=config.SYSTEM_GEMINI_MODEL_EMBEDDING,
+            system_completion_model=config.SYSTEM_GEMINI_MODEL_COMPLETION,
+            message="System Gemini key available — you can use AI features without your own API key.",
+        )
+    if config.is_model_server_enabled():
+        return SystemAIConfigResponse(
+            system_ai_available=True,
+            system_engine_type="ollama",
+            system_embedding_model=config.OLLAMA_LOCAL_MODEL_EMBEDDING,
+            system_completion_model=config.MODEL_SERVER_MODEL,
+            message=(
+                f"Local model server available ({config.MODEL_SERVER_MODEL}) — "
+                "you can use AI features without your own API key."
+            ),
+        )
     return SystemAIConfigResponse(
-        system_ai_available=available,
+        system_ai_available=False,
         system_engine_type="gemini",
         system_embedding_model=config.SYSTEM_GEMINI_MODEL_EMBEDDING,
         system_completion_model=config.SYSTEM_GEMINI_MODEL_COMPLETION,
-        message=(
-            "System Gemini key available — you can use AI features without your own API key."
-            if available else
-            "No system AI key configured. Configure your own engine to use AI features."
-        ),
+        message="No system AI key configured. Configure your own engine to use AI features.",
     )
 
 
@@ -545,14 +560,23 @@ async def get_user_available_models(user_id: str):
                 "source": "user",
             })
 
-        # Add system provider if available
-        if config.is_system_ai_available():
+        # Add system providers when available (Gemini key and/or local model server)
+        if config.is_system_gemini_available():
             providers.append({
                 "engine_id": "system-gemini",
                 "name": "System Gemini",
                 "engine_type": "gemini",
                 "litellm_prefix": "gemini/",
                 "models": ["gemini-2.5-flash-preview-05-20", "gemini-2.5-pro-preview-05-06", "gemini-3.1-pro-preview"],
+                "source": "system",
+            })
+        if config.is_model_server_enabled():
+            providers.append({
+                "engine_id": "system-local",
+                "name": "Local Model Server",
+                "engine_type": "ollama",
+                "litellm_prefix": "ollama/",
+                "models": [config.MODEL_SERVER_MODEL] if config.MODEL_SERVER_MODEL else [],
                 "source": "system",
             })
 

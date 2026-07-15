@@ -3080,7 +3080,9 @@ class BaseStorage(ABC):
         # Record embedding token usage for Insights dashboard
         try:
             emb_tokens = sum(len(c.split()) for c in chunks)
-            storage_engine_label = "ollama" if engine_type in ("ollama_local", "ollama_cloud") else engine_type
+            storage_engine_label = (
+                "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
+            )
             self.record_token_usage(TokenUsageRecord(
                 user_id=owner,
                 prompt_tokens=emb_tokens,
@@ -3093,8 +3095,11 @@ class BaseStorage(ABC):
             pass
 
         now = datetime.utcnow().isoformat() + "Z"
-        # Map internal engine types to AIEngineType enum values for storage
-        storage_engine = "ollama" if engine_type in ("ollama_local", "ollama_cloud") else engine_type
+        # Map internal engine types to AIEngineType enum values for storage.
+        # MODEL_SERVER_URL resolves as "local"; map to a valid AIEngineType.
+        storage_engine = (
+            "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
+        )
         sig = AISignature(
             ai_engine=storage_engine,
             model_name=model,
@@ -3588,8 +3593,13 @@ class BaseStorage(ABC):
             )
 
         now = datetime.utcnow().isoformat() + "Z"
+        # MODEL_SERVER_URL resolves as "local"; map to a valid AIEngineType for
+        # persistence (same pattern as embedding storage_engine normalization).
+        storage_engine = (
+            "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
+        )
         sig = AISignature(
-            ai_engine=engine_type,
+            ai_engine=storage_engine,
             model_name=model,
             generated_at=now,
             key_mode=AIKeyMode.SYSTEM if not viewpoint_create.engine_id else AIKeyMode.CUSTOM,
@@ -3601,7 +3611,7 @@ class BaseStorage(ABC):
             data_version=data_version,
             prompt_id=viewpoint_create.prompt_id,
             user=owner,
-            ai_engine=engine_type,
+            ai_engine=storage_engine,
             model=model,
             input_content=input_text[:2000],  # truncate stored input for space
             output_content=output_text,
@@ -3681,15 +3691,18 @@ class BaseStorage(ABC):
         })
 
         now = datetime.utcnow().isoformat() + "Z"
+        storage_engine = (
+            "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
+        )
         viewpoint.output_content = output_text
         viewpoint.version += 1
         viewpoint.updated_at = now
         viewpoint.prompt_id = prompt_id
-        viewpoint.ai_engine = engine_type
+        viewpoint.ai_engine = storage_engine
         viewpoint.model = model
         viewpoint.version_history = history
         viewpoint.ai_signature = AISignature(
-            ai_engine=engine_type,
+            ai_engine=storage_engine,
             model_name=model,
             generated_at=now,
             key_mode=AIKeyMode.SYSTEM if not engine_id else AIKeyMode.CUSTOM,
