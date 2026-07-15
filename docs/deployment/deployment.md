@@ -97,6 +97,7 @@ Apply in Supabase SQL Editor or via `psql`:
 | `api/supabase/mem_dog_embeddings.sql` | pgvector embeddings table |
 | `api/supabase/mem_dog_graph.sql` | Entity/relationship graph tables |
 | `api/supabase/mem_dog_embeddings_fts.sql` | tsvector column + hybrid/FTS search RPCs |
+| `api/supabase/mem_dog_embeddings_page.sql` | page/section columns + citation-aware match RPCs (also in GKE seed `07-…`) |
 | `api/supabase/organizations.sql` | Org/project hierarchy tables |
 | `api/supabase/profiles.sql` | User profiles |
 | `api/supabase/agent_configs.sql` | Agent config table |

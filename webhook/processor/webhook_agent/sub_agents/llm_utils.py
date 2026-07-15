@@ -285,11 +285,12 @@ def _write_api_results_async(
         except Exception as exc:
             logger.warning("[%s] (bg) graph persistence failed (non-blocking) | %s", agent_type, exc)
 
-        # Only trigger embedding after viewpoint is stored so the embedding
-        # can use the viewpoint text instead of making its own LLM call.
+        # Embedding can use parsed body even when viewpoint failed.
         if not vp_ok:
-            logger.warning("[%s] (bg) skipping embedding — viewpoint not stored | data_id=%s", agent_type, data_id)
-            return
+            logger.warning(
+                "[%s] (bg) viewpoint not stored — still attempting embedding | data_id=%s",
+                agent_type, data_id,
+            )
 
         try:
             logger.info("[%s] (bg) triggering embedding | data_id=%s", agent_type, data_id)

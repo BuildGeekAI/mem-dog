@@ -42,12 +42,13 @@ BEGIN
             e.embedding_id,
             e.data_id,
             e.chunk_text,
-            1 - (e.embedding <=> query_embedding::vector) AS sim,
-            ROW_NUMBER() OVER (ORDER BY e.embedding <=> query_embedding::vector) AS v_rank
+            1 - (e.vector <=> query_embedding::vector) AS sim,
+            ROW_NUMBER() OVER (ORDER BY e.vector <=> query_embedding::vector) AS v_rank
         FROM mem_dog_embeddings e
-        WHERE (filter_user_id IS NULL OR e.user_id = filter_user_id)
+        WHERE e.vector IS NOT NULL
+          AND (filter_user_id IS NULL OR e.user_id = filter_user_id)
           AND (filter_data_ids IS NULL OR e.data_id = ANY(filter_data_ids))
-        ORDER BY e.embedding <=> query_embedding::vector
+        ORDER BY e.vector <=> query_embedding::vector
         LIMIT match_count * 3
     ),
     fts_results AS (
@@ -88,6 +89,10 @@ BEGIN
 END;
 $$;
 
+GRANT EXECUTE ON FUNCTION match_embeddings_hybrid(TEXT, TEXT, INT, TEXT, TEXT[], FLOAT, FLOAT, INT) TO service_role;
+GRANT EXECUTE ON FUNCTION match_embeddings_hybrid(TEXT, TEXT, INT, TEXT, TEXT[], FLOAT, FLOAT, INT) TO anon;
+GRANT EXECUTE ON FUNCTION match_embeddings_hybrid(TEXT, TEXT, INT, TEXT, TEXT[], FLOAT, FLOAT, INT) TO authenticated;
+
 -- 3. Pure full-text search RPC (no embedding needed)
 CREATE OR REPLACE FUNCTION match_embeddings_fts(
     query_text TEXT,
@@ -122,3 +127,9 @@ BEGIN
     LIMIT match_count;
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION match_embeddings_fts(TEXT, INT, TEXT, TEXT[]) TO service_role;
+GRANT EXECUTE ON FUNCTION match_embeddings_fts(TEXT, INT, TEXT, TEXT[]) TO anon;
+GRANT EXECUTE ON FUNCTION match_embeddings_fts(TEXT, INT, TEXT, TEXT[]) TO authenticated;
+
+NOTIFY pgrst, 'reload schema';

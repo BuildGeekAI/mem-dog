@@ -317,14 +317,14 @@ When Docling lands, prefer a dedicated **`document-parse` worker** (or heavier p
 ```bash
 ./scripts/dev-lean.sh up -d
 # or: docker compose -f docker-compose.yml -f docker-compose.lean.yml \
-#       up -d db redis api webhook-gateway webhook-processor
+#       up -d db redis api ui mcp-server webhook-gateway webhook-processor
 ```
 
 | Extra env | Purpose |
 |-----------|---------|
 | `WEBHOOK_GATEWAY_URL` | api → gateway |
 | `WEBHOOK_API_KEY` / `WGW_API_KEY` | Gateway auth |
-| `DOCUMENT_PARSER` | After Phase 1 — `pypdf` (default) or `docling` |
+| `DOCUMENT_PARSER` | `pypdf` (lean default) or opt-in `docling` (PDF-only) |
 | `LOCAL_DEV=true` | Processor HTTP path (compose default) |
 
 #### Profile L2 — Connector OAuth (Phase B Connect)
