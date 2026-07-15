@@ -77,11 +77,19 @@ services:
       - model-weights:/models
       # Docker socket lets the API restart tier containers on activation
       - /var/run/docker.sock:/var/run/docker.sock
+    # python:slim image has no curl — probe with stdlib so depends_on healthy works
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   # ---------------------------------------------------------------------------
   # Frontend UI
@@ -196,10 +204,17 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   # ---------------------------------------------------------------------------
   # MCP Server — SSE transport for Claude Desktop, Cursor, etc.
@@ -219,10 +234,17 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   # ---------------------------------------------------------------------------
   # Webhook processor — local mode (HTTP trigger instead of Pub/Sub)
@@ -233,7 +255,8 @@ services:
   webhook-processor:
     build: ./webhook/processor
     ports:
-      - "8090:8090"
+      # Host 8090 → container 8080 (same pattern as gateway 8070:8080, mcp 8091:8080)
+      - "8090:8080"
     environment:
       - MEM_DOG_API_URL=http://api:8080
       - MODEL_SERVER_URL=http://ollama-medium:11434
