@@ -62,7 +62,7 @@ class TestOllamaOpenAiBase:
 
 
 class TestBuildGraphitiClients:
-    def test_raises_without_ai_provider(self, monkeypatch):
+    def test_returns_none_without_ai_provider(self, monkeypatch):
         monkeypatch.setattr(config, "SYSTEM_GEMINI_API_KEY", "")
         monkeypatch.setattr(config, "MODEL_SERVER_URL", "")
         monkeypatch.setattr(config, "MODEL_SERVER_URL_MEDIUM", "")
@@ -74,8 +74,7 @@ class TestBuildGraphitiClients:
             "http://ollama.webhook-pipeline.svc.cluster.local:11434",
         )
         monkeypatch.setattr(config, "OLLAMA_TIER", False)
-        with pytest.raises(RuntimeError, match="Graphiti requires an AI provider"):
-            _build_graphiti_clients()
+        assert _build_graphiti_clients() is None
 
     def test_prefers_gemini_over_local_ollama(self, monkeypatch):
         monkeypatch.setattr(config, "SYSTEM_GEMINI_API_KEY", "test-gemini-key")
@@ -96,13 +95,12 @@ class TestBuildGraphitiClients:
         assert embedder is not None
         assert cross_encoder is not None
 
-    def test_ollama_requires_chat_and_embedding_models(self, monkeypatch):
+    def test_ollama_incomplete_models_returns_none(self, monkeypatch):
         monkeypatch.setattr(config, "SYSTEM_GEMINI_API_KEY", "")
         monkeypatch.setattr(config, "MODEL_SERVER_URL", "http://host.docker.internal:11434")
         monkeypatch.setattr(config, "MODEL_SERVER_MODEL", "")
         monkeypatch.setattr(config, "OLLAMA_LOCAL_MODEL_EMBEDDING", "embeddinggemma")
-        with pytest.raises(RuntimeError, match="MODEL_SERVER_MODEL"):
-            _build_graphiti_clients()
+        assert _build_graphiti_clients() is None
 
 
 class TestSearchFilterHelpers:

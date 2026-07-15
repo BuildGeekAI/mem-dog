@@ -3,6 +3,10 @@
 Requires NEO4J_URI, NEO4J_USER, and NEO4J_PASSWORD. AI for extraction/search
 uses SYSTEM_GEMINI_API_KEY when set, otherwise local Ollama OpenAI-compat
 (/v1 chat + embeddings).
+
+When Neo4j is configured but no AI provider is available, Graphiti is
+soft-disabled: search returns empty results and ingest/startup log a warning
+instead of failing the API process.
 """
 
 from __future__ import annotations
@@ -15,6 +19,8 @@ from app import config
 logger = logging.getLogger("mem_dog.graphiti")
 
 _graphiti = None
+# Set after a failed AI resolve / Graphiti construct so callers soft-degrade.
+_graphiti_unavailable_reason: Optional[str] = None
 
 # Ollama accepts any non-empty api_key for its OpenAI-compatible API.
 _OLLAMA_OPENAI_API_KEY = "ollama"
@@ -25,6 +31,11 @@ _DEFAULT_EMBEDDING_DIM = 768
 def is_graphiti_enabled() -> bool:
     """True when Neo4j connection details are configured."""
     return bool(_neo4j_uri())
+
+
+def graphiti_unavailable_reason() -> Optional[str]:
+    """Reason Graphiti was soft-disabled, or None if usable / not yet probed."""
+    return _graphiti_unavailable_reason
 
 
 def _neo4j_uri() -> str:
@@ -121,48 +132,59 @@ def _build_ollama_clients(
     return llm_client, embedder, cross_encoder
 
 
-def _build_graphiti_clients() -> Tuple[object, object, object, str]:
-    """Resolve Graphiti AI clients. Raises RuntimeError when none are configured."""
+def _build_graphiti_clients() -> Optional[Tuple[object, object, object, str]]:
+    """Resolve Graphiti AI clients, or None when none can be initialized."""
     gemini_key = (config.SYSTEM_GEMINI_API_KEY or "").strip()
     if gemini_key:
         llm_client, embedder, cross_encoder = _build_gemini_clients(gemini_key)
-        if llm_client is None or embedder is None:
-            raise RuntimeError(
-                "SYSTEM_GEMINI_API_KEY is set but Graphiti Gemini clients failed to initialize."
-            )
-        return llm_client, embedder, cross_encoder, "gemini"
+        if llm_client is not None and embedder is not None:
+            return llm_client, embedder, cross_encoder, "gemini"
+        logger.warning(
+            "SYSTEM_GEMINI_API_KEY is set but Graphiti Gemini clients failed; "
+            "trying local Ollama fallback"
+        )
 
     openai_base = _resolve_ollama_openai_base()
     if openai_base:
         chat_model = (config.MODEL_SERVER_MODEL or "").strip()
         embedding_model = (config.OLLAMA_LOCAL_MODEL_EMBEDDING or "").strip()
         if not chat_model or not embedding_model:
-            raise RuntimeError(
-                "Local Ollama is configured for Graphiti but MODEL_SERVER_MODEL and "
-                "OLLAMA_LOCAL_MODEL_EMBEDDING must both be set."
+            logger.warning(
+                "Local Ollama base %s is set for Graphiti but MODEL_SERVER_MODEL "
+                "and OLLAMA_LOCAL_MODEL_EMBEDDING must both be set",
+                openai_base,
             )
-        llm_client, embedder, cross_encoder = _build_ollama_clients(
-            openai_base,
-            chat_model=chat_model,
-            embedding_model=embedding_model,
-        )
-        return llm_client, embedder, cross_encoder, "ollama_local"
+        else:
+            try:
+                llm_client, embedder, cross_encoder = _build_ollama_clients(
+                    openai_base,
+                    chat_model=chat_model,
+                    embedding_model=embedding_model,
+                )
+                return llm_client, embedder, cross_encoder, "ollama_local"
+            except Exception as exc:
+                logger.warning("Graphiti Ollama clients failed: %s", exc)
 
-    raise RuntimeError(
-        "Graphiti requires an AI provider. Set SYSTEM_GEMINI_API_KEY or configure "
+    logger.warning(
+        "Graphiti soft-disabled: no AI provider. Set SYSTEM_GEMINI_API_KEY or "
         "local Ollama via MODEL_SERVER_URL / OLLAMA_LOCAL_API_BASE with "
         "MODEL_SERVER_MODEL and OLLAMA_LOCAL_MODEL_EMBEDDING."
     )
+    return None
 
 
 async def get_graphiti():
-    """Return the Graphiti singleton, creating it on first call.
+    """Return the Graphiti singleton, or None when soft-disabled.
 
-    Raises RuntimeError if NEO4J_URI is not configured or no AI provider is available.
+    Raises RuntimeError only when NEO4J_URI is missing (callers should check
+    ``is_graphiti_enabled()`` first). AI / client failures soft-disable Graphiti
+    and return None so search/ingest can degrade without 500s.
     """
-    global _graphiti
+    global _graphiti, _graphiti_unavailable_reason
     if _graphiti is not None:
         return _graphiti
+    if _graphiti_unavailable_reason is not None:
+        return None
 
     import os
 
@@ -176,19 +198,31 @@ async def get_graphiti():
             "Set NEO4J_URI, NEO4J_USER, and NEO4J_PASSWORD env vars."
         )
 
-    from graphiti_core import Graphiti
+    clients = _build_graphiti_clients()
+    if clients is None:
+        _graphiti_unavailable_reason = "no AI provider available"
+        return None
 
-    llm_client, embedder, cross_encoder, provider = _build_graphiti_clients()
+    llm_client, embedder, cross_encoder, provider = clients
 
-    _graphiti = Graphiti(
-        neo4j_uri,
-        neo4j_user,
-        neo4j_password,
-        llm_client=llm_client,
-        embedder=embedder,
-        cross_encoder=cross_encoder,
-    )
-    await _graphiti.build_indices_and_constraints()
+    try:
+        from graphiti_core import Graphiti
+
+        _graphiti = Graphiti(
+            neo4j_uri,
+            neo4j_user,
+            neo4j_password,
+            llm_client=llm_client,
+            embedder=embedder,
+            cross_encoder=cross_encoder,
+        )
+        await _graphiti.build_indices_and_constraints()
+    except Exception as exc:
+        _graphiti = None
+        _graphiti_unavailable_reason = str(exc)
+        logger.warning("Graphiti soft-disabled after init failure: %s", exc)
+        return None
+
     logger.info(
         "Graphiti client initialized (neo4j=%s, provider=%s)",
         neo4j_uri,
@@ -270,12 +304,18 @@ async def search_edges(
 ):
     """Hybrid edge search via Graphiti's current ``search()`` API.
 
+    Returns an empty list when Graphiti is soft-disabled.
+
     Current graphiti_core exposes:
       search(query, num_results=…, search_filter=…) -> list[EntityEdge]
-
-    Older callers used the deprecated ``config=`` / ``filters=`` kwargs.
     """
     graphiti = await get_graphiti()
+    if graphiti is None:
+        logger.debug(
+            "Graphiti search skipped (%s)",
+            _graphiti_unavailable_reason or "unavailable",
+        )
+        return []
     kwargs: dict = {"query": query, "num_results": limit}
     if search_filter is not None:
         kwargs["search_filter"] = search_filter
@@ -284,7 +324,7 @@ async def search_edges(
 
 async def close_graphiti():
     """Close the Graphiti client and Neo4j driver."""
-    global _graphiti
+    global _graphiti, _graphiti_unavailable_reason
     if _graphiti is not None:
         try:
             await _graphiti.close()
@@ -292,3 +332,4 @@ async def close_graphiti():
         except Exception as exc:
             logger.warning("Error closing Graphiti: %s", exc)
         _graphiti = None
+    _graphiti_unavailable_reason = None

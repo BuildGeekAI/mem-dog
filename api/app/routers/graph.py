@@ -130,6 +130,8 @@ async def _ingest_to_graphiti(
             return
 
         graphiti = await get_graphiti()
+        if graphiti is None:
+            return
 
         # Build episode body from entity names and relationship descriptions
         parts = [f"{e.entity_name} ({e.entity_type})" for e in entities]
