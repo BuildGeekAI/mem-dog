@@ -166,12 +166,14 @@ export default function DataChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // Auto-resize textarea
+  // Auto-resize textarea (keep single-line height matched to send button)
   useEffect(() => {
     const ta = textareaRef.current;
     if (ta) {
-      ta.style.height = 'auto';
-      ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+      ta.style.height = '2.5rem';
+      if (ta.scrollHeight > 40) {
+        ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+      }
     }
   }, [input]);
 
@@ -391,7 +393,7 @@ export default function DataChat() {
             </div>
           )}
         </div>
-        <div className="max-w-3xl mx-auto flex items-end gap-2">
+        <div className="max-w-3xl mx-auto flex items-start gap-2">
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
@@ -400,7 +402,7 @@ export default function DataChat() {
               onKeyDown={handleKeyDown}
               placeholder="Ask about your data..."
               rows={1}
-              className="w-full resize-none rounded-xl bg-white/5 border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 px-4 py-3 pr-12 text-sm text-white/90 placeholder-white/30 outline-none transition-all"
+              className="w-full box-border min-h-10 max-h-40 resize-none rounded-xl bg-white/5 border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 px-4 py-2.5 pr-12 text-sm text-white/90 placeholder-white/30 outline-none transition-all"
             />
           </div>
           <button
