@@ -111,6 +111,6 @@
 
 | Document | Description |
 |----------|-------------|
-| [Document parsing upgrade](plans/document-parsing-upgrade.md) | Docling-first parse → body-chunk embeddings; optional LlamaParse/GCP hard-doc router |
+| [Document parsing upgrade](plans/document-parsing-upgrade.md) | Lean defaults to pypdf with optional Docling (PDF-only), plus body-chunk embeddings and optional hard-doc routers |
 | [Host SaaS embedding](plans/host-saas-embedding.md) | Multi-host tenancy bindings, connector contracts, tagging, upsert, project-scoped retrieval |
 | [Scale to ~1k workspaces](plans/scale-1k-workspaces.md) | Capacity addendum: KEDA prod ceilings, pooler, quotas-before-replicas, soak tests |
