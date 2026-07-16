@@ -480,7 +480,13 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-8">
+        <div
+          className={`flex-1 px-4 py-4 md:px-6 md:py-8 ${
+            activeTab === 'testing' && testingSubTab === 'knowledge'
+              ? 'flex flex-col min-h-0 overflow-hidden'
+              : 'overflow-y-auto'
+          }`}
+        >
           {!ready ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-6 h-6 text-primary-400 animate-spin mr-3" />
@@ -525,9 +531,15 @@ export default function Home() {
               )}
 
               {activeTab === 'testing' && (
-                <div className="space-y-6 animate-in">
+                <div
+                  className={`animate-in ${
+                    testingSubTab === 'knowledge'
+                      ? 'flex flex-col flex-1 min-h-0 gap-6'
+                      : 'space-y-6'
+                  }`}
+                >
                   {/* Testing Sub-tab Toggle */}
-                  <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl max-w-full overflow-x-auto">
+                  <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl max-w-full overflow-x-auto flex-shrink-0">
                     {([
                       { id: 'chat'       as const, label: 'Channel to Webhook',  icon: MessageSquare },
                       { id: 'upload'     as const, label: 'Data Insert',         icon: Upload        },
@@ -556,7 +568,7 @@ export default function Home() {
                   )}
 
                   {testingSubTab === 'knowledge' && (
-                    <div className="h-[calc(100vh-200px)]">
+                    <div className="flex flex-col flex-1 min-h-0">
                       <DataChat />
                     </div>
                   )}

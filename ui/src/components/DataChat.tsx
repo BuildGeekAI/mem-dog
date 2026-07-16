@@ -231,9 +231,9 @@ export default function DataChat() {
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-10rem)]">
+    <div className="flex flex-col flex-1 min-h-0 h-full">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-2 md:px-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-2 md:px-4">
         {isEmpty && !loading ? (
           /* Welcome state */
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
