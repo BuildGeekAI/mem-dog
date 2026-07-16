@@ -15,7 +15,7 @@
 #   docker compose -f docker-compose.yml -f docker-compose.lean.yml \
 #     up db redis neo4j api ui mcp-server webhook-gateway webhook-processor
 #   # Docling PDF path:
-#   DOCUMENT_PARSER=docling ./scripts/dev-lean.sh up -d webhook-processor
+#   DOCUMENT_PARSER=docling INSTALL_DOCLING=true ./scripts/dev-lean.sh up -d webhook-processor
 #
 # Prerequisites:
 #   1. Docker Desktop → Resources → Memory ≥ 10 GB (8 GB is tight; 10–12 GB
@@ -39,8 +39,9 @@ services:
         required: false
     environment:
       - OLLAMA_TIER=false
-      # Host Ollama (outside Docker) for embeddings + chat on lean 16GB boxes.
-      # Override or clear these if you use cloud Gemini instead.
+      # Host Ollama defaults for Metal GPU when no cloud key is set.
+      # With OLLAMA_CLOUD_API_KEY or SYSTEM_GEMINI_API_KEY in api/.env, the API
+      # prefers cloud embeddings over this host URL (lean cloud-only path).
       - OLLAMA_LOCAL_API_BASE=${OLLAMA_LOCAL_API_BASE:-http://host.docker.internal:11434}
       - MODEL_SERVER_URL=${MODEL_SERVER_URL:-http://host.docker.internal:11434}
       - MODEL_SERVER_URL_SMALL=${MODEL_SERVER_URL_SMALL:-http://host.docker.internal:11434}

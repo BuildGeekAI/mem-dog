@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-pull-worker
+  namespace: webhook-pipeline
+spec:
+  template:
+    spec:
+      containers:
+        - name: pull-worker
+          image: webhook-pull-worker:local
+          imagePullPolicy: IfNotPresent

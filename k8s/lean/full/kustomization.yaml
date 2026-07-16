@@ -1,0 +1,76 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Full lean: core + NATS webhook pipeline + Nango + Supabase (+ Studio/Meta/Realtime/seed) + OpenClaw.
+# Prefer 12–16 GB Docker Desktop memory. No in-cluster Ollama / GKE Gateway.
+
+resources:
+  - ../core
+
+  - ../api-supabase-secrets.yaml
+
+  # NATS webhook pipeline (replaces LOCAL_DEV processor — scaled to 0 below)
+  # webhook-pipeline-secrets already comes from ../core
+  - ../../webhook-pipeline/sa.yaml
+  - ../webhook-pipeline-configmap.yaml
+  - ../../webhook-pipeline/nats-deployment.yaml
+  - ../../webhook-pipeline/nats-service.yaml
+  - ../../webhook-pipeline/receiver-deployment.yaml
+  - ../../webhook-pipeline/receiver-service.yaml
+  - ../../webhook-pipeline/processor-deployment.yaml
+  - ../../webhook-pipeline/agent-deployment.yaml
+  - ../../webhook-pipeline/agent-service.yaml
+
+  - ../../nango/namespace.yaml
+  - ../nango-config.yaml
+  - ../../nango/nango-secrets.yaml
+  - ../../nango/nango-postgres.yaml
+  - ../../nango/nango-deployment.yaml
+
+  - ../../supabase/namespace.yaml
+  - ../supabase-secrets.yaml
+  - ../supabase-auth-oauth.yaml
+  - ../supabase-pvc.yaml
+  - ../../supabase/postgres-configmap.yaml
+  - ../../supabase/postgres-statefulset.yaml
+  - ../../supabase/postgres-service.yaml
+  - ../../supabase/kong-configmap.yaml
+  - ../../supabase/kong-deployment.yaml
+  - ../../supabase/kong-service.yaml
+  - ../../supabase/gotrue-deployment.yaml
+  - ../../supabase/gotrue-service.yaml
+  - ../../supabase/postgrest-deployment.yaml
+  - ../../supabase/postgrest-service.yaml
+  - ../../supabase/meta-deployment.yaml
+  - ../../supabase/meta-service.yaml
+  - ../../supabase/realtime-deployment.yaml
+  - ../../supabase/realtime-service.yaml
+  - ../../supabase/studio-deployment.yaml
+  - ../../supabase/studio-service.yaml
+  - ../../supabase/seed-configmap.yaml
+  - ../supabase-seed-job.yaml
+
+  - ../openclaw-pvc.yaml
+  - ../openclaw-secret.yaml
+  - ../../openclaw-node/configmap.yaml
+  - ../../openclaw-node/skills-configmap.yaml
+  - ../../openclaw-node/deployment.yaml
+  - ../../openclaw-node/service.yaml
+
+patches:
+  - path: ../patches/nango-deployment.yaml
+  - path: ../patches/nango-postgres.yaml
+  - path: ../patches/openclaw-deployment.yaml
+  - path: ../patches/supabase-db.yaml
+  - path: ../patches/supabase-gotrue.yaml
+  - path: ../patches/supabase-kong.yaml
+  - path: patches/api-config-nango.yaml
+  - path: patches/gateway-config-nango.yaml
+  - path: patches/api-auth-nango.yaml
+  - path: patches/gateway-secret-nango.yaml
+  - path: patches/gateway-pipeline-url.yaml
+  - path: patches/scale-down-processor.yaml
+  - path: patches/webhook-agent.yaml
+  - path: patches/webhook-receiver.yaml
+  - path: patches/webhook-pull-worker.yaml
+  - path: patches/supabase-studio.yaml

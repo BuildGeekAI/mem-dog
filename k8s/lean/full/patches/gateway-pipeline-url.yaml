@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webhook-gateway-config
+  namespace: webhook-gateway
+data:
+  # Default envelope path → in-cluster NATS receiver (prod-like)
+  WEBHOOK_GATEWAY_URL: "http://webhook-receiver.webhook-pipeline.svc.cluster.local:8080/"
+  WEBHOOK_GKE_RECEIVER_URL: "http://webhook-receiver.webhook-pipeline.svc.cluster.local:8080/"

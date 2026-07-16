@@ -33,9 +33,17 @@ spec:
               mkdir -p /home/node/.openclaw/skills/mem-dog-ingest
               mkdir -p /home/node/.openclaw/skills/mem-dog-bridge
               mkdir -p /home/node/.openclaw/skills/mem-dog-semantic-search
-              cp /config-src/openclaw.json /home/node/.openclaw/openclaw.json
-              sed -i "s|__GEMINI_API_KEY__|${GEMINI_API_KEY}|g" /home/node/.openclaw/openclaw.json
-              sed -i "s|__OPENCLAW_GATEWAY_TOKEN__|${OPENCLAW_GATEWAY_TOKEN}|g" /home/node/.openclaw/openclaw.json
+              # Preserve PVC openclaw.json when present; seed from ConfigMap only once.
+              # Always ensure gateway.mode=local (older PVC configs may omit it).
+              if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+                cp /config-src/openclaw.json /home/node/.openclaw/openclaw.json
+                sed -i "s|__GEMINI_API_KEY__|${GEMINI_API_KEY}|g" /home/node/.openclaw/openclaw.json
+                sed -i "s|__OPENCLAW_GATEWAY_TOKEN__|${OPENCLAW_GATEWAY_TOKEN}|g" /home/node/.openclaw/openclaw.json
+              else
+                echo "Preserving existing openclaw.json on PVC"
+              fi
+              grep -q '"mode": "local"' /home/node/.openclaw/openclaw.json \
+                || sed -i 's|"gateway": {|"gateway": {\n        "mode": "local",|' /home/node/.openclaw/openclaw.json
               cp /skills-src/mem-dog-query.md /home/node/.openclaw/skills/mem-dog-query/SKILL.md
               cp /skills-src/mem-dog-ingest.md /home/node/.openclaw/skills/mem-dog-ingest/SKILL.md
               cp /skills-src/mem-dog-bridge.md /home/node/.openclaw/skills/mem-dog-bridge/SKILL.md
@@ -43,6 +51,7 @@ spec:
               sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/mem-dog-query/SKILL.md
               sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/mem-dog-ingest/SKILL.md
               sed -i "s|__MEM_DOG_API_KEY__|${MEM_DOG_API_KEY}|g" /home/node/.openclaw/skills/mem-dog-semantic-search/SKILL.md
+              echo "openclaw.json gateway keys:"; grep -A6 '"gateway"' /home/node/.openclaw/openclaw.json | head -8
           env:
             - name: GEMINI_API_KEY
               valueFrom:

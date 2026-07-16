@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webhook-processor-config
+  namespace: webhook-pipeline
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: lean-local
+data:
+  LOCAL_DEV: "true"
+  MEM_DOG_API_URL: "http://api.mem-dog.svc.cluster.local:8080"
+  OLLAMA_TIER: "false"
+  DOCUMENT_PARSER: "pypdf"
+  DOCUMENT_OCR_ENABLED: "false"
+  DOCUMENT_HARD_PARSER: "none"
+  GOOGLE_GENAI_USE_VERTEXAI: "FALSE"
+  MODEL_SERVER_URL: "http://host.docker.internal:11434"
+  MODEL_SERVER_URL_SMALL: "http://host.docker.internal:11434"
+  MODEL_SERVER_URL_MEDIUM: "http://host.docker.internal:11434"
+  MODEL_SERVER_URL_LARGE: "http://host.docker.internal:11434"
+  MODEL_SERVER_MODEL: "llama3.2:1b"
+  OLLAMA_LOCAL_API_BASE: "http://host.docker.internal:11434"
+  OLLAMA_LOCAL_MODEL_EMBEDDING: "embeddinggemma"

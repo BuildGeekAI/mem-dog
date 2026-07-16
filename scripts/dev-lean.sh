@@ -4,11 +4,11 @@
 # Services: db + redis + neo4j + api + ui + mcp-server + webhook-gateway + webhook-processor
 # Skips: ollama-* — use host Ollama (Metal GPU) or cloud keys instead
 #
-# DOCUMENT_PARSER defaults to pypdf; opt into Docling with DOCUMENT_PARSER=docling.
+# DOCUMENT_PARSER defaults to pypdf; Docling is opt-in (needs INSTALL_DOCLING=true rebuild).
 #
 # Usage:
 #   ./scripts/dev-lean.sh up [-d]
-#   DOCUMENT_PARSER=docling ./scripts/dev-lean.sh up -d
+#   DOCUMENT_PARSER=docling INSTALL_DOCLING=true ./scripts/dev-lean.sh up -d --build webhook-processor
 #   ./scripts/dev-lean.sh down
 #   ./scripts/dev-lean.sh ps
 #   ./scripts/dev-lean.sh logs [service]
