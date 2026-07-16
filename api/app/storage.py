@@ -3250,6 +3250,8 @@ class BaseStorage(ABC):
             )
 
         now = datetime.utcnow().isoformat() + "Z"
+        # Map internal engine types to AIEngineType enum values for storage.
+        # MODEL_SERVER_URL resolves as "local"; map to a valid AIEngineType.
         storage_engine = (
             "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
         )

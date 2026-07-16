@@ -421,7 +421,16 @@ def is_ai_enabled() -> bool:
 
 
 def is_system_ai_available() -> bool:
-    """Check if system default AI (Gemini) is available."""
+    """True if AI works without a user-configured API key.
+
+    Covers the system Gemini key and a local/open model server
+    (``MODEL_SERVER_URL*``, e.g. host Ollama in lean Docker).
+    """
+    return bool(SYSTEM_GEMINI_API_KEY) or is_model_server_enabled()
+
+
+def is_system_gemini_available() -> bool:
+    """True when the dedicated system Gemini API key is configured."""
     return bool(SYSTEM_GEMINI_API_KEY)
 
 
