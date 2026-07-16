@@ -521,6 +521,46 @@ class MemDogClient:
         with self._client() as c:
             return c.delete(f"/api/v1/organizations/{org_id}")
 
+    # -------------------------------------------------------------------------
+    # Host SaaS
+    # -------------------------------------------------------------------------
+
+    def create_host_binding(
+        self,
+        external_org_id: str,
+        external_workspace_id: str,
+        *,
+        display_name: Optional[str] = None,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> httpx.Response:
+        """POST /api/v1/host/bindings — provision org/project/user/md_* for a host workspace.
+
+        Requires the platform API key (``x-api-key``). Returns ``api_key`` only on create.
+        """
+        payload: dict[str, Any] = {
+            "external_org_id": external_org_id,
+            "external_workspace_id": external_workspace_id,
+        }
+        if display_name is not None:
+            payload["display_name"] = display_name
+        if metadata is not None:
+            payload["metadata"] = metadata
+        with self._client() as c:
+            return c.post("/api/v1/host/bindings", json=payload)
+
+    def get_host_binding(
+        self, external_org_id: str, external_workspace_id: str
+    ) -> httpx.Response:
+        """GET /api/v1/host/bindings — look up an existing binding (no api_key)."""
+        with self._client() as c:
+            return c.get(
+                "/api/v1/host/bindings",
+                params={
+                    "external_org_id": external_org_id,
+                    "external_workspace_id": external_workspace_id,
+                },
+            )
+
     def add_org_member(self, org_id: str, user_id: str, role: str = "member") -> httpx.Response:
         """POST /api/v1/organizations/{org_id}/members - Add member."""
         with self._client() as c:
@@ -959,7 +999,7 @@ class MemDogClient:
         with self._client() as c:
             return c.get(f"/api/v1/ai/model-catalog/{model_id}")
 
-    def semantic_search(self, query: str, *, search_mode: Optional[str] = None, reranker: Optional[str] = None, limit: Optional[int] = None, user_id: Optional[str] = None, memory_type: Optional[str] = None, temporal_filter: Optional[str] = None) -> httpx.Response:
+    def semantic_search(self, query: str, *, search_mode: Optional[str] = None, reranker: Optional[str] = None, limit: Optional[int] = None, user_id: Optional[str] = None, project_id: Optional[str] = None, memory_type: Optional[str] = None, temporal_filter: Optional[str] = None) -> httpx.Response:
         """POST /api/v1/ai/query/semantic - Semantic search (5 modes + 4 rerankers)."""
         payload: dict[str, Any] = {"query": query}
         if search_mode:
@@ -967,9 +1007,11 @@ class MemDogClient:
         if reranker:
             payload["reranker"] = reranker
         if limit is not None:
-            payload["limit"] = limit
+            payload["max_results"] = limit
         if user_id:
             payload["user_id"] = user_id
+        if project_id:
+            payload["project_id"] = project_id
         if memory_type:
             payload["memory_type"] = memory_type
         if temporal_filter:

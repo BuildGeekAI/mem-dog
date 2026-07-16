@@ -22,6 +22,7 @@ from app.routers import webhooks_mgmt
 from app.routers import gmail_push
 from app.routers import gdrive_push
 from app.routers import zoom_push
+from app.routers import host
 
 # ---------------------------------------------------------------------------
 # Initialise OpenTelemetry (traces + metrics + logs) before anything else
@@ -141,7 +142,7 @@ async def metrics_middleware(request: Request, call_next):
 # ---------------------------------------------------------------------------
 # API Key authentication (when API_KEY env var is set)
 # ---------------------------------------------------------------------------
-_PUBLIC_PATHS = frozenset({"/", "/health", "/docs", "/redoc", "/openapi.json", "/api/v1/gmail/push", "/api/v1/gdrive/push", "/api/v1/zoom/push"})
+_PUBLIC_PATHS = frozenset({"/", "/health", "/ready", "/docs", "/redoc", "/openapi.json", "/api/v1/gmail/push", "/api/v1/gdrive/push", "/api/v1/zoom/push"})
 
 
 @app.middleware("http")
@@ -284,6 +285,7 @@ app.include_router(graph.router)
 # Organization & project hierarchy
 app.include_router(organizations.router)
 app.include_router(projects.router)
+app.include_router(host.router)
 
 # Per-user webhook endpoint management
 app.include_router(webhooks_mgmt.router)
@@ -380,6 +382,20 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+
+@app.get("/ready")
+async def ready():
+    """Readiness probe for host circuit breakers — storage must be constructible."""
+    try:
+        storage = get_storage()
+        _ = storage  # touch singleton
+        return {"status": "ready"}
+    except Exception as exc:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "detail": str(exc)},
+        )
 
 
 @app.get("/api/v1/auth/me")

@@ -9,6 +9,7 @@ import base64
 import json
 import logging
 import math
+import re
 import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple
@@ -1951,6 +1952,8 @@ class BaseStorage(ABC):
         # Multitenancy / provenance
         provenance: Optional[DataProvenance] = None,
         source_service: Optional[str] = None,
+        org_id: Optional[str] = None,
+        project_id: Optional[str] = None,
     ) -> Tuple[str, int]:
         """Create new data entry and associate with memories. Returns (data_id, version).
 
@@ -2007,6 +2010,20 @@ class BaseStorage(ABC):
                 final_owner.user = {"user_id": user}
             final_owner.user["user_id"] = user
 
+            # Host SaaS / org scoping — explicit args win; else user defaults
+            resolved_org_id = org_id
+            resolved_project_id = project_id
+            if not resolved_project_id or not resolved_org_id:
+                try:
+                    profile = self.get_user(user)
+                    if profile:
+                        resolved_org_id = resolved_org_id or getattr(profile, "default_org_id", None)
+                        resolved_project_id = resolved_project_id or getattr(
+                            profile, "default_project_id", None
+                        )
+                except Exception:
+                    pass
+
             # Always set url, mime_type, and is_downloaded on metadata (mime_type falls back to content_type).
             effective_mime_type = mime_type if mime_type is not None else content_type
             metadata = DataMetadata(
@@ -2037,6 +2054,8 @@ class BaseStorage(ABC):
                 provenance=provenance,
                 source_service=source_service or "mem-dog-api",
                 data_version_label=version_label,
+                org_id=resolved_org_id,
+                project_id=resolved_project_id,
             )
             self.store_metadata(metadata)
 
@@ -3246,6 +3265,20 @@ class BaseStorage(ABC):
         if not version_label:
             version_label = _make_version_label()
 
+        # Prefer explicit EmbeddingCreate scoping, else stamp from data metadata / user defaults
+        emb_org_id = embedding_create.org_id or (getattr(metadata, "org_id", None) if metadata else None)
+        emb_project_id = embedding_create.project_id or (
+            getattr(metadata, "project_id", None) if metadata else None
+        )
+        if not emb_project_id:
+            try:
+                user = self.get_user(owner)
+                if user:
+                    emb_org_id = emb_org_id or getattr(user, "default_org_id", None)
+                    emb_project_id = emb_project_id or getattr(user, "default_project_id", None)
+            except Exception:
+                pass
+
         engine_type, model, api_key = self._resolve_embedding_engine(
             embedding_create.engine_id
         )
@@ -3314,6 +3347,8 @@ class BaseStorage(ABC):
                     user_id=owner,
                     version_label=version_label,
                     ai_signature=sig,
+                    org_id=emb_org_id,
+                    project_id=emb_project_id,
                     page=spec.get("page"),
                     section_path=spec.get("section_path"),
                     element_type=spec.get("element_type"),
@@ -3429,11 +3464,14 @@ class BaseStorage(ABC):
     def similarity_search(
         self, query_vector: List[float], limit: int = 5, user_id: str = "",
         memory_id: str = "",
+        project_id: str = "",
     ) -> List[dict]:
         """Return embedding hit dicts via cosine similarity over blob-store embeddings.
 
         Each dict has ``embedding_id``, ``data_id``, ``chunk_text``, ``similarity``,
         and optional ``page`` when present on the stored embedding.
+        When ``project_id`` is set, only embeddings stamped with that project match
+        (embeddings with no project_id are excluded).
         """
         self._check_ai_enabled()
         if not self.embeddings_store:
@@ -3455,6 +3493,8 @@ class BaseStorage(ABC):
                 content = self.embeddings_store.read(info.name)
                 emb = json.loads(content)
                 if user_id and emb.get("user_id") and emb.get("user_id") != user_id:
+                    continue
+                if project_id and emb.get("project_id") != project_id:
                     continue
                 vec = emb.get("vector")
                 if not vec:
@@ -3480,12 +3520,16 @@ class BaseStorage(ABC):
         self, query_vector: List[float], query_text: str, limit: int = 5,
         user_id: str = "", memory_id: str = "",
         vector_weight: float = 0.5, fts_weight: float = 0.5,
+        project_id: str = "",
     ) -> List[dict]:
         """Hybrid cosine + BM25 search.
 
         Default implementation falls back to similarity_search with empty FTS fields.
         """
-        results = self.similarity_search(query_vector, limit=limit, user_id=user_id, memory_id=memory_id)
+        results = self.similarity_search(
+            query_vector, limit=limit, user_id=user_id, memory_id=memory_id,
+            project_id=project_id,
+        )
         return [
             {
                 "embedding_id": r.get("embedding_id", ""),
@@ -3502,6 +3546,7 @@ class BaseStorage(ABC):
 
     def fts_search(
         self, query_text: str, limit: int = 5, user_id: str = "", memory_id: str = "",
+        project_id: str = "",
     ) -> List[dict]:
         """Full-text search. Default returns empty list (no FTS index in base storage)."""
         return []
@@ -4121,7 +4166,9 @@ class BaseStorage(ABC):
             storage_used_bytes=0,
             created_at=now,
             updated_at=now,
-            last_active_at=now
+            last_active_at=now,
+            default_org_id=user_create.default_org_id,
+            default_project_id=user_create.default_project_id,
         )
         
         # Store user
@@ -5132,54 +5179,296 @@ class BaseStorage(ABC):
             return False
 
     # =================================================================
-    # Organization & Project hierarchy (default: not implemented)
-    # Overridden by SupabaseStorage which has direct table access.
+    # Organization & Project hierarchy (local JSON; SupabaseStorage overrides)
     # =================================================================
 
+    _ORGS_PREFIX = "orgs/"
+    _PROJECTS_PREFIX = "projects/"
+    _HOST_BINDINGS_PREFIX = "index/host_bindings/"
+
+    @staticmethod
+    def _host_binding_key(external_org_id: str, external_workspace_id: str) -> str:
+        def _safe(s: str) -> str:
+            return re.sub(r"[^a-zA-Z0-9._-]+", "_", (s or "").strip())[:120] or "x"
+
+        return f"{_safe(external_org_id)}__{_safe(external_workspace_id)}"
+
+    def host_binding_get(
+        self, external_org_id: str, external_workspace_id: str
+    ) -> Optional[dict]:
+        """Return stored host binding dict or None."""
+        path = (
+            self._HOST_BINDINGS_PREFIX
+            + self._host_binding_key(external_org_id, external_workspace_id)
+            + ".json"
+        )
+        try:
+            raw = self.meta_store.read(path)
+            return json.loads(raw.decode("utf-8"))
+        except FileNotFoundError:
+            return None
+        except Exception as exc:
+            logger.warning("host_binding_get failed: %s", exc)
+            return None
+
+    def host_binding_put(self, record: dict) -> None:
+        """Persist a host binding record (idempotent key from external ids)."""
+        key = self._host_binding_key(
+            record["external_org_id"], record["external_workspace_id"]
+        )
+        path = self._HOST_BINDINGS_PREFIX + key + ".json"
+        payload = dict(record)
+        payload["updated_at"] = datetime.utcnow().isoformat() + "Z"
+        if "created_at" not in payload:
+            payload["created_at"] = payload["updated_at"]
+        self.meta_store.write(
+            path, json.dumps(payload, indent=2).encode("utf-8"), "application/json"
+        )
+
+    def set_user_defaults(
+        self,
+        user_id: str,
+        *,
+        default_org_id: Optional[str] = None,
+        default_project_id: Optional[str] = None,
+    ) -> Optional[User]:
+        """Update a user's default org/project (local profile JSON)."""
+        user = self.get_user(user_id)
+        if not user:
+            return None
+        if default_org_id is not None:
+            user.default_org_id = default_org_id
+        if default_project_id is not None:
+            user.default_project_id = default_project_id
+        user.updated_at = datetime.utcnow().isoformat() + "Z"
+        blob_path = f"users/{user_id}/profile.json"
+        self.user_store.write(
+            blob_path,
+            json.dumps(user.model_dump(), indent=2).encode("utf-8"),
+            "application/json",
+        )
+        return user
+
     def create_organization(self, org_create, owner_user_id: str):
-        raise RuntimeError("Organization management requires STORAGE_BACKEND=supabase")
+        from ulid import ULID
+        from app.models import Organization, OrgMember, OrgRole
+
+        now = datetime.utcnow().isoformat() + "Z"
+        org_id = f"org_{ULID()}"
+        org = Organization(
+            org_id=org_id,
+            name=org_create.name,
+            display_name=org_create.display_name or org_create.name,
+            owner_user_id=owner_user_id,
+            metadata=getattr(org_create, "metadata", None) or {},
+            status="active",
+            created_at=now,
+            updated_at=now,
+        )
+        path = f"{self._ORGS_PREFIX}{org_id}.json"
+        self.meta_store.write(
+            path, json.dumps(org.model_dump(), indent=2).encode("utf-8"), "application/json"
+        )
+        self.add_org_member(org_id, owner_user_id, OrgRole.OWNER)
+        return org
 
     def get_organization(self, org_id: str):
-        raise RuntimeError("Organization management requires STORAGE_BACKEND=supabase")
+        from app.models import Organization
+
+        path = f"{self._ORGS_PREFIX}{org_id}.json"
+        try:
+            raw = self.meta_store.read(path)
+            return Organization(**json.loads(raw.decode("utf-8")))
+        except FileNotFoundError:
+            return None
 
     def list_organizations(self, user_id: str):
-        raise RuntimeError("Organization management requires STORAGE_BACKEND=supabase")
+        orgs = []
+        for info in self.meta_store.list_blobs(prefix=self._ORGS_PREFIX):
+            if not info.name.endswith(".json") or "/members/" in info.name:
+                continue
+            try:
+                raw = self.meta_store.read(info.name)
+                org = json.loads(raw.decode("utf-8"))
+                member = self.get_org_member(org.get("org_id", ""), user_id)
+                if member or org.get("owner_user_id") == user_id:
+                    from app.models import Organization
+
+                    orgs.append(Organization(**org))
+            except Exception:
+                continue
+        return orgs
 
     def update_organization(self, org_id: str, org_update):
-        raise RuntimeError("Organization management requires STORAGE_BACKEND=supabase")
+        org = self.get_organization(org_id)
+        if not org:
+            return None
+        data = org.model_dump()
+        for field in ("name", "display_name", "metadata", "status"):
+            val = getattr(org_update, field, None)
+            if val is not None:
+                data[field] = val
+        data["updated_at"] = datetime.utcnow().isoformat() + "Z"
+        path = f"{self._ORGS_PREFIX}{org_id}.json"
+        self.meta_store.write(
+            path, json.dumps(data, indent=2).encode("utf-8"), "application/json"
+        )
+        from app.models import Organization
+
+        return Organization(**data)
 
     def delete_organization(self, org_id: str):
-        raise RuntimeError("Organization management requires STORAGE_BACKEND=supabase")
+        path = f"{self._ORGS_PREFIX}{org_id}.json"
+        try:
+            self.meta_store.delete(path)
+        except FileNotFoundError:
+            return False
+        for info in self.meta_store.list_blobs(prefix=f"{self._ORGS_PREFIX}{org_id}/members/"):
+            try:
+                self.meta_store.delete(info.name)
+            except Exception:
+                pass
+        for proj in self.list_projects(org_id):
+            self.delete_project(proj.project_id)
+        return True
 
     def add_org_member(self, org_id: str, user_id: str, role):
-        raise RuntimeError("Organization management requires STORAGE_BACKEND=supabase")
+        from app.models import OrgMember, OrgRole
+
+        role_val = role.value if hasattr(role, "value") else str(role)
+        now = datetime.utcnow().isoformat() + "Z"
+        member = OrgMember(
+            org_id=org_id,
+            user_id=user_id,
+            role=OrgRole(role_val),
+            created_at=now,
+        )
+        path = f"{self._ORGS_PREFIX}{org_id}/members/{user_id}.json"
+        self.meta_store.write(
+            path, json.dumps(member.model_dump(), indent=2).encode("utf-8"), "application/json"
+        )
+        return member
 
     def get_org_member(self, org_id: str, user_id: str):
-        raise RuntimeError("Organization management requires STORAGE_BACKEND=supabase")
+        from app.models import OrgMember
+
+        path = f"{self._ORGS_PREFIX}{org_id}/members/{user_id}.json"
+        try:
+            raw = self.meta_store.read(path)
+            return OrgMember(**json.loads(raw.decode("utf-8")))
+        except FileNotFoundError:
+            return None
 
     def list_org_members(self, org_id: str):
-        raise RuntimeError("Organization management requires STORAGE_BACKEND=supabase")
+        from app.models import OrgMember
+
+        out = []
+        for info in self.meta_store.list_blobs(prefix=f"{self._ORGS_PREFIX}{org_id}/members/"):
+            if not info.name.endswith(".json"):
+                continue
+            try:
+                raw = self.meta_store.read(info.name)
+                out.append(OrgMember(**json.loads(raw.decode("utf-8"))))
+            except Exception:
+                continue
+        return out
 
     def update_org_member_role(self, org_id: str, user_id: str, role):
-        raise RuntimeError("Organization management requires STORAGE_BACKEND=supabase")
+        member = self.get_org_member(org_id, user_id)
+        if not member:
+            return None
+        from app.models import OrgRole
+
+        role_val = role.value if hasattr(role, "value") else str(role)
+        member.role = OrgRole(role_val)
+        path = f"{self._ORGS_PREFIX}{org_id}/members/{user_id}.json"
+        self.meta_store.write(
+            path, json.dumps(member.model_dump(), indent=2).encode("utf-8"), "application/json"
+        )
+        return member
 
     def remove_org_member(self, org_id: str, user_id: str):
-        raise RuntimeError("Organization management requires STORAGE_BACKEND=supabase")
+        path = f"{self._ORGS_PREFIX}{org_id}/members/{user_id}.json"
+        try:
+            self.meta_store.delete(path)
+            return True
+        except FileNotFoundError:
+            return False
 
     def create_project(self, org_id: str, project_create):
-        raise RuntimeError("Project management requires STORAGE_BACKEND=supabase")
+        from ulid import ULID
+        from app.models import Project
+
+        now = datetime.utcnow().isoformat() + "Z"
+        project_id = f"proj_{ULID()}"
+        project = Project(
+            project_id=project_id,
+            org_id=org_id,
+            name=project_create.name,
+            display_name=project_create.display_name or project_create.name,
+            description=getattr(project_create, "description", None),
+            metadata=getattr(project_create, "metadata", None) or {},
+            status="active",
+            created_at=now,
+            updated_at=now,
+        )
+        path = f"{self._PROJECTS_PREFIX}{project_id}.json"
+        self.meta_store.write(
+            path, json.dumps(project.model_dump(), indent=2).encode("utf-8"), "application/json"
+        )
+        return project
 
     def get_project(self, project_id: str):
-        raise RuntimeError("Project management requires STORAGE_BACKEND=supabase")
+        from app.models import Project
+
+        path = f"{self._PROJECTS_PREFIX}{project_id}.json"
+        try:
+            raw = self.meta_store.read(path)
+            return Project(**json.loads(raw.decode("utf-8")))
+        except FileNotFoundError:
+            return None
 
     def list_projects(self, org_id: str):
-        raise RuntimeError("Project management requires STORAGE_BACKEND=supabase")
+        from app.models import Project
+
+        out = []
+        for info in self.meta_store.list_blobs(prefix=self._PROJECTS_PREFIX):
+            if not info.name.endswith(".json"):
+                continue
+            try:
+                raw = self.meta_store.read(info.name)
+                data = json.loads(raw.decode("utf-8"))
+                if data.get("org_id") == org_id:
+                    out.append(Project(**data))
+            except Exception:
+                continue
+        return out
 
     def update_project(self, project_id: str, project_update):
-        raise RuntimeError("Project management requires STORAGE_BACKEND=supabase")
+        project = self.get_project(project_id)
+        if not project:
+            return None
+        data = project.model_dump()
+        for field in ("name", "display_name", "description", "metadata", "status"):
+            val = getattr(project_update, field, None)
+            if val is not None:
+                data[field] = val
+        data["updated_at"] = datetime.utcnow().isoformat() + "Z"
+        path = f"{self._PROJECTS_PREFIX}{project_id}.json"
+        self.meta_store.write(
+            path, json.dumps(data, indent=2).encode("utf-8"), "application/json"
+        )
+        from app.models import Project
+
+        return Project(**data)
 
     def delete_project(self, project_id: str):
-        raise RuntimeError("Project management requires STORAGE_BACKEND=supabase")
+        path = f"{self._PROJECTS_PREFIX}{project_id}.json"
+        try:
+            self.meta_store.delete(path)
+            return True
+        except FileNotFoundError:
+            return False
 
 
 # =============================================================================
@@ -6060,6 +6349,10 @@ class SupabaseStorage(BaseStorage):
             "ai_signature": ai_sig,
             "created_at":   embedding.created_at,
         }
+        if embedding.org_id:
+            row["org_id"] = embedding.org_id
+        if embedding.project_id:
+            row["project_id"] = embedding.project_id
         page_meta = {
             "page": embedding.page,
             "section_path": embedding.section_path,
@@ -6444,12 +6737,15 @@ class SupabaseStorage(BaseStorage):
     def similarity_search(
         self, query_vector: List[float], limit: int = 5, user_id: str = "",
         memory_id: str = "",
+        project_id: str = "",
     ) -> List[dict]:
         """Cosine similarity search using pgvector on ``mem_dog_embeddings``.
 
         Returns dicts with ``embedding_id``, ``data_id``, ``chunk_text``,
         ``similarity``, and optional ``page``, scoped to ``user_id`` when provided.
         When ``memory_id`` is set, restricts results to that memory's data_ids.
+        When ``project_id`` is set, passes ``filter_project_id`` to the RPC when
+        available (falls back to base blob-scan with project filter).
         Falls back to the base blob-scan implementation on any error.
         """
         self._check_ai_enabled()
@@ -6472,6 +6768,8 @@ class SupabaseStorage(BaseStorage):
                 rpc_params["filter_user_id"] = user_id
             if filter_data_ids is not None:
                 rpc_params["filter_data_ids"] = filter_data_ids
+            if project_id:
+                rpc_params["filter_project_id"] = project_id
             res = self._supa_client.rpc("match_embeddings", rpc_params).execute()
             results: List[dict] = []
             for row in res.data or []:
@@ -6490,12 +6788,16 @@ class SupabaseStorage(BaseStorage):
                 "pgvector similarity_search RPC unavailable (%s), falling back to base implementation",
                 exc,
             )
-            return super().similarity_search(query_vector, limit=limit, memory_id=memory_id)
+            return super().similarity_search(
+                query_vector, limit=limit, memory_id=memory_id, user_id=user_id,
+                project_id=project_id,
+            )
 
     def hybrid_search(
         self, query_vector: List[float], query_text: str, limit: int = 5,
         user_id: str = "", memory_id: str = "",
         vector_weight: float = 0.5, fts_weight: float = 0.5,
+        project_id: str = "",
     ) -> List[dict]:
         """Hybrid cosine + BM25 search via ``match_embeddings_hybrid`` RPC."""
         self._check_ai_enabled()
@@ -6521,7 +6823,7 @@ class SupabaseStorage(BaseStorage):
             if filter_data_ids is not None:
                 rpc_params["filter_data_ids"] = filter_data_ids
             res = self._supa_client.rpc("match_embeddings_hybrid", rpc_params).execute()
-            return [
+            results = [
                 {
                     "embedding_id": row.get("embedding_id", ""),
                     "data_id": row.get("data_id", ""),
@@ -6531,12 +6833,19 @@ class SupabaseStorage(BaseStorage):
                     "rrf_score": float(row.get("rrf_score", 0.0)) if row.get("rrf_score") is not None else None,
                     "search_type": row.get("search_type", "both"),
                     **({"page": row["page"]} if row.get("page") is not None else {}),
+                    **({"project_id": row["project_id"]} if row.get("project_id") is not None else {}),
                 }
                 for row in res.data or []
             ]
+            if project_id:
+                results = [r for r in results if r.get("project_id") == project_id]
+            return results
         except Exception as exc:
             logger.debug("hybrid_search RPC unavailable (%s), falling back to base", exc)
-            return super().hybrid_search(query_vector, query_text, limit=limit, user_id=user_id, memory_id=memory_id)
+            return super().hybrid_search(
+                query_vector, query_text, limit=limit, user_id=user_id,
+                memory_id=memory_id, project_id=project_id,
+            )
 
     def fts_search(
         self, query_text: str, limit: int = 5, user_id: str = "", memory_id: str = "",
@@ -6729,6 +7038,10 @@ class SupabaseStorage(BaseStorage):
             "updated_at": now,
             "last_active_at": now,
         }
+        if user_create.default_org_id:
+            row["default_org_id"] = user_create.default_org_id
+        if user_create.default_project_id:
+            row["default_project_id"] = user_create.default_project_id
         try:
             res = self._supa_client.table(self._PROFILES_TABLE).insert(row).execute()
         except Exception as exc:
@@ -6748,6 +7061,28 @@ class SupabaseStorage(BaseStorage):
             "application/json",
         )
         return user
+
+    def set_user_defaults(
+        self,
+        user_id: str,
+        *,
+        default_org_id: Optional[str] = None,
+        default_project_id: Optional[str] = None,
+    ) -> Optional[User]:
+        self._check_user_management_enabled()
+        patch: Dict[str, Any] = {"updated_at": datetime.utcnow().isoformat() + "Z"}
+        if default_org_id is not None:
+            patch["default_org_id"] = default_org_id
+        if default_project_id is not None:
+            patch["default_project_id"] = default_project_id
+        try:
+            self._supa_client.table(self._PROFILES_TABLE).update(patch).eq(
+                "user_id", user_id
+            ).execute()
+        except Exception as exc:
+            logger.warning("set_user_defaults failed: %s", exc)
+            return None
+        return self.get_user(user_id)
 
     def get_user(self, user_id: str) -> Optional[User]:  # type: ignore[override]
         self._check_user_management_enabled()

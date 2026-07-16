@@ -481,6 +481,10 @@ class SemanticQueryRequest(BaseModel):
     )
     model_tier: str = Field("medium", pattern="^(small|medium|large|very-large)$")
     user_id: str = Field("", description="Scope results to this user")
+    project_id: str = Field(
+        "",
+        description="Scope results to this project (embeddings stamped with project_id)",
+    )
 
 
 class SemanticResult(BaseModel):
@@ -575,14 +579,19 @@ async def semantic_query(request: SemanticQueryRequest, http_request: FastAPIReq
     # 2. Search — branch on search_mode
     search_mode = request.search_mode
     dict_results: list[dict] = []
+    project_id = (request.project_id or "").strip()
 
     try:
         if search_mode == SearchMode.fts:
-            dict_results = storage.fts_search(request.query, limit=request.max_results, user_id=user_id)
+            dict_results = storage.fts_search(
+                request.query, limit=request.max_results, user_id=user_id,
+                project_id=project_id,
+            )
         elif search_mode == SearchMode.hybrid:
             dict_results = storage.hybrid_search(
                 query_vector, request.query, limit=request.max_results,
                 user_id=user_id, vector_weight=request.vector_weight, fts_weight=request.fts_weight,
+                project_id=project_id,
             )
         elif search_mode == SearchMode.graph:
             dict_results = await _graphiti_search(request.query, user_id, request.max_results, request.temporal)
@@ -590,6 +599,7 @@ async def semantic_query(request: SemanticQueryRequest, http_request: FastAPIReq
             pgvector_task = asyncio.create_task(asyncio.to_thread(
                 storage.hybrid_search, query_vector, request.query,
                 request.max_results, user_id, "", request.vector_weight, request.fts_weight,
+                project_id,
             ))
             graphiti_results = await _graphiti_search(request.query, user_id, request.max_results, request.temporal)
             pgvector_results = await pgvector_task
@@ -599,6 +609,7 @@ async def semantic_query(request: SemanticQueryRequest, http_request: FastAPIReq
             # Default: vector-only (backward compatible)
             dict_results = storage.similarity_search(
                 query_vector, limit=request.max_results, user_id=user_id,
+                project_id=project_id,
             )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Search failed: {exc}")
@@ -740,6 +751,10 @@ class ChatRequest(BaseModel):
     model_tier: str = Field("medium", pattern="^(small|medium|large|very-large)$")
     user_id: str = Field("")
     memory_id: Optional[str] = Field(None)
+    project_id: str = Field(
+        "",
+        description="Scope retrieval to this project (embeddings stamped with project_id)",
+    )
     search_mode: SearchMode = Field(SearchMode.vector, description="Search strategy")
     vector_weight: float = Field(0.5, ge=0.0, le=1.0)
     fts_weight: float = Field(0.5, ge=0.0, le=1.0)
@@ -817,15 +832,20 @@ async def chat_with_data(request: ChatRequest, http_request: FastAPIRequest = No
     search_mode = request.search_mode
     dict_results: list[dict] = []
     memory_id = request.memory_id or ""
+    project_id = (request.project_id or "").strip()
 
     try:
         if search_mode == SearchMode.fts:
-            dict_results = storage.fts_search(request.message, limit=request.max_results, user_id=user_id, memory_id=memory_id)
+            dict_results = storage.fts_search(
+                request.message, limit=request.max_results, user_id=user_id,
+                memory_id=memory_id, project_id=project_id,
+            )
         elif search_mode == SearchMode.hybrid:
             dict_results = storage.hybrid_search(
                 query_vector, request.message, limit=request.max_results,
                 user_id=user_id, memory_id=memory_id,
                 vector_weight=request.vector_weight, fts_weight=request.fts_weight,
+                project_id=project_id,
             )
         elif search_mode == SearchMode.graph:
             dict_results = await _graphiti_search(request.message, user_id, request.max_results, request.temporal)
@@ -833,6 +853,7 @@ async def chat_with_data(request: ChatRequest, http_request: FastAPIRequest = No
             pgvector_task = asyncio.create_task(asyncio.to_thread(
                 storage.hybrid_search, query_vector, request.message,
                 request.max_results, user_id, memory_id, request.vector_weight, request.fts_weight,
+                project_id,
             ))
             graphiti_results = await _graphiti_search(request.message, user_id, request.max_results, request.temporal)
             pgvector_results = await pgvector_task
@@ -841,7 +862,7 @@ async def chat_with_data(request: ChatRequest, http_request: FastAPIRequest = No
         else:
             dict_results = storage.similarity_search(
                 query_vector, limit=request.max_results, user_id=user_id,
-                memory_id=memory_id,
+                memory_id=memory_id, project_id=project_id,
             )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Search failed: {exc}")
