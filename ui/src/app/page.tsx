@@ -482,7 +482,7 @@ export default function Home() {
         </div>
         <div
           className={`flex-1 px-4 py-4 md:px-6 md:py-8 ${
-            activeTab === 'testing' && testingSubTab === 'knowledge'
+            activeTab === 'testing' && (testingSubTab === 'knowledge' || testingSubTab === 'mcp')
               ? 'flex flex-col min-h-0 overflow-hidden'
               : 'overflow-y-auto'
           }`}
@@ -533,7 +533,7 @@ export default function Home() {
               {activeTab === 'testing' && (
                 <div
                   className={`animate-in ${
-                    testingSubTab === 'knowledge'
+                    testingSubTab === 'knowledge' || testingSubTab === 'mcp'
                       ? 'flex flex-col flex-1 min-h-0 gap-6'
                       : 'space-y-6'
                   }`}
@@ -573,7 +573,11 @@ export default function Home() {
                     </div>
                   )}
 
-                  {testingSubTab === 'mcp' && <McpPlayground />}
+                  {testingSubTab === 'mcp' && (
+                    <div className="flex flex-col flex-1 min-h-0">
+                      <McpPlayground />
+                    </div>
+                  )}
 
                 </div>
               )}

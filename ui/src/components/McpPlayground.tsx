@@ -218,12 +218,14 @@ export default function McpPlayground() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages, chatLoading]);
 
-  // Auto-resize textarea
+  // Auto-resize textarea (keep single-line height matched to send button)
   useEffect(() => {
     const ta = chatInputRef.current;
     if (ta) {
-      ta.style.height = 'auto';
-      ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+      ta.style.height = '2.5rem';
+      if (ta.scrollHeight > 40) {
+        ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+      }
     }
   }, [chatInput]);
 
@@ -273,9 +275,9 @@ export default function McpPlayground() {
   const toolDef = TOOL_DEFS.find((t) => t.id === selectedTool)!;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)]">
+    <div className="flex flex-col flex-1 min-h-0 h-full">
       {/* Mode toggle */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-4 flex-shrink-0">
         <div className="flex items-center gap-1 p-1 bg-white/5 rounded-xl">
           <button
             onClick={() => setMode('chat')}
@@ -308,7 +310,7 @@ export default function McpPlayground() {
         /* Chat Mode                                                         */
         /* ----------------------------------------------------------------- */
         <div className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto px-2">
+          <div className="flex-1 min-h-0 overflow-y-auto px-2">
             {chatMessages.length === 0 && !chatLoading ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/20 flex items-center justify-center mb-6">
@@ -370,7 +372,7 @@ export default function McpPlayground() {
 
           {/* Chat input */}
           <div className="flex-shrink-0 border-t border-white/10 bg-white/[0.02] px-2 py-3">
-            <div className="max-w-3xl mx-auto flex items-end gap-2">
+            <div className="max-w-3xl mx-auto flex items-start gap-2">
               <textarea
                 ref={chatInputRef}
                 value={chatInput}
@@ -378,7 +380,7 @@ export default function McpPlayground() {
                 onKeyDown={handleChatKey}
                 placeholder="Ask about your data..."
                 rows={1}
-                className="flex-1 resize-none rounded-xl bg-white/5 border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 px-4 py-3 text-sm text-white/90 placeholder-white/30 outline-none transition-all"
+                className="flex-1 box-border min-h-10 max-h-40 resize-none rounded-xl bg-white/5 border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 px-4 py-2.5 text-sm text-white/90 placeholder-white/30 outline-none transition-all"
               />
               <button
                 onClick={() => sendChat(chatInput)}
@@ -448,7 +450,7 @@ export default function McpPlayground() {
           </div>
 
           {/* Results */}
-          <div className="flex-1 overflow-y-auto space-y-3">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-3">
             {toolResults.map((r, idx) => (
               <div key={idx} className={`glass-card p-4 ${r.error ? 'border-red-500/30' : ''}`}>
                 <div className="flex items-center gap-2 mb-2">
