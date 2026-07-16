@@ -1,15 +1,18 @@
 import logging
+import uuid
 from datetime import datetime, timezone
+from typing import Any, Optional
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app import config
 from app.auth import ensure_jwt_user_profile
 from app.storage import get_storage
 from app.telemetry import setup_telemetry, get_tracer, get_meter
-from app.routers import data, versions, list, tags, bulk_delete
+from app.routers import data, versions, list as list_router, tags, bulk_delete
 from app.routers import users, access, memories, channel_identities, channels
 from app.routers import ai_config, prompts, embeddings, viewpoints, ai_query, skills, analysis_templates, agent_configs
 from app.routers import machines, ollama_proxy, k8s_pods
@@ -145,21 +148,80 @@ async def metrics_middleware(request: Request, call_next):
 _PUBLIC_PATHS = frozenset({"/", "/health", "/ready", "/docs", "/redoc", "/openapi.json", "/api/v1/gmail/push", "/api/v1/gdrive/push", "/api/v1/zoom/push"})
 
 
+def _error_code_for_status(status_code: int) -> str:
+    return {
+        400: "bad_request",
+        401: "unauthorized",
+        403: "forbidden",
+        404: "not_found",
+        409: "conflict",
+        422: "validation_error",
+        429: "rate_limited",
+        503: "service_unavailable",
+    }.get(status_code, "http_error")
+
+
+def _structured_error(
+    *,
+    status_code: int,
+    detail: Any,
+    request_id: Optional[str],
+) -> dict:
+    """Host-friendly error envelope; keep FastAPI ``detail`` for compatibility."""
+    message: str
+    code = _error_code_for_status(status_code)
+    details: dict = {}
+    if isinstance(detail, dict):
+        message = str(detail.get("message") or detail.get("detail") or detail)
+        code = str(detail.get("code") or code)
+        extra = detail.get("details")
+        if isinstance(extra, dict):
+            details = extra
+    elif isinstance(detail, list):
+        message = "Validation failed"
+        code = "validation_error"
+        details = {"errors": detail}
+    else:
+        message = str(detail) if detail is not None else "Error"
+    return {
+        "detail": detail if not isinstance(detail, list) else message,
+        "error": {
+            "code": code,
+            "message": message,
+            "details": details,
+            "request_id": request_id,
+        },
+    }
+
+
 @app.middleware("http")
 async def api_key_middleware(request: Request, call_next):
-    """Dual-path auth: global service key OR per-user ``md_*`` key."""
+    """Dual-path auth: global service key OR per-user ``md_*`` key.
+
+    Also assigns / echoes ``X-Request-Id`` for host log correlation (Phase F3).
+    """
     # Defaults — no authenticated user
     request.state.user_id = None
     request.state.auth_type = None
+    request_id = (
+        request.headers.get("x-request-id")
+        or request.headers.get("X-Request-Id")
+        or ""
+    ).strip() or str(uuid.uuid4())
+    request.state.request_id = request_id
+
+    async def _respond(response):
+        response.headers["X-Request-Id"] = request_id
+        return response
 
     if request.method == "OPTIONS" or request.url.path in _PUBLIC_PATHS:
-        return await call_next(request)
+        return await _respond(await call_next(request))
 
     provided = request.headers.get("x-api-key", "")
 
     if not config.API_KEY:
         # No global key configured (local dev) — pass through
-        return await call_next(request)
+        return await _respond(await call_next(request))
 
     # 1. Global service key — inter-service / admin
     #    If a JWT Bearer is also present, prefer JWT to extract user_id
@@ -179,11 +241,11 @@ async def api_key_middleware(request: Request, call_next):
                     request.state.user_id = sub
                     request.state.auth_type = "jwt"
                     await ensure_jwt_user_profile(sub, payload)
-                    return await call_next(request)
+                    return await _respond(await call_next(request))
             except Exception:
                 logger.debug("JWT decode failed alongside global key, using global", exc_info=True)
         request.state.auth_type = "global"
-        return await call_next(request)
+        return await _respond(await call_next(request))
 
     # 2. Per-user key (md_ prefix) — O(1) lookup via Supabase
     if provided.startswith("md_"):
@@ -193,7 +255,7 @@ async def api_key_middleware(request: Request, call_next):
             if user_id:
                 request.state.user_id = user_id
                 request.state.auth_type = "per_user"
-                return await call_next(request)
+                return await _respond(await call_next(request))
         except Exception:
             logger.debug("Per-user key validation error", exc_info=True)
 
@@ -212,13 +274,33 @@ async def api_key_middleware(request: Request, call_next):
                 request.state.user_id = sub
                 request.state.auth_type = "jwt"
                 await ensure_jwt_user_profile(sub, payload)
-                return await call_next(request)
+                return await _respond(await call_next(request))
         except Exception:
             logger.debug("JWT auth failed", exc_info=True)
 
+    return await _respond(
+        JSONResponse(
+            status_code=401,
+            content=_structured_error(
+                status_code=401,
+                detail="Invalid or missing API key",
+                request_id=request_id,
+            ),
+        )
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    request_id = getattr(request.state, "request_id", None)
     return JSONResponse(
-        status_code=401,
-        content={"detail": "Invalid or missing API key"},
+        status_code=exc.status_code,
+        content=_structured_error(
+            status_code=exc.status_code,
+            detail=exc.detail,
+            request_id=request_id,
+        ),
+        headers={"X-Request-Id": request_id or ""},
     )
 
 
@@ -241,7 +323,7 @@ app.add_middleware(
 app.include_router(data.router)
 app.include_router(tags.router)
 app.include_router(versions.router)
-app.include_router(list.router)
+app.include_router(list_router.router)
 app.include_router(bulk_delete.router)
 
 # User management routers

@@ -27,14 +27,78 @@ from app.models import (
 )
 from app import nango_client
 from app.nango_provider_meta import get_app_category, get_capabilities, get_channel_key
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger("mem_dog.routers.integrations")
 
 router = APIRouter(prefix="/api/v1/integrations", tags=["Integrations"])
 
 
+class ConnectSessionCreate(BaseModel):
+    """Start a Nango Connect session for host-driven OAuth."""
+    provider_key: str = Field(..., min_length=1)
+    user_id: Optional[str] = Field(
+        None,
+        description="End-user id for Nango; defaults to the authenticated md_* / JWT user.",
+    )
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _require_platform_key(request: Request) -> None:
+    """When API_KEY is set, only the global platform key may mutate OAuth app credentials."""
+    if not config.API_KEY:
+        return
+    if getattr(request.state, "auth_type", None) != "global":
+        raise HTTPException(
+            status_code=403,
+            detail="Provider OAuth credentials require the platform API key",
+        )
+
+
+def _resolve_user_scope(request: Request, explicit_user_id: Optional[str] = None) -> Optional[str]:
+    """Scope connections to the caller for md_*/JWT; allow platform filter/all.
+
+    - ``per_user`` / ``jwt``: always the authenticated user; reject cross-user explicit ids.
+    - ``global`` / open (no API_KEY): optional ``explicit_user_id``, else None (all).
+    """
+    auth_type = getattr(request.state, "auth_type", None)
+    caller = getattr(request.state, "user_id", None)
+    explicit = (explicit_user_id or "").strip() or None
+
+    if auth_type in ("per_user", "jwt"):
+        if not caller:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        if explicit and explicit != caller:
+            raise HTTPException(
+                status_code=403,
+                detail="Cannot access another user's integration connections",
+            )
+        return caller
+
+    return explicit
+
+
+def _connection_owner_id(nango_conn: Dict[str, Any]) -> str:
+    end_user = nango_conn.get("end_user", {})
+    if isinstance(end_user, dict):
+        return str(end_user.get("id") or "").strip()
+    return ""
+
+
+def _assert_connection_access(request: Request, nango_conn: Dict[str, Any]) -> None:
+    """Forbid md_*/JWT callers from touching another user's connection."""
+    auth_type = getattr(request.state, "auth_type", None)
+    if auth_type not in ("per_user", "jwt"):
+        return
+    caller = getattr(request.state, "user_id", None)
+    if not caller:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    owner = _connection_owner_id(nango_conn)
+    if owner != caller:
+        raise HTTPException(status_code=404, detail="Connection not found")
 
 
 # Known auth modes from Nango provider templates (built-in knowledge).
@@ -226,8 +290,11 @@ async def get_provider(provider_key: str) -> IntegrationProvider:
 
 
 @router.put("/providers/{provider_key}/oauth-credentials", response_model=IntegrationProvider)
-async def set_oauth_credentials(provider_key: str, body: OAuthCredentialsUpdate) -> IntegrationProvider:
-    """Set OAuth client credentials on a Nango integration."""
+async def set_oauth_credentials(
+    provider_key: str, body: OAuthCredentialsUpdate, request: Request
+) -> IntegrationProvider:
+    """Set OAuth client credentials on a Nango integration (platform key only)."""
+    _require_platform_key(request)
     try:
         await nango_client.update_integration(provider_key, {
             "oauth_client_id": body.client_id,
@@ -249,8 +316,9 @@ async def set_oauth_credentials(provider_key: str, body: OAuthCredentialsUpdate)
 
 
 @router.delete("/providers/{provider_key}/oauth-credentials", response_model=IntegrationProvider)
-async def clear_oauth_credentials(provider_key: str) -> IntegrationProvider:
-    """Clear OAuth client credentials from a Nango integration."""
+async def clear_oauth_credentials(provider_key: str, request: Request) -> IntegrationProvider:
+    """Clear OAuth client credentials from a Nango integration (platform key only)."""
+    _require_platform_key(request)
     try:
         await nango_client.update_integration(provider_key, {
             "oauth_client_id": "",
@@ -273,12 +341,18 @@ async def clear_oauth_credentials(provider_key: str) -> IntegrationProvider:
 
 @router.get("/connections", response_model=List[IntegrationConnection])
 async def list_connections(
+    request: Request,
     user_id: Optional[str] = Query(None, description="Filter by user ID"),
     provider_key: Optional[str] = Query(None, description="Filter by provider"),
 ) -> List[IntegrationConnection]:
-    """List connections from Nango."""
+    """List connections from Nango.
+
+    Workspace ``md_*`` / JWT keys are auto-scoped to the key owner. Platform key
+    may pass ``user_id`` or omit it to list all (admin / gateway).
+    """
+    scoped_user = _resolve_user_scope(request, user_id)
     try:
-        nango_conns = await nango_client.list_connections(end_user_id=user_id)
+        nango_conns = await nango_client.list_connections(end_user_id=scoped_user)
         connections = [_nango_to_connection(c) for c in nango_conns]
 
         if provider_key:
@@ -291,12 +365,13 @@ async def list_connections(
 
 
 @router.get("/connections/{connection_id}", response_model=IntegrationConnection)
-async def get_connection(connection_id: str) -> IntegrationConnection:
+async def get_connection(connection_id: str, request: Request) -> IntegrationConnection:
     """Get a single connection from Nango."""
     try:
         nango_conn = await nango_client.get_connection(connection_id)
         if not nango_conn:
             raise HTTPException(status_code=404, detail=f"Connection not found: {connection_id}")
+        _assert_connection_access(request, nango_conn)
         return _nango_to_connection(nango_conn)
     except HTTPException:
         raise
@@ -306,20 +381,34 @@ async def get_connection(connection_id: str) -> IntegrationConnection:
 
 
 @router.delete("/connections/{connection_id}", status_code=204)
-async def delete_connection(connection_id: str) -> None:
+async def delete_connection(connection_id: str, request: Request) -> None:
     """Delete a connection in Nango."""
     try:
+        nango_conn = await nango_client.get_connection(connection_id)
+        if not nango_conn:
+            raise HTTPException(status_code=404, detail=f"Connection not found: {connection_id}")
+        _assert_connection_access(request, nango_conn)
         await nango_client.delete_connection(connection_id)
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.exception("delete_connection failed")
         raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/connections/api-key", response_model=IntegrationConnection)
-async def create_api_key_connection(body: IntegrationConnectionCreate) -> IntegrationConnection:
+async def create_api_key_connection(
+    body: IntegrationConnectionCreate, request: Request
+) -> IntegrationConnection:
     """Create an API-key connection in Nango."""
     if not body.api_key:
         raise HTTPException(status_code=400, detail="api_key is required for API key connections")
+
+    # Force end_user to the authenticated workspace user when using md_*/JWT
+    scoped_user = _resolve_user_scope(request, body.user_id)
+    if not scoped_user:
+        raise HTTPException(status_code=400, detail="user_id is required")
+    body.user_id = scoped_user
 
     try:
         result = await nango_client.create_connection({
@@ -371,12 +460,16 @@ async def create_api_key_connection(body: IntegrationConnectionCreate) -> Integr
 
 @router.get("/oauth/authorize/{provider_key}")
 async def get_oauth_authorize_url(
+    request: Request,
     provider_key: str,
-    user_id: str = Query(..., description="mem-dog user ID"),
+    user_id: Optional[str] = Query(None, description="mem-dog user ID (defaults to auth user)"),
     redirect_uri: str = Query("", description="OAuth callback URI (unused, Nango handles callback)"),
     scopes: Optional[str] = Query(None, description="Override default scopes"),
 ) -> Dict[str, str]:
     """Generate an OAuth2 authorization URL via Nango's direct OAuth flow."""
+    resolved_user = _resolve_user_scope(request, user_id)
+    if not resolved_user:
+        raise HTTPException(status_code=400, detail="user_id is required")
     try:
         # Nango's self-hosted OAuth flow: browser redirects to /oauth/connect/<provider>
         nango_url = nango_client.NANGO_API_URL.rstrip("/")
@@ -384,14 +477,43 @@ async def get_oauth_authorize_url(
         public_key = os.getenv("NANGO_PUBLIC_KEY", "")
         authorize_url = (
             f"{server_url}/oauth/connect/{provider_key}"
-            f"?connection_id={user_id}"
+            f"?connection_id={resolved_user}"
             f"&public_key={public_key}"
         )
         if scopes:
             authorize_url += f"&params={{\"scopes\":\"{scopes}\"}}"
-        return {"authorize_url": authorize_url, "state": user_id}
+        return {"authorize_url": authorize_url, "state": resolved_user}
     except Exception as exc:
         logger.exception("get_oauth_authorize_url failed")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/oauth/connect-session")
+async def create_oauth_connect_session(
+    body: ConnectSessionCreate, request: Request
+) -> Dict[str, Any]:
+    """Create a Nango Connect session token/URL for host-driven OAuth UX."""
+    resolved_user = _resolve_user_scope(request, body.user_id)
+    if not resolved_user:
+        raise HTTPException(status_code=400, detail="user_id is required")
+    try:
+        session = await nango_client.create_connect_session(
+            end_user_id=resolved_user,
+            provider_config_key=body.provider_key,
+        )
+        return {
+            "user_id": resolved_user,
+            "provider_key": body.provider_key,
+            "token": session.get("token") or session.get("data", {}).get("token"),
+            "connect_link": (
+                session.get("connect_link")
+                or session.get("connect_url")
+                or session.get("data", {}).get("connect_link")
+            ),
+            "raw": session,
+        }
+    except Exception as exc:
+        logger.exception("create_oauth_connect_session failed")
         raise HTTPException(status_code=500, detail=str(exc))
 
 
@@ -412,12 +534,13 @@ async def oauth_callback(
 
 
 @router.post("/oauth/refresh/{connection_id}", response_model=IntegrationConnection)
-async def refresh_connection(connection_id: str) -> IntegrationConnection:
+async def refresh_connection(connection_id: str, request: Request) -> IntegrationConnection:
     """Refresh OAuth tokens — Nango auto-refreshes, so this verifies health."""
     try:
         nango_conn = await nango_client.get_connection(connection_id)
         if not nango_conn:
             raise HTTPException(status_code=404, detail=f"Connection not found: {connection_id}")
+        _assert_connection_access(request, nango_conn)
         return _nango_to_connection(nango_conn)
     except HTTPException:
         raise
@@ -431,8 +554,8 @@ async def refresh_connection(connection_id: str) -> IntegrationConnection:
 # =============================================================================
 
 @router.get("/connections/{connection_id}/credentials", response_model=IntegrationCredentials)
-async def get_credentials(connection_id: str) -> IntegrationCredentials:
-    """Get decrypted credentials from Nango."""
+async def get_credentials(connection_id: str, request: Request) -> IntegrationCredentials:
+    """Get decrypted credentials from Nango (scoped to connection owner for md_*/JWT)."""
     try:
         nango_conn = await nango_client.get_connection(
             connection_id,
@@ -440,6 +563,7 @@ async def get_credentials(connection_id: str) -> IntegrationCredentials:
         )
         if not nango_conn:
             raise HTTPException(status_code=404, detail=f"Credentials not found for: {connection_id}")
+        _assert_connection_access(request, nango_conn)
 
         creds = nango_conn.get("credentials", {})
         return IntegrationCredentials(

@@ -160,9 +160,9 @@ If a dedicated route ships later, ship an official SDK/script that performs the 
 
 ### Phase B — Connector reliability
 
-1. Implement `external_id` upsert on `/data` and `/ingest`.
-2. Audit integrations/oauth/proxy/webhook routes for `md_*` service-key auth.
-3. Reference recipes: Notion (outbound), Slack (inbound `whk_*` + outbound), CSV/file (no Nango).
+1. ~~Implement `external_id` upsert on `/data` and `/ingest`.~~
+2. ~~Audit integrations/oauth/proxy/webhook routes for `md_*` service-key auth.~~ (scoping + connect-session + platform-gated oauth-credentials)
+3. Reference recipes: ~~CSV/file (no Nango)~~; Notion (outbound), Slack (inbound `whk_*` + outbound) still open.
 4. Surface `parse_status` on metadata when the Docling plan lands.
 
 **Exit:** Re-syncing the same upstream object twice yields one logical `data_id`; host drives Connect without mem-dog UI.
@@ -209,9 +209,9 @@ Ship **before** meaningful multi-tenant volume (do not wait for a second host). 
 
 #### F3 — Observability (G15)
 
-- Accept `X-Request-Id`; generate if missing; echo on response; include in logs and webhook pipeline context.
+- ~~Accept `X-Request-Id`; generate if missing; echo on response; include in logs and webhook pipeline context.~~ (API echo + structured `error.request_id`; pipeline context still optional)
 - Optional W3C `traceparent` passthrough.
-- Error JSON shape (all host-facing 4xx/5xx):
+- ~~Error JSON shape (all host-facing 4xx/5xx):~~ (`detail` retained for compatibility)
 
 ```json
 {
@@ -415,7 +415,7 @@ Add to delivery (not optional fluff):
 - [x] `host-saas.md` + workspace provision happy path in-repo
 - [x] Cross-project retrieval isolation covered by tests
 - [x] `external_id` upsert on `/data` and `/ingest`
-- [ ] Host can complete file or Notion path → search without mem-dog UI
+- [x] Host can complete file or Notion path → search without mem-dog UI
 - [ ] Docling Phases 0–2 done or explicitly scheduled
 - [ ] Citation payload documented for host grounded generation
 - [ ] G1–G9 closed or deferred with owners; G10–G12 on a dated backlog

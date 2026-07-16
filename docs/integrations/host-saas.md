@@ -4,7 +4,7 @@ mem-dog can sit behind another product (the **host**). The host owns end-user au
 billing, and domain UI. mem-dog owns the long-lived corpus, embeddings, search/RAG,
 and (optionally) Nango connector credentials.
 
-This guide is the Phase A contract. Full roadmap: [`docs/plans/host-saas-embedding.md`](../plans/host-saas-embedding.md).
+This guide is the Host SaaS contract (Phases A–B + F3 observability). Full roadmap: [`docs/plans/host-saas-embedding.md`](../plans/host-saas-embedding.md).
 
 ## Ownership boundary
 
@@ -166,10 +166,79 @@ curl -X POST "$BASE/api/v1/data" \
 
 | Key | Header | Use |
 |-----|--------|-----|
-| Platform `API_KEY` | `x-api-key` | `POST/GET /api/v1/host/workspaces` only |
-| Workspace `md_*` | `x-api-key` | Data, embeddings, search, integrations |
+| Platform `API_KEY` | `x-api-key` | `POST/GET /api/v1/host/workspaces`, provider OAuth app credentials |
+| Workspace `md_*` | `x-api-key` | Data, embeddings, search, connections, webhooks |
 
 Local lean often runs with no `API_KEY` (open). Production must set `API_KEY` so workspace provision stays platform-gated.
+
+**Integrations scoping:** `md_*` / JWT callers only see and mutate their own Nango connections (auto-scoped). Platform key may filter by `user_id` or list all (gateway/admin).
+
+### Request correlation (F3)
+
+Send `X-Request-Id` on host → mem-dog calls (or omit to receive a generated UUID). The API echoes the same value on every response and includes it in structured errors:
+
+```json
+{
+  "detail": "…",
+  "error": {
+    "code": "not_found",
+    "message": "…",
+    "details": {},
+    "request_id": "…"
+  }
+}
+```
+
+## Recipe: file / CSV sync (no Nango)
+
+Host SoR remains the source of truth. mem-dog stores searchable memory with upsert.
+
+```bash
+# 1) Provision once (platform key)
+# → org_id, project_id, user_id, md_*
+
+# 2) For each upstream row / file revision:
+curl -s -X POST "$MEMDOG_BASE_URL/api/v1/data" \
+  -H "x-api-key: $WORKSPACE_MD_KEY" \
+  -H "X-Request-Id: host-sync-$(date +%s)" \
+  -F "content@$CSV_OR_TEXT_PATH" \
+  -F "name=customers-export.csv" \
+  -F "mime_type=text/csv" \
+  -F "owner_user_id=$USER_ID" \
+  -F "org_id=$ORG_ID" \
+  -F "project_id=$PROJECT_ID" \
+  -F "external_id=csv:customers:v1" \
+  -F "tags=source:host,tenant:acme-site-42,event:sync"
+
+# Re-upload the same external_id after SoR changes → same data_id, new version.
+
+# 3) Embed (optional) then search
+curl -s -X POST "$MEMDOG_BASE_URL/api/v1/ai/embeddings" \
+  -H "x-api-key: $WORKSPACE_MD_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"data_id\":\"$DATA_ID\",\"user_id\":\"$USER_ID\",\"project_id\":\"$PROJECT_ID\"}"
+
+curl -s -X POST "$MEMDOG_BASE_URL/api/v1/ai/query/semantic" \
+  -H "x-api-key: $WORKSPACE_MD_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"query\":\"enterprise customers in EMEA\",\"user_id\":\"$USER_ID\",\"project_id\":\"$PROJECT_ID\",\"max_results\":5}"
+```
+
+## Connect & integrations (Phase B)
+
+Hosts drive Nango from the **server** with the workspace `md_*` key. Never put `md_*` in browsers.
+
+| Step | Call | Key |
+|------|------|-----|
+| List providers | `GET /api/v1/integrations/providers` | `md_*` |
+| Start Connect session | `POST /api/v1/integrations/oauth/connect-session` `{"provider_key":"notion"}` | `md_*` |
+| Or redirect OAuth URL | `GET /api/v1/integrations/oauth/authorize/{provider}` | `md_*` (user defaults to key owner) |
+| List connections | `GET /api/v1/integrations/connections` | `md_*` (auto-scoped) |
+| API-key provider | `POST /api/v1/integrations/connections/api-key` | `md_*` |
+| Inbound webhooks | `POST /api/v1/webhooks` → `whk_*` URL on gateway | `md_*` |
+| Outbound provider API | `{GATEWAY}/proxy/{provider}/{path}?user_id=…` | `WGW_API_KEY` |
+
+Sync job pattern: gateway proxy → normalize → `POST /api/v1/data` with `external_id` + `project_id`.
 
 ## Health for host circuit breakers
 
@@ -206,12 +275,11 @@ cd api && pytest tests/test_host_saas.py -v
 
 ## Compatibility policy (preview)
 
-- `/api/v1/host/workspaces`, `project_id` on semantic/chat, and `external_id` upsert are additive.
+- `/api/v1/host/workspaces`, `project_id` on semantic/chat, `external_id` upsert, `X-Request-Id`, and structured `error` are additive (`detail` retained).
 - Breaking changes require `/api/v2` or a dated deprecation notice in this doc.
 - Standalone mem-dog UI is unchanged; Host SaaS is an embed contract on top.
 
-## Next (Phase B+)
+## Next (Phase B+ / F)
 
-- Host-driven Nango Connect recipes (Notion / Slack)
-- Service-key auth audit for oauth/proxy/webhooks
-- Workspace purge / quotas / key rotation (Phase F)
+- Notion / Slack Connect recipes (need Nango)
+- Workspace purge / quotas / key rotation (Phase F1, F2, F5)
