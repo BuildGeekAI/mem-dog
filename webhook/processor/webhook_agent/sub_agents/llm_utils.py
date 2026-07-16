@@ -43,14 +43,22 @@ if TYPE_CHECKING:
 
 
 def _infer_ai_engine(model_str: str) -> str:
-    """Derive the AI engine name from a LiteLLM model string.
+    """Derive the mem-dog ``AIEngineType`` from a LiteLLM / model-server string.
 
     E.g. ``"ollama/gemma3:12b"`` → ``"ollama"``,
-    ``"gemini/gemini-3.1-pro-preview"`` → ``"gemini"``.
+    ``"gemini/gemini-3.1-pro-preview"`` → ``"gemini"``,
+    ``"google/gemini-2.0-flash"`` → ``"gemini"`` (LiteLLM provider alias),
+    ``"llama3.2:1b"`` → ``"ollama"`` (bare name from self-hosted model server).
     """
+    if not model_str:
+        return ""
     if "/" in model_str:
-        return model_str.split("/", 1)[0]
-    return model_str
+        provider = model_str.split("/", 1)[0]
+        if provider == "google":
+            return "gemini"
+        return provider
+    # MODEL_SERVER_MODEL is stored without a provider prefix (e.g. "llama3.2:1b").
+    return "ollama"
 
 
 def _try_parse_json_obj(text: str) -> dict | None:
