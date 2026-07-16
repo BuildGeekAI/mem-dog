@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -198,7 +198,8 @@ def _structured_error(
 async def api_key_middleware(request: Request, call_next):
     """Dual-path auth: global service key OR per-user ``md_*`` key.
 
-    Also assigns / echoes ``X-Request-Id`` for host log correlation (Phase F3).
+    Also assigns / echoes ``X-Request-Id`` for host log correlation (Phase F3)
+    and enforces Host SaaS quotas after auth (Phase F2).
     """
     # Defaults — no authenticated user
     request.state.user_id = None
@@ -214,14 +215,37 @@ async def api_key_middleware(request: Request, call_next):
         response.headers["X-Request-Id"] = request_id
         return response
 
+    async def _quota_or_continue():
+        from app import quotas
+
+        try:
+            quotas.check_content_length_header(request)
+            quotas.check_ingest_rate(request)
+        except HTTPException as exc:
+            headers = {"X-Request-Id": request_id}
+            if exc.headers:
+                headers.update({k: str(v) for k, v in exc.headers.items()})
+            return await _respond(
+                JSONResponse(
+                    status_code=exc.status_code,
+                    content=_structured_error(
+                        status_code=exc.status_code,
+                        detail=exc.detail,
+                        request_id=request_id,
+                    ),
+                    headers=headers,
+                )
+            )
+        return await _respond(await call_next(request))
+
     if request.method == "OPTIONS" or request.url.path in _PUBLIC_PATHS:
         return await _respond(await call_next(request))
 
     provided = request.headers.get("x-api-key", "")
 
     if not config.API_KEY:
-        # No global key configured (local dev) — pass through
-        return await _respond(await call_next(request))
+        # No global key configured (local dev) — pass through (still apply quotas)
+        return await _quota_or_continue()
 
     # 1. Global service key — inter-service / admin
     #    If a JWT Bearer is also present, prefer JWT to extract user_id
@@ -241,11 +265,11 @@ async def api_key_middleware(request: Request, call_next):
                     request.state.user_id = sub
                     request.state.auth_type = "jwt"
                     await ensure_jwt_user_profile(sub, payload)
-                    return await _respond(await call_next(request))
+                    return await _quota_or_continue()
             except Exception:
                 logger.debug("JWT decode failed alongside global key, using global", exc_info=True)
         request.state.auth_type = "global"
-        return await _respond(await call_next(request))
+        return await _quota_or_continue()
 
     # 2. Per-user key (md_ prefix) — O(1) lookup via Supabase
     if provided.startswith("md_"):
@@ -255,7 +279,7 @@ async def api_key_middleware(request: Request, call_next):
             if user_id:
                 request.state.user_id = user_id
                 request.state.auth_type = "per_user"
-                return await _respond(await call_next(request))
+                return await _quota_or_continue()
         except Exception:
             logger.debug("Per-user key validation error", exc_info=True)
 
@@ -274,7 +298,7 @@ async def api_key_middleware(request: Request, call_next):
                 request.state.user_id = sub
                 request.state.auth_type = "jwt"
                 await ensure_jwt_user_profile(sub, payload)
-                return await _respond(await call_next(request))
+                return await _quota_or_continue()
         except Exception:
             logger.debug("JWT auth failed", exc_info=True)
 
@@ -293,6 +317,9 @@ async def api_key_middleware(request: Request, call_next):
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     request_id = getattr(request.state, "request_id", None)
+    headers = {"X-Request-Id": request_id or ""}
+    if getattr(exc, "headers", None):
+        headers.update({k: str(v) for k, v in exc.headers.items()})
     return JSONResponse(
         status_code=exc.status_code,
         content=_structured_error(
@@ -300,7 +327,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
             detail=exc.detail,
             request_id=request_id,
         ),
-        headers={"X-Request-Id": request_id or ""},
+        headers=headers,
     )
 
 

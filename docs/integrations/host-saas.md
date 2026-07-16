@@ -282,6 +282,29 @@ external_org_id=acme-account-1&external_workspace_id=acme-site-42" \
   -H "x-api-key: $PLATFORM_API_KEY"
 ```
 
+## Quotas (Phase F2)
+
+Defaults are **off** (`0`) so lean/local stays unrestricted. Set env on the API to enforce:
+
+| Env | Meaning |
+|-----|---------|
+| `QUOTA_INGEST_RPM` | Max POST/PUT ingest requests per minute per tenant (`user:` / `key:` / `ip:`) |
+| `QUOTA_MAX_BODY_BYTES` | Max request body (Content-Length + actual upload size) |
+| `QUOTA_MAX_STORAGE_BYTES_PER_PROJECT` | Max sum of data sizes in a project for the owner |
+
+Applies to `/api/v1/data`, `/api/v1/ingest`, embeddings create, and user data uploads.
+
+Over limit → `429` with `Retry-After` and:
+
+```json
+{
+  "detail": { "code": "rate_limited", "message": "…", "details": {} },
+  "error": { "code": "rate_limited", "message": "…", "details": {}, "request_id": "…" }
+}
+```
+
+(`quota_exceeded` for body/storage limits.)
+
 ## Health for host circuit breakers
 
 | Endpoint | Meaning |
@@ -323,6 +346,6 @@ cd api && pytest tests/test_host_saas.py -v
 
 ## Next (Phase F)
 
-- Quotas (F2)
+- SDK polish / OpenAPI host tags (F4)
 - Notion / Slack Connect recipes (need Nango)
 - Async purge job + full archive export for large workspaces

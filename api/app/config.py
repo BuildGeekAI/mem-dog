@@ -149,6 +149,15 @@ API_KEY = os.getenv("API_KEY", "")
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
 
 # =============================================================================
+# Host SaaS quotas (Phase F2) — 0 disables each check
+# =============================================================================
+QUOTA_INGEST_RPM = int(os.getenv("QUOTA_INGEST_RPM", "0") or "0")
+QUOTA_MAX_BODY_BYTES = int(os.getenv("QUOTA_MAX_BODY_BYTES", "0") or "0")
+QUOTA_MAX_STORAGE_BYTES_PER_PROJECT = int(
+    os.getenv("QUOTA_MAX_STORAGE_BYTES_PER_PROJECT", "0") or "0"
+)
+
+# =============================================================================
 # GCP / Bucket Configuration (used only when STORAGE_BACKEND=gcs)
 # =============================================================================
 # Resolution order: env var -> system config bucket -> default

@@ -123,6 +123,16 @@ async def _store_direct(env: UniversalEnvelope, auth_user_id: str = "") -> Creat
         if external_id:
             external_id = str(external_id).strip() or None
 
+        from app import quotas
+
+        quotas.check_body_size(len(raw_bytes))
+        quotas.check_project_storage(
+            storage,
+            user_id=user_id,
+            project_id=project_id,
+            additional_bytes=len(raw_bytes),
+        )
+
         create_kwargs = dict(
             content=raw_bytes,
             content_type=content_type,
