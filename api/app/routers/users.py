@@ -26,6 +26,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/users", tags=["Users"])
 
 
+def _require_self_or_platform(request: Request, user_id: str) -> None:
+    """md_*/JWT may only manage their own keys; platform key may manage any."""
+    if not config.API_KEY:
+        return
+    auth_type = getattr(request.state, "auth_type", None)
+    caller = getattr(request.state, "user_id", None)
+    if auth_type == "global":
+        return
+    if auth_type in ("per_user", "jwt") and caller and caller == user_id:
+        return
+    raise HTTPException(
+        status_code=403,
+        detail="API keys can only be managed by the key owner or platform API key",
+    )
+
+
 class UserAllDataResponse(BaseModel):
     """All data owned by a single user (from blob storage)."""
 
@@ -325,8 +341,9 @@ async def delete_user(user_id: str):
 # =============================================================================
 
 @router.get("/{user_id}/api-keys", response_model=List[APIKeyResponse], tags=["API Keys"])
-async def list_api_keys(user_id: str):
+async def list_api_keys(user_id: str, request: Request):
     """List API keys for a user (without the actual key values)."""
+    _require_self_or_platform(request, user_id)
     storage = get_storage()
     storage._check_user_management_enabled()
     
@@ -347,12 +364,13 @@ async def list_api_keys(user_id: str):
 
 
 @router.post("/{user_id}/api-keys", response_model=APIKeyResponse, status_code=201, tags=["API Keys"])
-async def create_api_key(user_id: str, key_create: APIKeyCreate):
+async def create_api_key(user_id: str, key_create: APIKeyCreate, request: Request):
     """
     Create an API key for a user.
     
     **Important**: The API key is only returned once. Store it securely!
     """
+    _require_self_or_platform(request, user_id)
     storage = get_storage()
     storage._check_user_management_enabled()
     
@@ -375,8 +393,17 @@ async def create_api_key(user_id: str, key_create: APIKeyCreate):
 
 
 @router.delete("/{user_id}/api-keys/{key_id}", tags=["API Keys"])
-async def delete_api_key(user_id: str, key_id: str):
+async def delete_api_key(
+    user_id: str,
+    key_id: str,
+    request: Request,
+    allow_empty: bool = Query(
+        False,
+        description="If true, allow revoking the last remaining key (host may lock itself out).",
+    ),
+):
     """Revoke an API key."""
+    _require_self_or_platform(request, user_id)
     storage = get_storage()
     storage._check_user_management_enabled()
     
@@ -385,6 +412,14 @@ async def delete_api_key(user_id: str, key_id: str):
         user = storage.get_user(user_id)
         if not user:
             raise HTTPException(status_code=404, detail=f"User not found: {user_id}")
+
+        existing = storage.list_api_keys(user_id)
+        if len(existing) <= 1 and not allow_empty:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot revoke the last API key; create a replacement first "
+                "(or pass allow_empty=true)",
+            )
         
         success = storage.delete_api_key(user_id, key_id)
         if not success:

@@ -232,9 +232,9 @@ Ship **before** meaningful multi-tenant volume (do not wait for a second host). 
 
 #### F5 — Key rotation (G17)
 
-- `POST /api/v1/.../api-keys` create additional key; `DELETE` revoke.
-- Rotation helper: create new → host switches → revoke old (optional overlap window).
-- Never return full key material on list; show prefix + created_at + last_used_at if available.
+- ~~`POST /api/v1/.../api-keys` create additional key; `DELETE` revoke.~~ (`/api/v1/host/api-keys` + users routes scoped)
+- ~~Rotation helper: create new → host switches → revoke old (optional overlap window).~~ (`POST /api/v1/host/api-keys/rotate`)
+- ~~Never return full key material on list; show prefix + created_at + last_used_at if available.~~
 
 **Exit (Phase F):** A host can offboard a workspace, survive rate limits cleanly, correlate logs via request id, pin a documented client, and rotate keys without rebinding tenancy.
 

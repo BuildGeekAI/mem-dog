@@ -4564,6 +4564,7 @@ class BaseStorage(ABC):
         # Generate a secure API key
         raw_key = f"md_{secrets.token_urlsafe(32)}"  # md_ prefix for mem-dog
         key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+        key_prefix = raw_key[:11]  # "md_" + 8 chars
         
         # Calculate expiry if specified
         expires_at = None
@@ -4576,6 +4577,7 @@ class BaseStorage(ABC):
         key_rec: Dict[str, Any] = {
             "key_id": key_id,
             "key_hash": key_hash,
+            "key_prefix": key_prefix,
             "name": key_create.name,
             "created_at": now,
         }
@@ -4596,8 +4598,10 @@ class BaseStorage(ABC):
             key_id=key_id,
             name=key_create.name,
             key=raw_key,  # Only returned once!
+            key_prefix=key_prefix,
             created_at=now,
             expires_at=expires_at,
+            last_used_at=None,
         )
 
     def list_api_keys(self, user_id: str) -> List[APIKeyResponse]:
@@ -4613,8 +4617,10 @@ class BaseStorage(ABC):
                 key_id=k["key_id"],
                 name=k["name"],
                 key=None,  # Never return the actual key
+                key_prefix=k.get("key_prefix"),
                 created_at=k["created_at"],
-                expires_at=k.get("expires_at")
+                expires_at=k.get("expires_at"),
+                last_used_at=k.get("last_used_at"),
             )
             for k in credentials.api_keys
         ]
@@ -4674,6 +4680,28 @@ class BaseStorage(ABC):
                         expiry = datetime.fromisoformat(key["expires_at"].rstrip("Z"))
                         if datetime.utcnow() > expiry:
                             return None  # Expired
+                    # Best-effort last_used stamp (skip if recently updated)
+                    try:
+                        now = datetime.utcnow().isoformat() + "Z"
+                        prev = key.get("last_used_at")
+                        should_touch = True
+                        if prev:
+                            try:
+                                prev_dt = datetime.fromisoformat(prev.rstrip("Z"))
+                                should_touch = (datetime.utcnow() - prev_dt).total_seconds() > 60
+                            except Exception:
+                                pass
+                        if should_touch:
+                            key["last_used_at"] = now
+                            credentials.updated_at = now
+                            creds_path = f"users/{user.user_id}/credentials.json"
+                            self.user_store.write(
+                                creds_path,
+                                json.dumps(credentials.model_dump(), indent=2).encode("utf-8"),
+                                "application/json",
+                            )
+                    except Exception:
+                        logger.debug("validate_api_key last_used update failed", exc_info=True)
                     return user.user_id
         
         return None
@@ -7511,6 +7539,7 @@ class SupabaseStorage(BaseStorage):
         key_id = str(uuid.uuid4())[:8]
         raw_key = f"md_{secrets.token_urlsafe(32)}"
         key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+        key_prefix = raw_key[:11]
 
         expires_at = None
         if key_create.expires_in_days:
@@ -7521,6 +7550,7 @@ class SupabaseStorage(BaseStorage):
             "key_id": key_id,
             "user_id": user_id,
             "key_hash": key_hash,
+            "key_prefix": key_prefix,
             "name": key_create.name,
             "created_at": now,
             "updated_at": now,
@@ -7531,15 +7561,22 @@ class SupabaseStorage(BaseStorage):
         try:
             self._supa_client.table(self._API_KEYS_TABLE).insert(row).execute()
         except Exception as exc:
-            logger.warning("create_api_key insert failed: %s", exc)
-            return None
+            logger.warning("create_api_key insert failed (%s); retrying without prefix", exc)
+            row.pop("key_prefix", None)
+            try:
+                self._supa_client.table(self._API_KEYS_TABLE).insert(row).execute()
+            except Exception as exc2:
+                logger.warning("create_api_key insert failed: %s", exc2)
+                return None
 
         return APIKeyResponse(
             key_id=key_id,
             name=key_create.name,
             key=raw_key,
+            key_prefix=key_prefix,
             created_at=now,
             expires_at=expires_at,
+            last_used_at=None,
         )
 
     def list_api_keys(self, user_id: str) -> List[APIKeyResponse]:  # type: ignore[override]
@@ -7547,21 +7584,32 @@ class SupabaseStorage(BaseStorage):
         try:
             res = (
                 self._supa_client.table(self._API_KEYS_TABLE)
-                .select("key_id, name, created_at, expires_at")
+                .select("key_id, name, created_at, expires_at, key_prefix, last_used_at")
                 .eq("user_id", user_id)
                 .order("created_at", desc=True)
                 .execute()
             )
-        except Exception as exc:
-            logger.warning("list_api_keys query failed: %s", exc)
-            return []
+        except Exception:
+            try:
+                res = (
+                    self._supa_client.table(self._API_KEYS_TABLE)
+                    .select("key_id, name, created_at, expires_at")
+                    .eq("user_id", user_id)
+                    .order("created_at", desc=True)
+                    .execute()
+                )
+            except Exception as exc:
+                logger.warning("list_api_keys query failed: %s", exc)
+                return []
         return [
             APIKeyResponse(
                 key_id=r["key_id"],
                 name=r["name"],
                 key=None,
+                key_prefix=r.get("key_prefix"),
                 created_at=r["created_at"],
                 expires_at=r.get("expires_at"),
+                last_used_at=r.get("last_used_at"),
             )
             for r in (res.data or [])
         ]
@@ -7589,7 +7637,7 @@ class SupabaseStorage(BaseStorage):
         try:
             res = (
                 self._supa_client.table(self._API_KEYS_TABLE)
-                .select("user_id, expires_at")
+                .select("key_id, user_id, expires_at")
                 .eq("key_hash", key_hash)
                 .limit(1)
                 .execute()
@@ -7609,6 +7657,13 @@ class SupabaseStorage(BaseStorage):
                     return None
             except Exception:
                 pass
+        try:
+            now = datetime.utcnow().isoformat() + "Z"
+            self._supa_client.table(self._API_KEYS_TABLE).update(
+                {"last_used_at": now, "updated_at": now}
+            ).eq("key_id", row["key_id"]).execute()
+        except Exception:
+            pass
         return row["user_id"]
 
     # ------------------------------------------------------------------

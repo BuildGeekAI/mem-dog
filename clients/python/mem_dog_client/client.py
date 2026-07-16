@@ -542,6 +542,66 @@ class MemDogClient:
         with self._client() as c:
             return c.delete(f"/api/v1/users/{user_id}/api-keys/{key_id}")
 
+    def list_host_api_keys(self, *, user_id: Optional[str] = None) -> httpx.Response:
+        """GET /api/v1/host/api-keys — list keys (prefix only; no raw material)."""
+        params = {}
+        if user_id:
+            params["user_id"] = user_id
+        with self._client() as c:
+            return c.get("/api/v1/host/api-keys", params=params)
+
+    def create_host_api_key(
+        self,
+        name: str,
+        *,
+        user_id: Optional[str] = None,
+        expires_in_days: Optional[int] = None,
+    ) -> httpx.Response:
+        """POST /api/v1/host/api-keys — create key (raw key returned once)."""
+        params = {}
+        if user_id:
+            params["user_id"] = user_id
+        payload: dict[str, Any] = {"name": name}
+        if expires_in_days is not None:
+            payload["expires_in_days"] = expires_in_days
+        with self._client() as c:
+            return c.post("/api/v1/host/api-keys", params=params, json=payload)
+
+    def revoke_host_api_key(
+        self,
+        key_id: str,
+        *,
+        user_id: Optional[str] = None,
+        allow_empty: bool = False,
+    ) -> httpx.Response:
+        """DELETE /api/v1/host/api-keys/{key_id}."""
+        params: dict[str, Any] = {}
+        if user_id:
+            params["user_id"] = user_id
+        if allow_empty:
+            params["allow_empty"] = "true"
+        with self._client() as c:
+            return c.delete(f"/api/v1/host/api-keys/{key_id}", params=params)
+
+    def rotate_host_api_key(
+        self,
+        *,
+        name: str = "host-rotated",
+        revoke_key_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        expires_in_days: Optional[int] = None,
+    ) -> httpx.Response:
+        """POST /api/v1/host/api-keys/rotate — create new key, optionally revoke old."""
+        payload: dict[str, Any] = {"name": name}
+        if revoke_key_id:
+            payload["revoke_key_id"] = revoke_key_id
+        if user_id:
+            payload["user_id"] = user_id
+        if expires_in_days is not None:
+            payload["expires_in_days"] = expires_in_days
+        with self._client() as c:
+            return c.post("/api/v1/host/api-keys/rotate", json=payload)
+
     # -------------------------------------------------------------------------
     # Organizations
     # -------------------------------------------------------------------------

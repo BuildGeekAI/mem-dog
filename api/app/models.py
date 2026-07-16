@@ -1421,12 +1421,40 @@ class APIKeyCreate(BaseModel):
 
 
 class APIKeyResponse(BaseModel):
-    """Response model for API key (key shown only once on creation)."""
+    """Response model for API key (raw ``key`` shown only once on creation)."""
     key_id: str
     name: str
-    key: Optional[str] = None  # Only populated on creation
+    key: Optional[str] = None  # Only populated on creation / rotate
+    key_prefix: Optional[str] = None  # e.g. md_AbCdEf… for list/display
     created_at: str
     expires_at: Optional[str] = None
+    last_used_at: Optional[str] = None
+
+
+class HostApiKeyRotateRequest(BaseModel):
+    """Create a new workspace key; optionally revoke an old one after."""
+    name: str = Field(default="host-rotated", min_length=1, max_length=100)
+    revoke_key_id: Optional[str] = Field(
+        default=None,
+        description="If set, revoke this key_id after the new key is created.",
+    )
+    user_id: Optional[str] = Field(
+        default=None,
+        description="Target user (platform key only). md_* rotates for itself.",
+    )
+    expires_in_days: Optional[int] = None
+
+
+class HostApiKeyRotateResponse(BaseModel):
+    """Result of key rotation. ``key`` is returned once."""
+    user_id: str
+    key_id: str
+    key: str
+    key_prefix: str
+    name: str
+    created_at: str
+    expires_at: Optional[str] = None
+    revoked_key_id: Optional[str] = None
 
 
 # =============================================================================
