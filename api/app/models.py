@@ -1399,7 +1399,8 @@ class UserCredentials(BaseModel):
     """User credentials for authentication (stored encrypted)."""
     user_id: str
     password_hash: Optional[str] = None  # For future password auth
-    api_keys: List[Dict[str, str]] = Field(default_factory=list)  # [{"key_id": "...", "key_hash": "...", "name": "..."}]
+    # expires_at may be null for non-expiring keys
+    api_keys: List[Dict[str, Any]] = Field(default_factory=list)
     created_at: str
     updated_at: str
 
@@ -1509,10 +1510,10 @@ class ProjectUpdate(BaseModel):
 
 
 # =============================================================================
-# Host SaaS binding models
+# Host SaaS workspace models
 # =============================================================================
 
-class HostBindingCreate(BaseModel):
+class HostWorkspaceCreate(BaseModel):
     """Provision a mem-dog workspace for an external host tenant."""
     external_org_id: str = Field(..., min_length=1, max_length=200)
     external_workspace_id: str = Field(..., min_length=1, max_length=200)
@@ -1520,7 +1521,7 @@ class HostBindingCreate(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
-class HostBindingResponse(BaseModel):
+class HostWorkspaceResponse(BaseModel):
     """Result of host workspace provision. ``api_key`` is set only on create."""
     org_id: str
     project_id: str

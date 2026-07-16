@@ -1,18 +1,18 @@
-"""Host SaaS Phase A — binding + project isolation."""
+"""Host SaaS Phase A — workspace provision + project isolation."""
 
 from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.models import HostBindingCreate
+from app.models import HostWorkspaceCreate
 from app.routers.ai_query import ChatRequest, SearchMode, SemanticQueryRequest
 from app.storage import BaseStorage
 
 
-class TestHostBindingModels:
-    def test_binding_create_defaults(self):
-        body = HostBindingCreate(
+class TestHostWorkspaceModels:
+    def test_workspace_create_defaults(self):
+        body = HostWorkspaceCreate(
             external_org_id="acct-1",
             external_workspace_id="ws-9",
         )
@@ -78,9 +78,9 @@ class TestProjectIsolationSearch:
         assert len(hits_all) == 2
 
 
-class TestHostBindingAPI:
+class TestHostWorkspaceAPI:
     def test_create_and_idempotent(self, client: TestClient, monkeypatch, tmp_path):
-        """Exercise binding against local storage when available."""
+        """Exercise workspace provision against local storage when available."""
         from app import config
         import app.storage as storage_mod
 
@@ -92,7 +92,7 @@ class TestHostBindingAPI:
         storage_mod.storage_instance = None
 
         resp = client.post(
-            "/api/v1/host/bindings",
+            "/api/v1/host/workspaces",
             json={
                 "external_org_id": "host-acct-1",
                 "external_workspace_id": "ws-alpha",
@@ -111,7 +111,7 @@ class TestHostBindingAPI:
         assert body["user_id"]
 
         again = client.post(
-            "/api/v1/host/bindings",
+            "/api/v1/host/workspaces",
             json={
                 "external_org_id": "host-acct-1",
                 "external_workspace_id": "ws-alpha",
@@ -125,7 +125,7 @@ class TestHostBindingAPI:
         assert again_body["project_id"] == body["project_id"]
 
         lookup = client.get(
-            "/api/v1/host/bindings",
+            "/api/v1/host/workspaces",
             params={
                 "external_org_id": "host-acct-1",
                 "external_workspace_id": "ws-alpha",

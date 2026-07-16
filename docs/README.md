@@ -70,7 +70,7 @@
 | Document | Description |
 |----------|-------------|
 | [Integration Platform](integrations/integrations.md) | Nango architecture, OAuth2, credentials, proxy |
-| [Host SaaS](integrations/host-saas.md) | Embed mem-dog as a private memory backend (bindings, tags, project-scoped search) |
+| [Host SaaS](integrations/host-saas.md) | Embed mem-dog as a private memory backend (workspaces, tags, project-scoped search) |
 | [86 App Guides](apps/) | Per-app setup guides (Slack, Gmail, GitHub, Jira, etc.) |
 
 ## DigiMe (OpenClaw)
@@ -113,5 +113,5 @@
 | Document | Description |
 |----------|-------------|
 | [Document parsing upgrade](plans/document-parsing-upgrade.md) | Lean defaults to pypdf with optional Docling (PDF-only), plus body-chunk embeddings and optional hard-doc routers |
-| [Host SaaS embedding](plans/host-saas-embedding.md) | Multi-host tenancy bindings, connector contracts, tagging, upsert, project-scoped retrieval |
+| [Host SaaS embedding](plans/host-saas-embedding.md) | Multi-host tenancy workspaces, connector contracts, tagging, upsert, project-scoped retrieval |
 | [Scale to ~1k workspaces](plans/scale-1k-workspaces.md) | Capacity addendum: KEDA prod ceilings, pooler, quotas-before-replicas, soak tests |

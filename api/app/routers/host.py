@@ -1,6 +1,6 @@
-"""Host SaaS provisioning — bind external tenants to mem-dog workspaces.
+"""Host SaaS provisioning — create workspaces for external host tenants.
 
-POST /api/v1/host/bindings — create (or return) org + project + service user + md_* key.
+POST /api/v1/host/workspaces — create (or return) org + project + service user + md_* key.
 Requires the platform ``API_KEY`` when configured (auth_type=global). In local
 dev with no API_KEY, the endpoint is open (same as other admin routes).
 """
@@ -15,8 +15,8 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from app import config
 from app.models import (
     APIKeyCreate,
-    HostBindingCreate,
-    HostBindingResponse,
+    HostWorkspaceCreate,
+    HostWorkspaceResponse,
     OrganizationCreate,
     ProjectCreate,
     UserCreate,
@@ -29,14 +29,14 @@ router = APIRouter(prefix="/api/v1/host", tags=["Host SaaS"])
 
 
 def _require_platform_key(request: Request) -> None:
-    """When API_KEY is set, only the global platform key may provision bindings."""
+    """When API_KEY is set, only the global platform key may provision workspaces."""
     if not config.API_KEY:
         return
     auth_type = getattr(request.state, "auth_type", None)
     if auth_type != "global":
         raise HTTPException(
             status_code=403,
-            detail="Host bindings require the platform API key (x-api-key)",
+            detail="Host workspaces require the platform API key (x-api-key)",
         )
 
 
@@ -45,8 +45,10 @@ def _slug(value: str, max_len: int = 40) -> str:
     return (cleaned or "workspace")[:max_len]
 
 
-@router.post("/bindings", response_model=HostBindingResponse, status_code=201)
-async def create_host_binding(body: HostBindingCreate, request: Request) -> HostBindingResponse:
+@router.post("/workspaces", response_model=HostWorkspaceResponse, status_code=201)
+async def create_host_workspace(
+    body: HostWorkspaceCreate, request: Request
+) -> HostWorkspaceResponse:
     """Provision org + project + service user + API key for a host workspace.
 
     Idempotent on ``(external_org_id, external_workspace_id)``. Re-calls return
@@ -55,9 +57,9 @@ async def create_host_binding(body: HostBindingCreate, request: Request) -> Host
     _require_platform_key(request)
     storage = get_storage()
 
-    existing = storage.host_binding_get(body.external_org_id, body.external_workspace_id)
+    existing = storage.host_workspace_get(body.external_org_id, body.external_workspace_id)
     if existing:
-        return HostBindingResponse(
+        return HostWorkspaceResponse(
             org_id=existing["org_id"],
             project_id=existing["project_id"],
             user_id=existing["user_id"],
@@ -89,7 +91,7 @@ async def create_host_binding(body: HostBindingCreate, request: Request) -> Host
                 email=email,
                 display_name=display,
                 metadata={
-                    "host_binding": True,
+                    "host_workspace": True,
                     "external_org_id": body.external_org_id,
                     "external_workspace_id": body.external_workspace_id,
                     **(body.metadata or {}),
@@ -99,7 +101,7 @@ async def create_host_binding(body: HostBindingCreate, request: Request) -> Host
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
-        logger.exception("host binding: create_user failed")
+        logger.exception("host workspace: create_user failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     try:
@@ -109,7 +111,7 @@ async def create_host_binding(body: HostBindingCreate, request: Request) -> Host
                 display_name=f"Host {body.external_org_id}",
                 metadata={
                     "external_org_id": body.external_org_id,
-                    "host_binding": True,
+                    "host_workspace": True,
                 },
             ),
             owner_user_id=user.user_id,
@@ -123,12 +125,12 @@ async def create_host_binding(body: HostBindingCreate, request: Request) -> Host
                 metadata={
                     "external_org_id": body.external_org_id,
                     "external_workspace_id": body.external_workspace_id,
-                    "host_binding": True,
+                    "host_workspace": True,
                 },
             ),
         )
     except Exception as exc:
-        logger.exception("host binding: org/project create failed")
+        logger.exception("host workspace: org/project create failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     # Persist defaults on the service user (best-effort).
@@ -139,7 +141,7 @@ async def create_host_binding(body: HostBindingCreate, request: Request) -> Host
             default_project_id=project.project_id,
         )
     except Exception as exc:
-        logger.warning("host binding: set_user_defaults failed: %s", exc)
+        logger.warning("host workspace: set_user_defaults failed: %s", exc)
 
     key_resp = storage.create_api_key(
         user.user_id,
@@ -158,9 +160,9 @@ async def create_host_binding(body: HostBindingCreate, request: Request) -> Host
         "key_id": key_resp.key_id,
         "metadata": body.metadata or {},
     }
-    storage.host_binding_put(record)
+    storage.host_workspace_put(record)
 
-    return HostBindingResponse(
+    return HostWorkspaceResponse(
         org_id=org.org_id,
         project_id=project.project_id,
         user_id=user.user_id,
@@ -172,19 +174,19 @@ async def create_host_binding(body: HostBindingCreate, request: Request) -> Host
     )
 
 
-@router.get("/bindings", response_model=HostBindingResponse)
-async def get_host_binding(
+@router.get("/workspaces", response_model=HostWorkspaceResponse)
+async def get_host_workspace(
     request: Request,
     external_org_id: str = Query(..., min_length=1),
     external_workspace_id: str = Query(..., min_length=1),
-) -> HostBindingResponse:
-    """Look up an existing host binding (never returns the raw API key)."""
+) -> HostWorkspaceResponse:
+    """Look up an existing host workspace (never returns the raw API key)."""
     _require_platform_key(request)
     storage = get_storage()
-    existing = storage.host_binding_get(external_org_id, external_workspace_id)
+    existing = storage.host_workspace_get(external_org_id, external_workspace_id)
     if not existing:
-        raise HTTPException(status_code=404, detail="Host binding not found")
-    return HostBindingResponse(
+        raise HTTPException(status_code=404, detail="Host workspace not found")
+    return HostWorkspaceResponse(
         org_id=existing["org_id"],
         project_id=existing["project_id"],
         user_id=existing["user_id"],

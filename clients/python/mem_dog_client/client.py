@@ -525,7 +525,7 @@ class MemDogClient:
     # Host SaaS
     # -------------------------------------------------------------------------
 
-    def create_host_binding(
+    def create_host_workspace(
         self,
         external_org_id: str,
         external_workspace_id: str,
@@ -533,7 +533,7 @@ class MemDogClient:
         display_name: Optional[str] = None,
         metadata: Optional[dict[str, Any]] = None,
     ) -> httpx.Response:
-        """POST /api/v1/host/bindings — provision org/project/user/md_* for a host workspace.
+        """POST /api/v1/host/workspaces — provision org/project/user/md_* for a host workspace.
 
         Requires the platform API key (``x-api-key``). Returns ``api_key`` only on create.
         """
@@ -546,15 +546,15 @@ class MemDogClient:
         if metadata is not None:
             payload["metadata"] = metadata
         with self._client() as c:
-            return c.post("/api/v1/host/bindings", json=payload)
+            return c.post("/api/v1/host/workspaces", json=payload)
 
-    def get_host_binding(
+    def get_host_workspace(
         self, external_org_id: str, external_workspace_id: str
     ) -> httpx.Response:
-        """GET /api/v1/host/bindings — look up an existing binding (no api_key)."""
+        """GET /api/v1/host/workspaces — look up an existing workspace (no api_key)."""
         with self._client() as c:
             return c.get(
-                "/api/v1/host/bindings",
+                "/api/v1/host/workspaces",
                 params={
                     "external_org_id": external_org_id,
                     "external_workspace_id": external_workspace_id,
