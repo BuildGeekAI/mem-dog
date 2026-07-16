@@ -63,6 +63,7 @@ class TestSemanticMatchChunk:
         assert chunk.fts_rank is None
         assert chunk.rrf_score is None
         assert chunk.search_type is None
+        assert chunk.page is None
 
     def test_with_new_fields(self):
         chunk = SemanticMatchChunk(
@@ -72,9 +73,11 @@ class TestSemanticMatchChunk:
             fts_rank=0.8,
             rrf_score=0.012,
             search_type="both",
+            page=3,
         )
         assert chunk.fts_rank == 0.8
         assert chunk.search_type == "both"
+        assert chunk.page == 3
 
 
 class TestChatRequest:

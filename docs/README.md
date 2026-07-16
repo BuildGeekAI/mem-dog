@@ -106,3 +106,11 @@
 | [vs Nango](comparisons/comparison-nango.md) | Integration platform comparison |
 | [vs BerryDB](comparisons/comparison-berrydb.md) | LLM memory layer comparison |
 | [vs Snowflake/Databricks](comparisons/comparison-snowflake-databricks.md) | Data warehouse comparison |
+
+## Plans
+
+| Document | Description |
+|----------|-------------|
+| [Document parsing upgrade](plans/document-parsing-upgrade.md) | Docling-first parse → body-chunk embeddings; optional LlamaParse/GCP hard-doc router |
+| [Host SaaS embedding](plans/host-saas-embedding.md) | Multi-host tenancy bindings, connector contracts, tagging, upsert, project-scoped retrieval |
+| [Scale to ~1k workspaces](plans/scale-1k-workspaces.md) | Capacity addendum: KEDA prod ceilings, pooler, quotas-before-replicas, soak tests |

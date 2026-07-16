@@ -497,6 +497,7 @@ class SemanticMatchChunk(BaseModel):
     fts_rank: float | None = None
     rrf_score: float | None = None
     search_type: str | None = None
+    page: int | None = None
 
 
 class SemanticRecord(BaseModel):
@@ -573,7 +574,6 @@ async def semantic_query(request: SemanticQueryRequest, http_request: FastAPIReq
 
     # 2. Search — branch on search_mode
     search_mode = request.search_mode
-    raw_results: list = []
     dict_results: list[dict] = []
 
     try:
@@ -597,7 +597,7 @@ async def semantic_query(request: SemanticQueryRequest, http_request: FastAPIReq
             dict_results = rrf_merge(pgvector_results, graphiti_results)[:request.max_results]
         else:
             # Default: vector-only (backward compatible)
-            raw_results = storage.similarity_search(
+            dict_results = storage.similarity_search(
                 query_vector, limit=request.max_results, user_id=user_id,
             )
     except Exception as exc:
@@ -616,30 +616,19 @@ async def semantic_query(request: SemanticQueryRequest, http_request: FastAPIReq
     from collections import OrderedDict
     grouped: OrderedDict[str, list] = OrderedDict()
 
-    # Normalize: if we have dict_results (from hybrid/fts/graph), convert to grouped chunks
-    if dict_results:
-        for r in dict_results:
-            data_id = r.get("data_id", "")
-            grouped.setdefault(data_id, []).append(
-                SemanticMatchChunk(
-                    embedding_id=r.get("embedding_id", ""),
-                    chunk_text=r.get("chunk_text", ""),
-                    similarity=round(r.get("similarity", 0.0), 4),
-                    fts_rank=round(r["fts_rank"], 4) if r.get("fts_rank") is not None else None,
-                    rrf_score=round(r["rrf_score"], 6) if r.get("rrf_score") is not None else None,
-                    search_type=r.get("search_type"),
-                )
+    for r in dict_results:
+        data_id = r.get("data_id", "")
+        grouped.setdefault(data_id, []).append(
+            SemanticMatchChunk(
+                embedding_id=r.get("embedding_id", ""),
+                chunk_text=r.get("chunk_text", ""),
+                similarity=round(float(r.get("similarity", 0.0)), 4),
+                fts_rank=round(r["fts_rank"], 4) if r.get("fts_rank") is not None else None,
+                rrf_score=round(r["rrf_score"], 6) if r.get("rrf_score") is not None else None,
+                search_type=r.get("search_type"),
+                page=r.get("page"),
             )
-    else:
-        for r in raw_results:
-            emb_id, data_id, chunk_text, similarity = r
-            grouped.setdefault(data_id, []).append(
-                SemanticMatchChunk(
-                    embedding_id=emb_id,
-                    chunk_text=chunk_text,
-                    similarity=round(similarity, 4),
-                )
-            )
+        )
 
     records: list[SemanticRecord] = []
     for data_id, chunks in grouped.items():
@@ -764,6 +753,7 @@ class ChatCitation(BaseModel):
     name: str | None = None
     chunk_text: str
     similarity: float
+    page: int | None = None
 
 
 class ChatResponse(BaseModel):
@@ -825,7 +815,6 @@ async def chat_with_data(request: ChatRequest, http_request: FastAPIRequest = No
 
     # 2. Search — branch on search_mode
     search_mode = request.search_mode
-    raw_results: list = []
     dict_results: list[dict] = []
     memory_id = request.memory_id or ""
 
@@ -850,7 +839,7 @@ async def chat_with_data(request: ChatRequest, http_request: FastAPIRequest = No
             from app.reranker import rrf_merge
             dict_results = rrf_merge(pgvector_results, graphiti_results)[:request.max_results]
         else:
-            raw_results = storage.similarity_search(
+            dict_results = storage.similarity_search(
                 query_vector, limit=request.max_results, user_id=user_id,
                 memory_id=memory_id,
             )
@@ -866,13 +855,6 @@ async def chat_with_data(request: ChatRequest, http_request: FastAPIRequest = No
             model_url = config.get_model_server_url(request.rerank.cross_encoder_tier)
             dict_results = await cross_encoder_rerank(request.message, dict_results, model_url, top_k=request.max_results)
 
-    # Normalize dict_results to raw_results format for downstream processing
-    if dict_results:
-        raw_results = [
-            (r.get("embedding_id", ""), r.get("data_id", ""), r.get("chunk_text", ""), r.get("similarity", 0.0))
-            for r in dict_results
-        ]
-
     # 2b. Entity-aware search — find entities mentioned in the query and
     #     boost results whose data_ids are linked to those entities.
     entity_hints: list[str] = []
@@ -882,11 +864,11 @@ async def chat_with_data(request: ChatRequest, http_request: FastAPIRequest = No
             entity_data_ids = storage.find_related_data_ids(
                 [e["entity_id"] for e in matched_entities], user_id, limit=20,
             )
-            existing_data_ids = {did for _, did, _, _ in raw_results}
+            existing_data_ids = {r.get("data_id", "") for r in dict_results}
             for eid in entity_data_ids:
                 if eid not in existing_data_ids:
                     try:
-                        extra = storage.similarity_search(
+                        storage.similarity_search(
                             query_vector, limit=1, user_id=user_id, memory_id="",
                         )
                     except Exception:
@@ -901,7 +883,10 @@ async def chat_with_data(request: ChatRequest, http_request: FastAPIRequest = No
     # 3. Build numbered context with metadata enrichment
     numbered_sources: list[dict] = []
     seen_chunks: set[str] = set()
-    for emb_id, data_id, chunk_text, similarity in raw_results:
+    for r in dict_results:
+        data_id = r.get("data_id", "")
+        chunk_text = r.get("chunk_text", "")
+        similarity = float(r.get("similarity", 0.0))
         chunk_key = f"{data_id}:{chunk_text[:100]}"
         if chunk_key in seen_chunks:
             continue
@@ -915,13 +900,16 @@ async def chat_with_data(request: ChatRequest, http_request: FastAPIRequest = No
 
         source_name = (getattr(meta, "name", None) if meta else None) or data_id[:12]
         idx = len(numbered_sources) + 1
-        numbered_sources.append({
+        src = {
             "index": idx,
             "data_id": data_id,
             "name": source_name,
             "chunk_text": chunk_text,
             "similarity": round(similarity, 4),
-        })
+        }
+        if r.get("page") is not None:
+            src["page"] = r.get("page")
+        numbered_sources.append(src)
 
     # 4. Build messages for the model
     if not numbered_sources:
@@ -1030,7 +1018,11 @@ async def _graphiti_search(
 
     Raises HTTPException(400) if Neo4j is not configured.
     """
-    from app.graphiti_client import is_graphiti_enabled, get_graphiti
+    from app.graphiti_client import (
+        build_temporal_search_filter,
+        is_graphiti_enabled,
+        search_edges,
+    )
 
     if not is_graphiti_enabled():
         raise HTTPException(
@@ -1038,35 +1030,18 @@ async def _graphiti_search(
             detail="Graph search requires NEO4J_URI to be configured",
         )
 
-    graphiti = await get_graphiti()
-
     try:
-        from graphiti_core.search.search_config_recipes import EDGE_HYBRID_SEARCH_RRF
-        search_config = EDGE_HYBRID_SEARCH_RRF.model_copy(deep=True)
-        search_config.limit = limit
-
-        kwargs: dict = {"query": query, "config": search_config}
-
-        # Apply temporal filters if provided
+        search_filter = None
         if temporal:
-            from graphiti_core.search.search_config import SearchFilters, DateFilter, ComparisonOperator
-            date_filters = []
-            if temporal.valid_at:
-                date_filters.append(
-                    DateFilter(date=temporal.valid_at, comparison_operator=ComparisonOperator.less_than_or_equal)
-                )
-            if temporal.valid_after:
-                date_filters.append(
-                    DateFilter(date=temporal.valid_after, comparison_operator=ComparisonOperator.greater_than_or_equal)
-                )
-            if temporal.valid_before:
-                date_filters.append(
-                    DateFilter(date=temporal.valid_before, comparison_operator=ComparisonOperator.less_than_or_equal)
-                )
-            if date_filters:
-                kwargs["filters"] = SearchFilters(valid_at=[date_filters])
+            search_filter = build_temporal_search_filter(
+                valid_at=temporal.valid_at,
+                valid_after=temporal.valid_after,
+                valid_before=temporal.valid_before,
+            )
 
-        results = await graphiti.search(**kwargs)
+        results = await search_edges(
+            query, limit=limit, search_filter=search_filter
+        )
 
         # Normalize Graphiti edges to mem-dog search result format
         normalized: list[dict] = []

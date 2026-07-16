@@ -615,6 +615,20 @@ class CreateDataResponse(BaseModel):
     message: str
 
 
+class ParsedDocumentStoreRequest(BaseModel):
+    """Request body for POST /data/{data_id}/parsed (webhook processor)."""
+    markdown: str = ""
+    document: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ParsedDocumentStoreResponse(BaseModel):
+    data_id: str
+    version_label: str
+    parse_status: str = "ready"
+    markdown_path: str
+    json_path: str
+
+
 class UpdateDataResponse(BaseModel):
     data_id: str
     version: int
@@ -924,7 +938,7 @@ class SystemAIConfigResponse(BaseModel):
     This tells users whether they can use the system-provided AI key
     or need to configure their own.
     """
-    system_ai_available: bool  # True if SYSTEM_GEMINI_API_KEY is set
+    system_ai_available: bool  # True if Gemini system key or local model server is configured
     system_engine_type: str = "gemini"
     system_embedding_model: str
     system_completion_model: str
@@ -1155,6 +1169,11 @@ class Embedding(BaseModel):
     # Organization/project scoping
     org_id: Optional[str] = None
     project_id: Optional[str] = None
+    # Parsed-document chunk localization (Phase 2)
+    page: Optional[int] = None
+    section_path: Optional[List[str]] = None
+    element_type: Optional[str] = None
+    embedding_kind: Optional[str] = None  # e.g. "body" | "viewpoint"
 
 
 class EmbeddingSummary(BaseModel):
