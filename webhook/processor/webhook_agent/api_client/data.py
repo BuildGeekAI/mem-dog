@@ -277,6 +277,54 @@ class DataClient:
         content_type = resp.headers.get("Content-Type", "").split(";")[0].strip() or "application/octet-stream"
         return resp.content, content_type
 
+    def store_parsed(
+        self,
+        data_id: str,
+        markdown: str,
+        document: dict[str, Any],
+        user_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Persist parsed markdown + JSON via POST /api/v1/data/{id}/parsed."""
+        params: dict[str, str] = {}
+        if user_id:
+            params["user_id"] = user_id
+        resp = _session.post(
+            f"{self._base}/{data_id}/parsed",
+            json={"markdown": markdown, "document": document},
+            params=params,
+            timeout=UPLOAD_TIMEOUT,
+        )
+        resp.raise_for_status()
+        result: dict[str, Any] = resp.json()
+        logger.info(
+            "Stored parsed document for %s (parser=%s)",
+            data_id,
+            document.get("parser"),
+        )
+        return result
+
+    def get_parsed(
+        self,
+        data_id: str,
+        fmt: str = "markdown",
+        user_id: str | None = None,
+        version: int | None = None,
+    ) -> tuple[bytes, str]:
+        """Fetch parsed artifact bytes (markdown or json)."""
+        params: dict[str, str] = {"fmt": fmt}
+        if user_id:
+            params["user_id"] = user_id
+        if version is not None:
+            params["version"] = str(version)
+        resp = _session.get(
+            f"{self._base}/{data_id}/parsed",
+            params=params,
+            timeout=DEFAULT_TIMEOUT,
+        )
+        resp.raise_for_status()
+        content_type = resp.headers.get("Content-Type", "text/plain").split(";")[0].strip()
+        return resp.content, content_type
+
     def delete(self, data_id: str, user_id: str | None = None) -> dict[str, Any]:
         """Delete a data item.
 

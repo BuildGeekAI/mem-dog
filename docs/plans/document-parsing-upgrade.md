@@ -1,6 +1,6 @@
 # Plan: Best-in-class document parsing for mem-dog
 
-**Status:** Proposed  
+**Status:** In progress (Phases 0–2 done for lean path; next = Phase 3 OCR / hard-parser)  
 **Owner:** mem-dog platform  
 **Related:** [`webhook/.../llm_utils.py`](../../webhook/processor/webhook_agent/sub_agents/llm_utils.py) (`_extract_document_text`, `analyse_document_payload`), [`api/app/storage.py`](../../api/app/storage.py) (`create_embedding`), [`docs/features/rag-chat.mdx`](../features/rag-chat.mdx), [`docs/core-concepts/ai-pipeline.mdx`](../core-concepts/ai-pipeline.mdx), [Host SaaS embedding](host-saas-embedding.md) (G7), [Scale to ~1k workspaces](scale-1k-workspaces.md) (parse pool ceilings)
 
@@ -83,15 +83,17 @@ flowchart TB
 
 ## Implementation phases
 
-### Phase 0 — Baseline & harness (1–3 days)
+### Phase 0 — Baseline & harness (1–3 days) — **DONE**
 
 - Snapshot current behavior with a **gold set** of ~50 docs: clean PDF, multi-column, table-heavy, scanned, DOCX, PPTX, long (50+ pages).
 - Metrics: extract coverage (% pages with text), table TEDS/simple accuracy spot-check, retrieval@k on fixed Q&A, latency p50/p95, cost/page.
 - Document current caps in code comments / ADR so regressions are visible.
 
-**Exit:** Benchmark harness runnable in CI (subset) and locally (full).
+**Exit:** Benchmark harness runnable in CI (subset) and locally (full).  
+**Harness:** [`testing/document-parse/`](../../testing/document-parse/) + [ADR 0001](../adr/0001-document-parsing-baseline.md).  
+**Shipped:** ADR + harness + local smoke; gold set is still small (~2 PDFs) — expand + CI subset remains follow-up (does not block Phase 2).
 
-### Phase 1 — Docling parse service (core)
+### Phase 1 — Docling parse service (core) — **DONE** (lean PDF path)
 
 **Code touchpoints**
 
@@ -102,16 +104,16 @@ flowchart TB
    - `{user_id}/{data_id}/{version}/parsed/document.md`
    - `{user_id}/{data_id}/{version}/parsed/document.json`
 4. Config env:
-   - `DOCUMENT_PARSER=docling|pypdf`
+   - `DOCUMENT_PARSER=docling|pypdf` (default **`pypdf`**; Docling is **opt-in**, PDF-only via `docling-slim[format-pdf]`, falls back to pypdf on error; Office stays on python-docx/openpyxl/pptx)
    - `DOCUMENT_PARSE_MAX_PAGES` (default high or unlimited for indexing)
-   - `DOCUMENT_OCR_ENABLED=true`
-   - `DOCUMENT_HARD_PARSER=none|llamaparse|gcp_layout` (+ API keys)
+   - `DOCUMENT_OCR_ENABLED` / `DOCUMENT_HARD_PARSER` — **env stubs only until Phase 3** (accepted in lean compose; not wired)
 
-**Deps:** add `docling` to webhook processor requirements; document RAM/GPU in [`docs/deployment/resource-requirements.mdx`](../deployment/resource-requirements.mdx).
+**Deps:** `docling-slim[format-pdf]` is **optional** (`requirements-docling.txt`, Docker `INSTALL_DOCLING=true`); RAM notes in [`docs/deployment/resource-requirements.mdx`](../deployment/resource-requirements.mdx) + lean overlay. Default GKE/processor images use pypdf only.
 
-**Exit:** Upload PDF with `forward_to_webhook=true` writes `parsed.md`; extract no longer capped at 20 pages for indexing.
+**Exit:** Upload PDF with `forward_to_webhook=true` writes `parsed.md`; extract no longer capped at 20 pages for indexing when `DOCUMENT_PARSER=docling`.  
+**Shipped:** `document_parse` package, API `POST/GET /data/{id}/parsed`, lean default stays `pypdf` (Docling opt-in).
 
-### Phase 2 — Embeddings from parsed body (retrieval fix)
+### Phase 2 — Embeddings from parsed body (retrieval fix) — **DONE** (lean / local)
 
 **Code touchpoints:** `BaseStorage.create_embedding` in `api/app/storage.py`.
 
@@ -121,9 +123,12 @@ flowchart TB
 4. Keep viewpoint: prepend to first chunk **or** store as `embedding_kind=viewpoint` separately.
 5. Raise/remove indexing truncation; keep LLM analysis truncation for cost.
 
-**Exit:** Semantic search returns chunks from PDF body text; citation metadata includes page when available.
+**Exit:** Semantic search returns chunks from PDF body text; citation metadata includes page when available.  
+**Shipped:** `create_embedding` prefers parsed JSON chunks → markdown → legacy fallbacks; prepends viewpoint to chunk 0; write-new-then-delete-old rewrite; coalesces same-page micro-chunks; `page` on `Embedding` / search / `SemanticMatchChunk` / `ChatCitation`; Supabase migration [`mem_dog_embeddings_page.sql`](../../api/supabase/mem_dog_embeddings_page.sql) (GKE seed `07-…`).
 
-### Phase 3 — OCR & hard-doc router
+### Phase 3 — OCR & hard-doc router — **NEXT**
+
+Env flags already exist (`DOCUMENT_OCR_ENABLED`, `DOCUMENT_HARD_PARSER`) as **stubs** — implement routing here, not sooner.
 
 1. If Docling text density &lt; N chars/page or confidence low → OCR pipeline.
 2. Optional router:
@@ -141,7 +146,7 @@ flowchart TB
 4. UI Playground: show parse status + “Re-parse” button.
 5. Docs: replace marketing overclaim with accurate pipeline diagram in `ai-pipeline` / `rag-chat`.
 
-**Exit:** Local compose profile `document-parse`; k8s manifests; docs updated.
+**Exit:** Local compose **lean** overlay; k8s manifests; docs updated.
 
 ### Phase 5 — Optional Graphiti & eval gate
 
@@ -192,17 +197,44 @@ Backward compatible: existing clients ignore new blobs; embeddings improve autom
 
 Align with host profiles in [host-saas-embedding.md](host-saas-embedding.md) (**L1**).
 
-| Component | Required? | Notes |
-|-----------|-----------|-------|
-| `db`, `redis`, `api` | Yes | Store + embed |
-| `webhook-gateway`, `webhook-processor` | Yes | Parse/enrich path today |
-| Future `document-parse` worker | Yes (when split) | Docling CPU/GPU; keep off LLM agent pods |
-| Cloud embedding/LLM keys | Recommended | Avoid 3× Ollama on laptops |
-| `ollama-*` | Optional | Only if validating local-only AI |
-| `neo4j`, `ui`, `mcp-server`, Nango | No | Not needed for parse/RAG body-chunk proof |
+### Machine note — Mac mini M2 Pro (16 GB)
+
+Verified sizing for this repo’s authoring machine:
+
+| Resource | Value |
+|----------|--------|
+| Chip | Apple M2 Pro (10 CPU / 16 GPU) |
+| Host RAM | **16 GB** unified |
+| Docker Desktop (recommended) | **10–12 GB** RAM, 6 CPUs (esp. when opting into `DOCUMENT_PARSER=docling`) |
+| Disk headroom | keep ≥20 GB free for images + gold PDFs |
+
+**Do not** run `docker compose up` (full stack + 3× Ollama) on 16 GB — that path is the **32GB Standard** profile in [resource-requirements](../deployment/resource-requirements.mdx).
+
+Use the **lean** overlay instead (host profile **L1**):
 
 ```bash
-docker compose up db redis api webhook-gateway webhook-processor
+cp api/.env.example api/.env
+# set OLLAMA_CLOUD_API_KEY=...  (or SYSTEM_GEMINI_API_KEY=...)
+./scripts/dev-lean.sh up -d
+```
+
+Files: [`docker-compose.lean.yml`](../../docker-compose.lean.yml), [`scripts/dev-lean.sh`](../../scripts/dev-lean.sh).  
+Parser default on lean: **`DOCUMENT_PARSER=pypdf`**. Opt in with `DOCUMENT_PARSER=docling`.
+
+| Component | Required? | Notes |
+|-----------|-----------|-------|
+| `db`, `redis`, `neo4j`, `api`, `ui`, `mcp-server` | Yes | Store + Graphiti + embed + playground UI + MCP SSE |
+| `webhook-gateway`, `webhook-processor` | Yes | Parse/enrich path today |
+| Future `document-parse` worker | Yes (when split) | Docling CPU/GPU; keep off LLM agent pods |
+| Cloud embedding/LLM keys | **Required on 16GB** | Avoid 3× Ollama on laptops |
+| `ollama-*` | Optional | Only if validating local-only AI on ≥32GB |
+| Nango | No | Not needed for parse/RAG body-chunk proof |
+
+```bash
+./scripts/dev-lean.sh up -d
+# or:
+# docker compose -f docker-compose.yml -f docker-compose.lean.yml \
+#   up -d db redis neo4j api ui mcp-server webhook-gateway webhook-processor
 # + document-parse worker when split out
 ```
 
@@ -263,7 +295,7 @@ mem-dog remains the memory platform; cloud parsers are **adapters**, not the cor
 3. `api`: `create_embedding` reads parsed body + chunk metadata  
 4. `ocr`: low-text branch  
 5. `router`: optional LlamaParse/GCP adapters  
-6. `ops`: parse worker + KEDA + compose profile  
+6. `ops`: parse worker + KEDA + lean compose overlay  
 7. `product`: parse status API + playground UX  
 8. `docs`: ai-pipeline / rag-chat accuracy pass  
 

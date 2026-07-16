@@ -11,7 +11,7 @@ import logging
 import math
 import time
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from typing import Literal
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -538,6 +538,88 @@ class BaseStorage(ABC):
             except FileNotFoundError:
                 _storage_errors_counter.add(1, {"operation": "get_raw", "error": "not_found"})
                 return None
+
+    def store_parsed_artifacts(
+        self,
+        data_id: str,
+        user_id: str,
+        markdown: str,
+        document: dict,
+        version: Optional[int] = None,
+    ) -> dict:
+        """Persist parsed markdown + JSON next to the raw blob for a data version.
+
+        Paths:
+          ``{user_id}/{data_id}/{version_label}/parsed/document.md``
+          ``{user_id}/{data_id}/{version_label}/parsed/document.json``
+        """
+        user_id = (user_id or "").strip() or config.DEFAULT_USER_ID
+        metadata = self.get_metadata(data_id, user_id)
+        if metadata is None:
+            raise FileNotFoundError(f"Data not found: {data_id}")
+
+        ver = version if version is not None else metadata.current_version
+        version_info = next((v for v in metadata.versions if v.version == ver), None)
+        vl = getattr(version_info, "version_label", None) if version_info else None
+        if not vl:
+            vl = metadata.data_version_label
+        if not vl:
+            raise FileNotFoundError(f"No version_label for data_id={data_id} version={ver}")
+
+        vl = _sanitize_version_label(vl)
+        base = f"{user_id}/{data_id}/{vl}/parsed"
+        md_path = f"{base}/document.md"
+        json_path = f"{base}/document.json"
+
+        doc_payload = dict(document)
+        doc_payload.setdefault("parse_status", "ready")
+        doc_payload.setdefault("markdown_uri", md_path)
+
+        self.raw_store.write(md_path, markdown.encode("utf-8"), "text/markdown; charset=utf-8")
+        self.raw_store.write(
+            json_path,
+            json.dumps(doc_payload, indent=2).encode("utf-8"),
+            "application/json",
+        )
+        logger.info("Stored parsed artifacts for %s at %s", data_id, base)
+        return {
+            "data_id": data_id,
+            "version_label": vl,
+            "parse_status": doc_payload.get("parse_status", "ready"),
+            "markdown_path": md_path,
+            "json_path": json_path,
+        }
+
+    def get_parsed_artifact(
+        self,
+        data_id: str,
+        user_id: str,
+        fmt: str = "markdown",
+        version: Optional[int] = None,
+    ) -> Optional[Tuple[bytes, str]]:
+        """Return parsed body bytes and content-type (markdown or json)."""
+        user_id = (user_id or "").strip() or config.DEFAULT_USER_ID
+        metadata = self.get_metadata(data_id, user_id)
+        if metadata is None:
+            return None
+
+        ver = version if version is not None else metadata.current_version
+        version_info = next((v for v in metadata.versions if v.version == ver), None)
+        vl = getattr(version_info, "version_label", None) if version_info else None
+        if not vl:
+            vl = metadata.data_version_label
+        if not vl:
+            return None
+
+        vl = _sanitize_version_label(vl)
+        suffix = "document.json" if fmt == "json" else "document.md"
+        blob_path = f"{user_id}/{data_id}/{vl}/parsed/{suffix}"
+        try:
+            content = self.raw_store.read(blob_path)
+            content_type = self.raw_store.get_content_type(blob_path)
+            return content, content_type
+        except FileNotFoundError:
+            return None
 
     def store_metadata(self, metadata: DataMetadata) -> None:
         """Store metadata in the blob store.
@@ -3010,48 +3092,115 @@ class BaseStorage(ABC):
     def create_embedding(self, embedding_create: EmbeddingCreate) -> Embedding:
         """Generate embeddings for a data item and persist them.
 
-        Chunks the raw text content, calls the configured AI embeddings endpoint
-        (system Gemini key takes priority), stores all chunk embeddings under the
-        multitenant path ``{user_id}/{data_id}/{version_label}/embeddings/``, and
-        returns the first chunk embedding.
+        Prefers Phase 1 parsed artifacts (JSON chunks with page metadata, else
+        markdown) over raw/viewpoint text. Chunks are embedded via the configured
+        AI endpoint and stored under
+        ``{user_id}/{data_id}/{version_label}/embeddings/``.
         """
         self._check_ai_enabled()
 
         owner = (embedding_create.user_id or "").strip() or config.DEFAULT_USER_ID
 
-        # Fetch raw content (use user-scoped path)
         raw = self.get_raw_data(embedding_create.data_id, user_id=owner)
         if raw is None:
             raise FileNotFoundError(f"Data not found: {embedding_create.data_id}")
         content_bytes, content_type = raw
 
-        # Determine if content is text-based (can be decoded directly)
-        is_text = isinstance(content_type, str) and (
-            content_type.startswith("text/")
-            or content_type in ("application/json", "application/xml", "application/javascript")
-        )
-        is_image = isinstance(content_type, str) and content_type.startswith("image/")
+        chunk_size = embedding_create.chunk_size
+        chunk_overlap = embedding_create.chunk_overlap
+        chunk_specs: List[Dict[str, Any]] = []
+        from_parsed = False
 
-        if is_text:
-            raw_text = content_bytes.decode("utf-8", errors="replace")
-            # Prepend viewpoint (keyword-dense analysis) to raw text so the
-            # first embedding chunks contain search-optimised context.
-            existing = self.list_viewpoints(data_id=embedding_create.data_id, user_id=owner)
-            if existing and existing[0].output_content:
-                text_content = f"{existing[0].output_content}\n\n---\n\n{raw_text}"
+        # 1) Prefer parsed JSON chunks (page / section metadata)
+        try:
+            parsed_json = self.get_parsed_artifact(
+                embedding_create.data_id, user_id=owner, fmt="json",
+            )
+        except Exception:
+            parsed_json = None
+        if parsed_json:
+            try:
+                document = json.loads(parsed_json[0].decode("utf-8"))
+                if isinstance(document, dict):
+                    chunk_specs = _chunk_specs_from_parsed_json(
+                        document, chunk_size, chunk_overlap,
+                    )
+                    from_parsed = bool(chunk_specs)
+            except Exception as exc:
+                logger.warning(
+                    "Failed to load parsed JSON chunks for %s: %s",
+                    embedding_create.data_id, exc,
+                )
+
+        # 2) Else parsed markdown
+        if not chunk_specs:
+            try:
+                parsed_md = self.get_parsed_artifact(
+                    embedding_create.data_id, user_id=owner, fmt="markdown",
+                )
+            except Exception:
+                parsed_md = None
+            if parsed_md:
+                md_text = parsed_md[0].decode("utf-8", errors="replace")
+                if md_text.strip():
+                    chunk_specs = _chunk_specs_from_text(
+                        md_text, chunk_size, chunk_overlap, embedding_kind="body",
+                    )
+                    from_parsed = bool(chunk_specs)
+
+        # 3) Else existing text / non-text viewpoint fallbacks
+        if not chunk_specs:
+            is_text = isinstance(content_type, str) and (
+                content_type.startswith("text/")
+                or content_type in (
+                    "application/json", "application/xml", "application/javascript",
+                )
+            )
+            existing = self.list_viewpoints(
+                data_id=embedding_create.data_id, user_id=owner,
+            )
+            vp_text = (
+                existing[0].output_content
+                if existing and existing[0].output_content
+                else ""
+            )
+            if is_text:
+                raw_text = content_bytes.decode("utf-8", errors="replace")
+                if vp_text:
+                    text_content = f"{vp_text}\n\n---\n\n{raw_text}"
+                else:
+                    text_content = raw_text
+                chunk_specs = _chunk_specs_from_text(
+                    text_content, chunk_size, chunk_overlap, embedding_kind="body",
+                )
             else:
-                text_content = raw_text
-        else:
-            # Non-text content — use viewpoint (AI analysis) for embedding.
-            # Never call the LLM here; the webhook pipeline is responsible
-            # for creating viewpoints via a single LLM call.
-            existing = self.list_viewpoints(data_id=embedding_create.data_id, user_id=owner)
+                if vp_text:
+                    text_content = vp_text
+                else:
+                    text_content = content_bytes.decode("utf-8", errors="replace")
+                chunk_specs = _chunk_specs_from_text(
+                    text_content, chunk_size, chunk_overlap, embedding_kind="body",
+                )
+
+        # Prepend viewpoint to first body chunk when using parsed artifacts
+        if from_parsed and chunk_specs:
+            existing = self.list_viewpoints(
+                data_id=embedding_create.data_id, user_id=owner,
+            )
             if existing and existing[0].output_content:
-                text_content = existing[0].output_content
-            else:
-                # No viewpoint yet — best-effort decode (embedding may be low quality
-                # but we avoid a redundant LLM call)
-                text_content = content_bytes.decode("utf-8", errors="replace")
+                vp = existing[0].output_content.strip()
+                if vp:
+                    first = chunk_specs[0]
+                    first["text"] = f"{vp}\n\n---\n\n{first['text']}"
+
+        if not chunk_specs:
+            chunk_specs = [{
+                "text": "(empty)",
+                "page": None,
+                "section_path": None,
+                "element_type": None,
+                "embedding_kind": "body",
+            }]
 
         metadata = self.get_metadata(embedding_create.data_id, user_id=owner)
         data_version = metadata.current_version if metadata else 1
@@ -3059,28 +3208,19 @@ class BaseStorage(ABC):
         if not version_label:
             version_label = _make_version_label()
 
-        # Resolve engine + model
         engine_type, model, api_key = self._resolve_embedding_engine(
             embedding_create.engine_id
         )
         model = embedding_create.model or model
 
-        # Chunk the text
-        chunks = _chunk_text(
-            text_content,
-            chunk_size=embedding_create.chunk_size,
-            overlap=embedding_create.chunk_overlap,
-        )
-        if not chunks:
-            chunks = [text_content[:embedding_create.chunk_size] or "(empty)"]
+        chunk_texts = [c["text"] for c in chunk_specs]
+        vectors = _generate_embeddings(chunk_texts, engine_type, model, api_key)
 
-        # Generate vectors
-        vectors = _generate_embeddings(chunks, engine_type, model, api_key)
-
-        # Record embedding token usage for Insights dashboard
         try:
-            emb_tokens = sum(len(c.split()) for c in chunks)
-            storage_engine_label = "ollama" if engine_type in ("ollama_local", "ollama_cloud") else engine_type
+            emb_tokens = sum(len(c.split()) for c in chunk_texts)
+            storage_engine_label = (
+                "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
+            )
             self.record_token_usage(TokenUsageRecord(
                 user_id=owner,
                 prompt_tokens=emb_tokens,
@@ -3092,9 +3232,27 @@ class BaseStorage(ABC):
         except Exception:
             pass
 
+        # Write new embeddings first, then delete prior rows for this version.
+        # Avoids delete-then-fail leaving the item with no embeddings.
+        old_ids: set[str] = set()
+        try:
+            for old in self.get_embeddings(
+                embedding_create.data_id,
+                user_id=owner,
+                version_label=version_label,
+            ):
+                if old.embedding_id:
+                    old_ids.add(old.embedding_id)
+        except Exception as exc:
+            logger.warning(
+                "list prior embeddings before recreate failed for %s: %s",
+                embedding_create.data_id, exc,
+            )
+
         now = datetime.utcnow().isoformat() + "Z"
-        # Map internal engine types to AIEngineType enum values for storage
-        storage_engine = "ollama" if engine_type in ("ollama_local", "ollama_cloud") else engine_type
+        storage_engine = (
+            "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
+        )
         sig = AISignature(
             ai_engine=storage_engine,
             model_name=model,
@@ -3103,25 +3261,49 @@ class BaseStorage(ABC):
         )
 
         stored: List[Embedding] = []
-        for idx, (chunk_text, vector) in enumerate(zip(chunks, vectors)):
-            emb = Embedding(
-                embedding_id=str(uuid.uuid4()),
-                data_id=embedding_create.data_id,
-                data_version=data_version,
-                ai_engine=storage_engine,
-                model=model,
-                vector=vector,
-                dimensions=len(vector),
-                chunk_index=idx,
-                chunk_text=chunk_text,
-                created_at=now,
-                version=1,
-                user_id=owner,
-                version_label=version_label,
-                ai_signature=sig,
-            )
-            self.store_embedding(emb)
-            stored.append(emb)
+        try:
+            for idx, (spec, vector) in enumerate(zip(chunk_specs, vectors)):
+                emb = Embedding(
+                    embedding_id=str(uuid.uuid4()),
+                    data_id=embedding_create.data_id,
+                    data_version=data_version,
+                    ai_engine=storage_engine,
+                    model=model,
+                    vector=vector,
+                    dimensions=len(vector),
+                    chunk_index=idx,
+                    chunk_text=spec["text"],
+                    created_at=now,
+                    version=1,
+                    user_id=owner,
+                    version_label=version_label,
+                    ai_signature=sig,
+                    page=spec.get("page"),
+                    section_path=spec.get("section_path"),
+                    element_type=spec.get("element_type"),
+                    embedding_kind=spec.get("embedding_kind") or "body",
+                )
+                self.store_embedding(emb)
+                stored.append(emb)
+        except Exception:
+            for emb in stored:
+                try:
+                    self.delete_embedding(emb.embedding_id, user_id=owner)
+                except Exception as cleanup_exc:
+                    logger.warning(
+                        "rollback of partial embedding rewrite failed for %s: %s",
+                        emb.embedding_id, cleanup_exc,
+                    )
+            raise
+
+        for old_id in old_ids:
+            try:
+                self.delete_embedding(old_id, user_id=owner)
+            except Exception as exc:
+                logger.warning(
+                    "delete stale embedding %s after rewrite failed: %s",
+                    old_id, exc,
+                )
 
         logger.info(
             "Embeddings created",
@@ -3131,6 +3313,7 @@ class BaseStorage(ABC):
                 "version_label": version_label,
                 "chunks": len(stored),
                 "model": model,
+                "from_parsed": from_parsed,
             },
         )
         return stored[0]
@@ -3210,8 +3393,12 @@ class BaseStorage(ABC):
     def similarity_search(
         self, query_vector: List[float], limit: int = 5, user_id: str = "",
         memory_id: str = "",
-    ) -> List[Tuple[str, str, str, float]]:
-        """Return (embedding_id, data_id, chunk_text, similarity) tuples via cosine similarity over blob-store embeddings."""
+    ) -> List[dict]:
+        """Return embedding hit dicts via cosine similarity over blob-store embeddings.
+
+        Each dict has ``embedding_id``, ``data_id``, ``chunk_text``, ``similarity``,
+        and optional ``page`` when present on the stored embedding.
+        """
         self._check_ai_enabled()
         if not self.embeddings_store:
             return []
@@ -3224,28 +3411,33 @@ class BaseStorage(ABC):
                 return 0.0
             return dot / (mag_a * mag_b)
 
-        scored: List[Tuple[str, str, str, float]] = []
+        scored: List[dict] = []
         for info in self.embeddings_store.list_blobs():
             if not info.name.endswith(".json") or "/embeddings/" not in info.name:
                 continue
             try:
                 content = self.embeddings_store.read(info.name)
                 emb = json.loads(content)
+                if user_id and emb.get("user_id") and emb.get("user_id") != user_id:
+                    continue
                 vec = emb.get("vector")
                 if not vec:
                     continue
                 if isinstance(vec, str):
                     vec = json.loads(vec)
                 sim = _cosine(query_vector, vec)
-                scored.append((
-                    emb.get("embedding_id", ""),
-                    emb.get("data_id", ""),
-                    emb.get("chunk_text", ""),
-                    sim,
-                ))
+                hit = {
+                    "embedding_id": emb.get("embedding_id", ""),
+                    "data_id": emb.get("data_id", ""),
+                    "chunk_text": emb.get("chunk_text", ""),
+                    "similarity": sim,
+                }
+                if emb.get("page") is not None:
+                    hit["page"] = emb.get("page")
+                scored.append(hit)
             except Exception:
                 continue
-        scored.sort(key=lambda x: x[3], reverse=True)
+        scored.sort(key=lambda x: x["similarity"], reverse=True)
         return scored[:limit]
 
     def hybrid_search(
@@ -3260,8 +3452,14 @@ class BaseStorage(ABC):
         results = self.similarity_search(query_vector, limit=limit, user_id=user_id, memory_id=memory_id)
         return [
             {
-                "embedding_id": r[0], "data_id": r[1], "chunk_text": r[2],
-                "similarity": r[3], "fts_rank": None, "rrf_score": None, "search_type": "vector",
+                "embedding_id": r.get("embedding_id", ""),
+                "data_id": r.get("data_id", ""),
+                "chunk_text": r.get("chunk_text", ""),
+                "similarity": r.get("similarity", 0.0),
+                "fts_rank": None,
+                "rrf_score": None,
+                "search_type": "vector",
+                **({"page": r["page"]} if r.get("page") is not None else {}),
             }
             for r in results
         ]
@@ -3283,7 +3481,8 @@ class BaseStorage(ABC):
 
         Priority:
         1. If engine_id is supplied and found in the user's engine configs, use it.
-        2. Local Ollama (if OLLAMA_LOCAL_API_BASE is set).
+        2. Local Ollama when OLLAMA_TIER is on, or when lean has a host URL and
+           no cloud/Gemini key (lean overlays often force host.docker.internal).
         3. Ollama Cloud (if OLLAMA_CLOUD_API_KEY is set).
         4. Fall back to the system Gemini key.
         """
@@ -3307,8 +3506,21 @@ class BaseStorage(ABC):
             except Exception:
                 pass
 
-        # Local Ollama primary (in-cluster, no API key)
-        if config.OLLAMA_LOCAL_API_BASE:
+        # Local Ollama (in-cluster or host). Skip the k8s default URL when
+        # OLLAMA_TIER=false. When lean forces host.docker.internal but a cloud
+        # key is present, prefer cloud so the documented cloud-only path works.
+        _default_local = "http://ollama.webhook-pipeline.svc.cluster.local:11434"
+        has_cloud = bool(
+            config.OLLAMA_CLOUD_API_KEY or config.SYSTEM_GEMINI_API_KEY
+        )
+        use_local = bool(config.OLLAMA_LOCAL_API_BASE) and (
+            config.OLLAMA_TIER
+            or (
+                config.OLLAMA_LOCAL_API_BASE.rstrip("/") != _default_local.rstrip("/")
+                and not has_cloud
+            )
+        )
+        if use_local:
             return (
                 "ollama_local",
                 config.OLLAMA_LOCAL_MODEL_EMBEDDING,
@@ -3588,8 +3800,13 @@ class BaseStorage(ABC):
             )
 
         now = datetime.utcnow().isoformat() + "Z"
+        # MODEL_SERVER_URL resolves as "local"; map to a valid AIEngineType for
+        # persistence (same pattern as embedding storage_engine normalization).
+        storage_engine = (
+            "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
+        )
         sig = AISignature(
-            ai_engine=engine_type,
+            ai_engine=storage_engine,
             model_name=model,
             generated_at=now,
             key_mode=AIKeyMode.SYSTEM if not viewpoint_create.engine_id else AIKeyMode.CUSTOM,
@@ -3601,7 +3818,7 @@ class BaseStorage(ABC):
             data_version=data_version,
             prompt_id=viewpoint_create.prompt_id,
             user=owner,
-            ai_engine=engine_type,
+            ai_engine=storage_engine,
             model=model,
             input_content=input_text[:2000],  # truncate stored input for space
             output_content=output_text,
@@ -3681,15 +3898,18 @@ class BaseStorage(ABC):
         })
 
         now = datetime.utcnow().isoformat() + "Z"
+        storage_engine = (
+            "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
+        )
         viewpoint.output_content = output_text
         viewpoint.version += 1
         viewpoint.updated_at = now
         viewpoint.prompt_id = prompt_id
-        viewpoint.ai_engine = engine_type
+        viewpoint.ai_engine = storage_engine
         viewpoint.model = model
         viewpoint.version_history = history
         viewpoint.ai_signature = AISignature(
-            ai_engine=engine_type,
+            ai_engine=storage_engine,
             model_name=model,
             generated_at=now,
             key_mode=AIKeyMode.SYSTEM if not engine_id else AIKeyMode.CUSTOM,
@@ -4949,6 +5169,150 @@ def _chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[s
     return chunks
 
 
+def _coalesce_chunk_specs(
+    specs: List[Dict[str, Any]],
+    chunk_size: int,
+) -> List[Dict[str, Any]]:
+    """Merge adjacent same-page specs so short Office paragraphs don't explode.
+
+    Specs with different ``page`` values are never merged (PDF page locality).
+    Paragraphs with ``page is None`` (DOCX) pack up to ``chunk_size``.
+    """
+    if not specs:
+        return []
+    merged: List[Dict[str, Any]] = []
+    current: Optional[Dict[str, Any]] = None
+    for spec in specs:
+        text = (spec.get("text") or "").strip()
+        if not text:
+            continue
+        if current is None:
+            current = {
+                "text": text,
+                "page": spec.get("page"),
+                "section_path": list(spec.get("section_path") or []) or None,
+                "element_type": spec.get("element_type"),
+                "embedding_kind": spec.get("embedding_kind") or "body",
+            }
+            continue
+        same_page = current.get("page") == spec.get("page")
+        same_kind = (current.get("embedding_kind") or "body") == (
+            spec.get("embedding_kind") or "body"
+        )
+        combined = f"{current['text']}\n\n{text}"
+        if same_page and same_kind and len(combined) <= chunk_size:
+            current["text"] = combined
+            sp = spec.get("section_path")
+            if sp:
+                cur_sp = list(current.get("section_path") or [])
+                for part in (sp if isinstance(sp, list) else [sp]):
+                    s = str(part)
+                    if s and s not in cur_sp:
+                        cur_sp.append(s)
+                current["section_path"] = cur_sp or None
+            continue
+        merged.append(current)
+        current = {
+            "text": text,
+            "page": spec.get("page"),
+            "section_path": list(spec.get("section_path") or []) or None,
+            "element_type": spec.get("element_type"),
+            "embedding_kind": spec.get("embedding_kind") or "body",
+        }
+    if current is not None:
+        merged.append(current)
+    return merged
+
+
+def _expand_chunk_specs(
+    specs: List[Dict[str, Any]],
+    chunk_size: int,
+    chunk_overlap: int,
+) -> List[Dict[str, Any]]:
+    """Split oversized chunk specs with ``_chunk_text``, inheriting metadata."""
+    expanded: List[Dict[str, Any]] = []
+    for spec in specs:
+        text = (spec.get("text") or "").strip()
+        if not text:
+            continue
+        meta = {
+            "page": spec.get("page"),
+            "section_path": spec.get("section_path"),
+            "element_type": spec.get("element_type"),
+            "embedding_kind": spec.get("embedding_kind") or "body",
+        }
+        if len(text) <= chunk_size:
+            expanded.append({"text": text, **meta})
+            continue
+        for piece in _chunk_text(text, chunk_size=chunk_size, overlap=chunk_overlap):
+            if piece.strip():
+                expanded.append({"text": piece, **meta})
+    return expanded
+
+
+def _chunk_specs_from_parsed_json(
+    document: Dict[str, Any],
+    chunk_size: int,
+    chunk_overlap: int,
+) -> List[Dict[str, Any]]:
+    """Build embedding chunk specs from parsed document JSON chunks."""
+    raw_chunks = document.get("chunks")
+    if not isinstance(raw_chunks, list) or not raw_chunks:
+        return []
+    specs: List[Dict[str, Any]] = []
+    for ch in raw_chunks:
+        if not isinstance(ch, dict):
+            continue
+        text = ch.get("text") or ""
+        if not str(text).strip():
+            continue
+        page = ch.get("page")
+        try:
+            page_i = int(page) if page is not None else None
+        except (TypeError, ValueError):
+            page_i = None
+        section_path = ch.get("section_path")
+        if section_path is not None and not isinstance(section_path, list):
+            section_path = [str(section_path)]
+        specs.append(
+            {
+                "text": str(text),
+                "page": page_i,
+                "section_path": section_path,
+                "element_type": ch.get("element_type"),
+                "embedding_kind": "body",
+            }
+        )
+    return _expand_chunk_specs(
+        _coalesce_chunk_specs(specs, chunk_size),
+        chunk_size,
+        chunk_overlap,
+    )
+
+
+def _chunk_specs_from_text(
+    text: str,
+    chunk_size: int,
+    chunk_overlap: int,
+    *,
+    embedding_kind: str = "body",
+) -> List[Dict[str, Any]]:
+    pieces = _chunk_text(text, chunk_size=chunk_size, overlap=chunk_overlap)
+    if not pieces:
+        pieces = [text[:chunk_size] or "(empty)"]
+    return [
+        {
+            "text": p,
+            "page": None,
+            "section_path": None,
+            "element_type": None,
+            "embedding_kind": embedding_kind,
+        }
+        for p in pieces
+        if p.strip() or p == "(empty)"
+    ]
+
+
 def _generate_embeddings(
     chunks: List[str], engine_type: str, model: str, api_key: str,
     task_type: str = "RETRIEVAL_DOCUMENT",
@@ -5418,8 +5782,14 @@ class RedisStorage(BaseStorage):
         results = self.similarity_search(query_vector, limit=limit, user_id=user_id, memory_id=memory_id)
         return [
             {
-                "embedding_id": r[0], "data_id": r[1], "chunk_text": r[2],
-                "similarity": r[3], "fts_rank": None, "rrf_score": None, "search_type": "vector",
+                "embedding_id": r.get("embedding_id", ""),
+                "data_id": r.get("data_id", ""),
+                "chunk_text": r.get("chunk_text", ""),
+                "similarity": r.get("similarity", 0.0),
+                "fts_rank": None,
+                "rrf_score": None,
+                "search_type": "vector",
+                **({"page": r["page"]} if r.get("page") is not None else {}),
             }
             for r in results
         ]
@@ -5629,6 +5999,10 @@ class SupabaseStorage(BaseStorage):
     # All queries enforce multi-tenancy via user_id scoping.
     # ------------------------------------------------------------------
 
+    # Set False after first PGRST missing-column response so later upserts
+    # skip page metadata without round-tripping failed writes.
+    _embedding_page_cols_ok: Optional[bool] = None
+
     def store_embedding(self, embedding: Embedding) -> None:
         self._check_ai_enabled()
         if not embedding.user_id or not embedding.version_label:
@@ -5654,9 +6028,51 @@ class SupabaseStorage(BaseStorage):
             "ai_signature": ai_sig,
             "created_at":   embedding.created_at,
         }
-        self._supa_client.table(self._EMB_TABLE).upsert(
-            row, on_conflict="embedding_id"
-        ).execute()
+        page_meta = {
+            "page": embedding.page,
+            "section_path": embedding.section_path,
+            "element_type": embedding.element_type,
+            "embedding_kind": embedding.embedding_kind,
+        }
+
+        def _upsert(payload: dict) -> None:
+            self._supa_client.table(self._EMB_TABLE).upsert(
+                payload, on_conflict="embedding_id"
+            ).execute()
+
+        def _missing_page_column(exc: Exception) -> bool:
+            msg = str(exc).lower()
+            return any(
+                token in msg
+                for token in (
+                    "page",
+                    "section_path",
+                    "element_type",
+                    "embedding_kind",
+                    "pgrst204",
+                )
+            ) and any(
+                token in msg
+                for token in ("column", "could not find", "schema cache", "pgrst")
+            )
+
+        if self._embedding_page_cols_ok is False:
+            _upsert(row)
+            return
+
+        try:
+            _upsert({**row, **page_meta})
+            self._embedding_page_cols_ok = True
+        except Exception as exc:
+            if self._embedding_page_cols_ok is True or not _missing_page_column(exc):
+                raise
+            logger.warning(
+                "mem_dog_embeddings page columns missing — upserting without "
+                "page metadata (apply mem_dog_embeddings_page.sql): %s",
+                exc,
+            )
+            self._embedding_page_cols_ok = False
+            _upsert(row)
 
     def get_embeddings(
         self,
@@ -5683,7 +6099,16 @@ class SupabaseStorage(BaseStorage):
         embeddings: List[Embedding] = []
         for row in res.data or []:
             try:
-                embeddings.append(Embedding(**row))
+                payload = dict(row)
+                vec = payload.get("vector")
+                if isinstance(vec, str):
+                    # pgvector may come back as "[1,2,...]"
+                    cleaned = vec.strip()
+                    if cleaned.startswith("[") and cleaned.endswith("]"):
+                        payload["vector"] = [float(x) for x in cleaned[1:-1].split(",") if x.strip()]
+                    else:
+                        payload["vector"] = json.loads(vec)
+                embeddings.append(Embedding(**payload))
             except Exception as exc:
                 logger.warning("Failed to parse embedding row: %s", exc)
         return embeddings
@@ -5987,11 +6412,11 @@ class SupabaseStorage(BaseStorage):
     def similarity_search(
         self, query_vector: List[float], limit: int = 5, user_id: str = "",
         memory_id: str = "",
-    ) -> List[Tuple[str, str, str, float]]:
+    ) -> List[dict]:
         """Cosine similarity search using pgvector on ``mem_dog_embeddings``.
 
-        Returns ``(embedding_id, data_id, chunk_text, similarity)`` tuples
-        ordered by descending similarity, scoped to ``user_id`` when provided.
+        Returns dicts with ``embedding_id``, ``data_id``, ``chunk_text``,
+        ``similarity``, and optional ``page``, scoped to ``user_id`` when provided.
         When ``memory_id`` is set, restricts results to that memory's data_ids.
         Falls back to the base blob-scan implementation on any error.
         """
@@ -6016,14 +6441,17 @@ class SupabaseStorage(BaseStorage):
             if filter_data_ids is not None:
                 rpc_params["filter_data_ids"] = filter_data_ids
             res = self._supa_client.rpc("match_embeddings", rpc_params).execute()
-            results: List[Tuple[str, str, str, float]] = []
+            results: List[dict] = []
             for row in res.data or []:
-                results.append((
-                    row.get("embedding_id", ""),
-                    row.get("data_id", ""),
-                    row.get("chunk_text", ""),
-                    float(row.get("similarity", 0.0)),
-                ))
+                hit = {
+                    "embedding_id": row.get("embedding_id", ""),
+                    "data_id": row.get("data_id", ""),
+                    "chunk_text": row.get("chunk_text", ""),
+                    "similarity": float(row.get("similarity", 0.0)),
+                }
+                if row.get("page") is not None:
+                    hit["page"] = row.get("page")
+                results.append(hit)
             return results
         except Exception as exc:
             logger.debug(
@@ -6070,6 +6498,7 @@ class SupabaseStorage(BaseStorage):
                     "fts_rank": float(row.get("fts_rank", 0.0)) if row.get("fts_rank") is not None else None,
                     "rrf_score": float(row.get("rrf_score", 0.0)) if row.get("rrf_score") is not None else None,
                     "search_type": row.get("search_type", "both"),
+                    **({"page": row["page"]} if row.get("page") is not None else {}),
                 }
                 for row in res.data or []
             ]
@@ -6109,6 +6538,7 @@ class SupabaseStorage(BaseStorage):
                     "similarity": 0.0,
                     "rrf_score": None,
                     "search_type": "fts",
+                    **({"page": row["page"]} if row.get("page") is not None else {}),
                 }
                 for row in res.data or []
             ]

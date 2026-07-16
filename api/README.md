@@ -98,7 +98,7 @@ When `STORAGE_BACKEND=supabase`, the API uses a hybrid approach:
 All features (AI layer, user management, memories, stats) are automatically enabled — no per-feature bucket config needed.
 
 Prerequisites:
-1. Apply the schema: `api/supabase/mem_dog_blobs.sql`, `api/supabase/mem_dog_embeddings.sql`, `api/supabase/store_kv.sql`, `api/supabase/list_data_paginated.sql`
+1. Apply the schema: `api/supabase/mem_dog_blobs.sql`, `api/supabase/mem_dog_embeddings.sql`, `api/supabase/mem_dog_embeddings_page.sql` (page/citation columns), `api/supabase/store_kv.sql`, `api/supabase/list_data_paginated.sql`
 2. Set `SUPABASE_URL`, `SUPABASE_KEY` (or `SUPABASE_SERVICE_ROLE_KEY`), and `RAW_BUCKET`
 
 ## Environment Variables
