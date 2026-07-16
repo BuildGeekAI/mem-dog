@@ -60,10 +60,44 @@ UPLOAD=$(curl -sf -X POST "$BASE/api/v1/data" \
   -F "owner_user_id=$USER_ID" \
   -F "org_id=$ORG_ID" \
   -F "project_id=$PROJ_ID" \
+  -F "external_id=smoke:phoenix-note" \
   -F "tags=source:host,tenant:$EXT_WS,event:note")
 echo "$UPLOAD" | head -c 300; echo
 DATA_ID=$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('data_id') or d.get('id') or '')" <<<"$UPLOAD")
 [[ -n "$DATA_ID" ]] || { echo "ERROR: no data_id" >&2; exit 1; }
+CREATED=$(python3 -c "import json,sys; print(json.load(sys.stdin).get('created'))" <<<"$UPLOAD")
+[[ "$CREATED" == "True" || "$CREATED" == "true" ]] || {
+  echo "ERROR: expected created=true on first upsert, got $CREATED" >&2
+  exit 1
+}
+
+echo "== external_id upsert (same id → same data_id) =="
+UP2=$(curl -sf -X POST "$BASE/api/v1/data" \
+  "${WH[@]}" \
+  -F "content=Host SaaS smoke: Project Phoenix launch date is 2026-09-15 (resynced)." \
+  -F "name=phoenix-note" \
+  -F "mime_type=text/plain" \
+  -F "owner_user_id=$USER_ID" \
+  -F "org_id=$ORG_ID" \
+  -F "project_id=$PROJ_ID" \
+  -F "external_id=smoke:phoenix-note" \
+  -F "tags=source:host,tenant:$EXT_WS,event:note")
+echo "$UP2" | head -c 300; echo
+DATA_ID2=$(python3 -c "import json,sys; print(json.load(sys.stdin)['data_id'])" <<<"$UP2")
+UPDATED=$(python3 -c "import json,sys; print(json.load(sys.stdin).get('updated'))" <<<"$UP2")
+CREATED2=$(python3 -c "import json,sys; print(json.load(sys.stdin).get('created'))" <<<"$UP2")
+[[ "$DATA_ID2" == "$DATA_ID" ]] || {
+  echo "ERROR: expected same data_id on upsert ($DATA_ID vs $DATA_ID2)" >&2
+  exit 1
+}
+[[ "$UPDATED" == "True" || "$UPDATED" == "true" ]] || {
+  echo "ERROR: expected updated=true on re-sync, got $UPDATED" >&2
+  exit 1
+}
+[[ "$CREATED2" == "False" || "$CREATED2" == "false" ]] || {
+  echo "ERROR: expected created=false on re-sync, got $CREATED2" >&2
+  exit 1
+}
 
 echo "== metadata has project_id =="
 META=$(curl -sf "$BASE/api/v1/data/$DATA_ID/metadata?user_id=$USER_ID" "${WH[@]}" || true)

@@ -183,6 +183,9 @@ async def create_data_for_user(
     device_memory_gb: Optional[float] = Form(None),
     device_connection_type: Optional[str] = Form(None),
     device_id: Optional[str] = Form(None),
+    org_id: Optional[str] = Form(None),
+    project_id: Optional[str] = Form(None),
+    external_id: Optional[str] = Form(None),
 ):
     """Upload data as the given user (user ID in path).
 
@@ -222,6 +225,9 @@ async def create_data_for_user(
         device_memory_gb=device_memory_gb,
         device_connection_type=device_connection_type,
         device_id=device_id,
+        org_id=org_id,
+        project_id=project_id,
+        external_id=external_id,
     )
 
 

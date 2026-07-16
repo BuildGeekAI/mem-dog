@@ -414,7 +414,7 @@ Add to delivery (not optional fluff):
 
 - [x] `host-saas.md` + workspace provision happy path in-repo
 - [x] Cross-project retrieval isolation covered by tests
-- [ ] `external_id` upsert on `/data` and `/ingest`
+- [x] `external_id` upsert on `/data` and `/ingest`
 - [ ] Host can complete file or Notion path → search without mem-dog UI
 - [ ] Docling Phases 0–2 done or explicitly scheduled
 - [ ] Citation payload documented for host grounded generation

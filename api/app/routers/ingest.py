@@ -117,7 +117,13 @@ async def _store_direct(env: UniversalEnvelope, auth_user_id: str = "") -> Creat
         if not auth_user_id and owner and owner.user and owner.user.get("user_id"):
             user_id = owner.user["user_id"]
 
-        data_id, version = storage.create_data(
+        org_id = getattr(env.context, "org_id", None) or None
+        project_id = getattr(env.context, "project_id", None) or None
+        external_id = getattr(env.context, "external_id", None) or None
+        if external_id:
+            external_id = str(external_id).strip() or None
+
+        create_kwargs = dict(
             content=raw_bytes,
             content_type=content_type,
             user=user_id,
@@ -131,15 +137,27 @@ async def _store_direct(env: UniversalEnvelope, auth_user_id: str = "") -> Creat
             mime_type=env.payload.mime_type,
             is_downloaded=env.payload.is_downloaded,
             owner=owner,
+            org_id=org_id,
+            project_id=project_id,
+            external_id=external_id,
         )
+        if external_id:
+            data_id, version, created, updated = storage.create_or_upsert_data(**create_kwargs)
+        else:
+            data_id, version = storage.create_data(**create_kwargs)
+            created, updated = True, False
+
         # Feed text content to Graphiti knowledge graph (non-blocking)
         if content_type.startswith("text/") or content_type == "application/json":
             asyncio.create_task(_ingest_to_graphiti(data_id, user_id, raw_bytes.decode("utf-8", errors="replace"), content_type))
 
+        msg = "Envelope updated directly" if updated else "Envelope stored directly"
         return CreateDataResponse(
             data_id=data_id,
             version=version,
-            message="Envelope stored directly",
+            message=msg,
+            created=created,
+            updated=updated,
         )
     except Exception as exc:
         logger.exception("Failed to store envelope directly")
@@ -166,6 +184,7 @@ async def _forward_to_webhook(env: UniversalEnvelope, auth_user_id: str = "") ->
     # Resolve org_id and project_id from envelope context if available
     org_id = getattr(env.context, "org_id", None) or None
     project_id = getattr(env.context, "project_id", None) or None
+    external_id = getattr(env.context, "external_id", None) or None
 
     trace_memory_id: str | None = None
     if config.is_memories_enabled():
@@ -190,11 +209,17 @@ async def _forward_to_webhook(env: UniversalEnvelope, auth_user_id: str = "") ->
 
     # Build nested meta_data
     identity_block: dict = {"user_id": user_id}
+    if org_id:
+        identity_block["org_id"] = org_id
+    if project_id:
+        identity_block["project_id"] = project_id
     content_block: dict = {
         "source_type": env.origin.source_type.value if env.origin.source_type else "other",
     }
     if env.payload.mime_type:
         content_block["mime_type"] = env.payload.mime_type
+    if external_id:
+        content_block["external_id"] = external_id
     access_block: dict = {"is_downloaded": bool(env.payload.is_downloaded)}
     if env.context.data_id:
         access_block["data_id"] = env.context.data_id

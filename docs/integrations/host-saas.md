@@ -108,12 +108,59 @@ RAG chat accepts the same `project_id` field on `POST /api/v1/ai/query/chat`.
 | `source:{provider}` | `source:notion` | Connector filters |
 | `tenant:{external_id}` | Host workspace id | Defense in depth |
 | `connection:{id}` | Host connection row id | Lineage |
-| `external_id` | Upstream object id | Upsert (Phase B) |
+| `external_id` (form / envelope) | Upstream object id | Upsert (see below) |
 | `event:{type}` | `event:session` | Domain event write-back |
 | `memory_type` | `factual` / `episodic` | Retrieval shaping |
 
-Reserved prefixes: `source:`, `tenant:`, `connection:`, `event:`, `user_id:`, `mime_type:`.
+Reserved prefixes: `source:`, `tenant:`, `connection:`, `event:`, `user_id:`, `mime_type:`, `external_id:`.
 Hosts may add product-specific tags outside these prefixes.
+
+## External ID upsert (Phase B)
+
+Re-syncing the same upstream object must not create duplicates.
+
+| Field | Where | Notes |
+|-------|--------|--------|
+| `external_id` | `POST /api/v1/data` form | Unique per `project_id` when set, else per owner `user_id` |
+| `context.external_id` | `POST /api/v1/ingest` envelope | Same rules on `direct=true` store |
+
+**Behavior**
+
+1. First write with `external_id` → new `data_id`, `created=true`, `updated=false`
+2. Later write with the same `(project_id|owner, external_id)` → same `data_id`, new version, `created=false`, `updated=true`
+3. Response shape: `{ data_id, version, message, created, updated }`
+4. Metadata stores `external_id`; a tag `external_id:{value}` is auto-added for search
+
+**Example (form)**
+
+```bash
+curl -X POST "$BASE/api/v1/data" \
+  -H "x-api-key: $MD_KEY" \
+  -F "content=Updated page body" \
+  -F "mime_type=text/plain" \
+  -F "owner_user_id=$USER_ID" \
+  -F "org_id=$ORG_ID" \
+  -F "project_id=$PROJ_ID" \
+  -F "external_id=notion:page-abc"
+```
+
+**Example (ingest direct)**
+
+```json
+{
+  "direct": true,
+  "envelope": {
+    "origin": { "source_type": "other" },
+    "content_text": "Updated page body",
+    "context": {
+      "org_id": "org_…",
+      "project_id": "proj_…",
+      "external_id": "notion:page-abc",
+      "tags": ["source:notion"]
+    }
+  }
+}
+```
 
 ## Auth
 
@@ -159,12 +206,12 @@ cd api && pytest tests/test_host_saas.py -v
 
 ## Compatibility policy (preview)
 
-- `/api/v1/host/workspaces` and `project_id` on semantic/chat are additive.
+- `/api/v1/host/workspaces`, `project_id` on semantic/chat, and `external_id` upsert are additive.
 - Breaking changes require `/api/v2` or a dated deprecation notice in this doc.
 - Standalone mem-dog UI is unchanged; Host SaaS is an embed contract on top.
 
 ## Next (Phase B+)
 
-- `external_id` upsert on `/data` and `/ingest`
-- Host-driven Nango Connect recipes
+- Host-driven Nango Connect recipes (Notion / Slack)
+- Service-key auth audit for oauth/proxy/webhooks
 - Workspace purge / quotas / key rotation (Phase F)

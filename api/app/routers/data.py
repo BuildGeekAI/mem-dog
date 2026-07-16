@@ -167,6 +167,7 @@ async def _create_data_impl(
     device_id: Optional[str] = Form(None),
     org_id: Optional[str] = Form(None),
     project_id: Optional[str] = Form(None),
+    external_id: Optional[str] = Form(None),
 ) -> CreateDataResponse:
     """Create a new data entry for the given owner_user_id.
 
@@ -322,7 +323,10 @@ async def _create_data_impl(
                 "size_bytes": len(file_content),
             },
         ) as span_ctx:
-            data_id, version = storage.create_data(
+            resolved_org = (org_id or "").strip() or None
+            resolved_project = (project_id or "").strip() or None
+            resolved_external = (external_id or "").strip() or None
+            create_kwargs = dict(
                 content=file_content,
                 content_type=content_type,
                 user=owner,
@@ -337,11 +341,19 @@ async def _create_data_impl(
                 mime_type=mime_type,
                 is_downloaded=flag_is_downloaded,
                 owner=data_owner,
-                org_id=(org_id or "").strip() or None,
-                project_id=(project_id or "").strip() or None,
+                org_id=resolved_org,
+                project_id=resolved_project,
+                external_id=resolved_external,
             )
+            if resolved_external:
+                data_id, version, created, updated = storage.create_or_upsert_data(**create_kwargs)
+            else:
+                data_id, version = storage.create_data(**create_kwargs)
+                created, updated = True, False
             span_ctx["attributes"]["data_id"] = data_id
             span_ctx["attributes"]["version"] = version
+            span_ctx["attributes"]["created"] = created
+            span_ctx["attributes"]["updated"] = updated
 
         _data_uploads_counter.add(1, {"user_id": owner, "content_type": content_type})
 
@@ -384,10 +396,13 @@ async def _create_data_impl(
                     is_downloaded=flag_is_downloaded,
                 )
 
+        msg = "Data updated successfully" if updated else "Data created successfully"
         return CreateDataResponse(
             data_id=data_id,
             version=version,
-            message="Data created successfully",
+            message=msg,
+            created=created,
+            updated=updated,
         )
     except HTTPException:
         raise
@@ -433,12 +448,19 @@ async def create_data(
     device_id: Optional[str] = Form(None),
     org_id: Optional[str] = Form(None, description="Optional org scope for this data item"),
     project_id: Optional[str] = Form(None, description="Optional project scope for this data item"),
+    external_id: Optional[str] = Form(
+        None,
+        description="Host/upstream object id for idempotent upsert (unique per project or owner).",
+    ),
 ):
     """Create a new data entry. Owner is taken from form field ``owner_user_id``.
 
     When the client sends a user ID (e.g. UI upload with current user), pass it as
     ``owner_user_id``; it is written to metadata and memory. Alternatively use
     ``POST /api/v1/users/{user_id}/data`` so the user ID is in the path (same behavior).
+
+    When ``external_id`` is set, a second upload with the same id updates the existing
+    ``data_id`` instead of creating a duplicate.
     """
     owner = (owner_user_id or "").strip() or config.DEFAULT_USER_ID
     return await _create_data_impl(
@@ -474,6 +496,7 @@ async def create_data(
         device_id=device_id,
         org_id=org_id,
         project_id=project_id,
+        external_id=external_id,
     )
 
 
