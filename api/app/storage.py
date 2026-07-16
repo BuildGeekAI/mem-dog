@@ -74,6 +74,44 @@ _ANALYSIS_TEMPLATES_PREFIX = "_analysis_templates/"
 # Blob path prefix for agent configs (stored in prompts store).
 _AGENT_CONFIGS_PREFIX = "_agent_configs/"
 
+# Valid AIEngineType values for persistence (AISignature / Embedding / Viewpoint).
+_VALID_STORAGE_ENGINES: frozenset[str] = frozenset(e.value for e in AIEngineType)
+
+# Provider aliases and internal labels → AIEngineType.
+_STORAGE_ENGINE_ALIASES: dict[str, str] = {
+    "google": "gemini",
+    "vertex_ai": "gemini",
+    "vertex": "gemini",
+    "local": "ollama",
+    "ollama_local": "ollama",
+    "ollama_cloud": "ollama",
+    "model_server": "ollama",
+}
+
+
+def _normalize_storage_engine(engine_type: str) -> str:
+    """Map provider aliases and bare model names to a valid ``AIEngineType`` value.
+
+  Used when persisting ``AISignature`` on embeddings and viewpoints so clients
+  that pass LiteLLM provider strings (``google/...``) or model-server bare
+  names (``llama3.2:1b``) do not trigger validation errors.
+    """
+    key = (engine_type or "").strip().lower()
+    if not key:
+        return AIEngineType.OLLAMA.value
+    if key in _VALID_STORAGE_ENGINES:
+        return key
+    if key in _STORAGE_ENGINE_ALIASES:
+        return _STORAGE_ENGINE_ALIASES[key]
+    if "/" in key:
+        provider = key.split("/", 1)[0]
+        if provider in _STORAGE_ENGINE_ALIASES:
+            return _STORAGE_ENGINE_ALIASES[provider]
+        if provider in _VALID_STORAGE_ENGINES:
+            return provider
+    # Bare model names (e.g. MODEL_SERVER_MODEL) — treat as local Ollama inference.
+    return AIEngineType.OLLAMA.value
+
 # Fixed subdirectory names used by the local filesystem backend.
 _LOCAL_SUBDIRS = {
     "raw": "raw",
@@ -3218,9 +3256,7 @@ class BaseStorage(ABC):
 
         try:
             emb_tokens = sum(len(c.split()) for c in chunk_texts)
-            storage_engine_label = (
-                "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
-            )
+            storage_engine_label = _normalize_storage_engine(engine_type)
             self.record_token_usage(TokenUsageRecord(
                 user_id=owner,
                 prompt_tokens=emb_tokens,
@@ -3252,9 +3288,7 @@ class BaseStorage(ABC):
         now = datetime.utcnow().isoformat() + "Z"
         # Map internal engine types to AIEngineType enum values for storage.
         # MODEL_SERVER_URL resolves as "local"; map to a valid AIEngineType.
-        storage_engine = (
-            "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
-        )
+        storage_engine = _normalize_storage_engine(engine_type)
         sig = AISignature(
             ai_engine=storage_engine,
             model_name=model,
@@ -3804,9 +3838,7 @@ class BaseStorage(ABC):
         now = datetime.utcnow().isoformat() + "Z"
         # MODEL_SERVER_URL resolves as "local"; map to a valid AIEngineType for
         # persistence (same pattern as embedding storage_engine normalization).
-        storage_engine = (
-            "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
-        )
+        storage_engine = _normalize_storage_engine(engine_type)
         sig = AISignature(
             ai_engine=storage_engine,
             model_name=model,
@@ -3900,9 +3932,7 @@ class BaseStorage(ABC):
         })
 
         now = datetime.utcnow().isoformat() + "Z"
-        storage_engine = (
-            "ollama" if engine_type in ("local", "ollama_local", "ollama_cloud") else engine_type
-        )
+        storage_engine = _normalize_storage_engine(engine_type)
         viewpoint.output_content = output_text
         viewpoint.version += 1
         viewpoint.updated_at = now
