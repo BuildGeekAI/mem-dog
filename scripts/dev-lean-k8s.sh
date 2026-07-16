@@ -16,6 +16,8 @@
 #   ./scripts/dev-lean-k8s.sh status
 #   ./scripts/dev-lean-k8s.sh logs [deployment]
 #   ./scripts/dev-lean-k8s.sh forward [core|full]
+#   ./scripts/dev-lean-k8s.sh forward-dev [core|full]   # API/services only (no UI :3000)
+#   ./scripts/dev-lean-k8s-ui-dev.sh [core|full] [--no-build]
 
 set -euo pipefail
 
@@ -310,6 +312,50 @@ stop_forwards() {
   fi
 }
 
+start_forwards_dev() {
+  local profile="${1:-$(load_profile)}"
+  stop_forwards
+  : > "$PID_FILE"
+
+  forward() {
+    local ns="$1" svc="$2" local_port="$3" remote_port="${4:-$3}"
+    kubectl -n "$ns" port-forward "svc/$svc" "${local_port}:${remote_port}" \
+      >/dev/null 2>&1 &
+    echo "$!" >> "$PID_FILE"
+  }
+
+  forward mem-dog api 8080 8080
+  forward webhook-gateway webhook-gateway 8070 8080
+  forward mem-dog mcp-server 8091 8080
+  forward neo4j neo4j 7474 7474
+
+  echo "==> Port-forwards (background, dev UI mode) profile=${profile}:"
+  echo "    Local UI    http://localhost:${UI_DEV_PORT:-3001} (npm run dev)"
+  echo "    API         http://localhost:8080"
+  echo "    Gateway     http://localhost:8070"
+  echo "    MCP SSE     http://localhost:8091/mcp/sse"
+  echo "    Neo4j       http://localhost:7474"
+
+  if [[ "$profile" == "full" ]]; then
+    forward webhook-pipeline webhook-agent 8090 8080
+    forward webhook-pipeline webhook-receiver 8092 8080
+    forward nango nango-server 3003 3003
+    forward supabase supabase-kong 8000 8000
+    forward supabase supabase-studio 54323 3000
+    forward webhook-gateway openclaw-node 18789 18789
+    echo "    ADK agent   http://localhost:8090"
+    echo "    Receiver    http://localhost:8092"
+    echo "    Nango       http://localhost:3003"
+    echo "    Supabase    http://localhost:8000"
+    echo "    Studio      http://localhost:54323"
+    echo "    OpenClaw    http://localhost:18789"
+  else
+    forward webhook-pipeline webhook-processor 8090 8080
+    echo "    ADK agent   http://localhost:8090"
+  fi
+  echo "    Host Ollama ${HOST_OLLAMA_URL}"
+}
+
 start_forwards() {
   local profile="${1:-$(load_profile)}"
   stop_forwards
@@ -433,12 +479,19 @@ case "$cmd" in
   forward)
     start_forwards "${1:-$(load_profile)}"
     ;;
+  forward-dev)
+    start_forwards_dev "${1:-$(load_profile)}"
+    ;;
+  stop-forwards)
+    stop_forwards
+    echo "==> Port-forwards stopped."
+    ;;
   build)
     build_images "${1:-core}"
     ;;
   *)
     echo "Unknown command: $cmd" >&2
-    echo "Usage: $0 {up|down|status|logs|forward|build} [core|full] [args...]" >&2
+    echo "Usage: $0 {up|down|status|logs|forward|forward-dev|stop-forwards|build} [core|full] [args...]" >&2
     exit 1
     ;;
 esac
