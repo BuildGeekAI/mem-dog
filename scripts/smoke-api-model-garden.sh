@@ -53,7 +53,7 @@ check() {
   local path="$2"
   local code
   code=$(curl -s -o /tmp/smoke_mg_body -w '%{http_code}' -X "$method" \
-    "${CURL_EXTRA[@]}" --max-time 30 "$API_URL$path" 2>/dev/null || echo "000")
+    ${CURL_EXTRA[@]+"${CURL_EXTRA[@]}"} --max-time 30 "$API_URL$path" 2>/dev/null || echo "000")
   if [ "$code" = "200" ] || [ "$code" = "201" ] || [ "$code" = "204" ]; then
     echo "  OK  $method $path → $code"
     return 0
