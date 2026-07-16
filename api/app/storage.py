@@ -4407,16 +4407,18 @@ class BaseStorage(ABC):
             expiry_date = datetime.utcnow() + timedelta(days=key_create.expires_in_days)
             expires_at = expiry_date.isoformat() + "Z"
         
-        # Add to credentials
-        credentials.api_keys.append({
+        # Add to credentials (omit null expires_at for cleaner JSON)
+        key_rec: Dict[str, Any] = {
             "key_id": key_id,
             "key_hash": key_hash,
             "name": key_create.name,
             "created_at": now,
-            "expires_at": expires_at
-        })
+        }
+        if expires_at is not None:
+            key_rec["expires_at"] = expires_at
+        credentials.api_keys.append(key_rec)
         credentials.updated_at = now
-        
+
         # Store updated credentials
         creds_path = f"users/{user_id}/credentials.json"
         self.user_store.write(
@@ -4489,12 +4491,19 @@ class BaseStorage(ABC):
         users, _ = self.list_users(limit=1000, offset=0)
         
         for user in users:
-            credentials = self.get_user_credentials(user.user_id)
+            try:
+                credentials = self.get_user_credentials(user.user_id)
+            except Exception as exc:
+                logger.warning(
+                    "validate_api_key: skip credentials for %s: %s",
+                    user.user_id, exc,
+                )
+                continue
             if not credentials:
                 continue
             
             for key in credentials.api_keys:
-                if key["key_hash"] == key_hash:
+                if key.get("key_hash") == key_hash:
                     # Check expiry
                     if key.get("expires_at"):
                         expiry = datetime.fromisoformat(key["expires_at"].rstrip("Z"))
@@ -5184,22 +5193,22 @@ class BaseStorage(ABC):
 
     _ORGS_PREFIX = "orgs/"
     _PROJECTS_PREFIX = "projects/"
-    _HOST_BINDINGS_PREFIX = "index/host_bindings/"
+    _HOST_WORKSPACES_PREFIX = "index/host_workspaces/"
 
     @staticmethod
-    def _host_binding_key(external_org_id: str, external_workspace_id: str) -> str:
+    def _host_workspace_key(external_org_id: str, external_workspace_id: str) -> str:
         def _safe(s: str) -> str:
             return re.sub(r"[^a-zA-Z0-9._-]+", "_", (s or "").strip())[:120] or "x"
 
         return f"{_safe(external_org_id)}__{_safe(external_workspace_id)}"
 
-    def host_binding_get(
+    def host_workspace_get(
         self, external_org_id: str, external_workspace_id: str
     ) -> Optional[dict]:
-        """Return stored host binding dict or None."""
+        """Return stored host workspace record or None."""
         path = (
-            self._HOST_BINDINGS_PREFIX
-            + self._host_binding_key(external_org_id, external_workspace_id)
+            self._HOST_WORKSPACES_PREFIX
+            + self._host_workspace_key(external_org_id, external_workspace_id)
             + ".json"
         )
         try:
@@ -5208,15 +5217,15 @@ class BaseStorage(ABC):
         except FileNotFoundError:
             return None
         except Exception as exc:
-            logger.warning("host_binding_get failed: %s", exc)
+            logger.warning("host_workspace_get failed: %s", exc)
             return None
 
-    def host_binding_put(self, record: dict) -> None:
-        """Persist a host binding record (idempotent key from external ids)."""
-        key = self._host_binding_key(
+    def host_workspace_put(self, record: dict) -> None:
+        """Persist a host workspace record (idempotent key from external ids)."""
+        key = self._host_workspace_key(
             record["external_org_id"], record["external_workspace_id"]
         )
-        path = self._HOST_BINDINGS_PREFIX + key + ".json"
+        path = self._HOST_WORKSPACES_PREFIX + key + ".json"
         payload = dict(record)
         payload["updated_at"] = datetime.utcnow().isoformat() + "Z"
         if "created_at" not in payload:

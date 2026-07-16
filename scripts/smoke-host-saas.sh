@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Host SaaS L0 smoke: binding → tagged ingest → project-scoped semantic (optional).
+# Host SaaS L0 smoke: workspace provision → tagged ingest → project-scoped semantic.
 #
 # Prerequisites:
 #   ./scripts/dev-lean.sh up -d
@@ -24,29 +24,29 @@ curl -sf "$BASE/ready" | head -c 200; echo
 
 EXT_ORG="smoke-org-$(date +%s)"
 EXT_WS="smoke-ws-1"
-echo "== create binding ($EXT_ORG / $EXT_WS) =="
-BIND=$(curl -sf -X POST "$BASE/api/v1/host/bindings" \
+echo "== create workspace ($EXT_ORG / $EXT_WS) =="
+WS=$(curl -sf -X POST "$BASE/api/v1/host/workspaces" \
   "${HDR[@]}" \
   -d "{\"external_org_id\":\"$EXT_ORG\",\"external_workspace_id\":\"$EXT_WS\",\"display_name\":\"Smoke WS\"}")
-echo "$BIND" | head -c 400; echo
+echo "$WS" | head -c 400; echo
 
-ORG_ID=$(python3 -c "import json,sys; print(json.load(sys.stdin)['org_id'])" <<<"$BIND")
-PROJ_ID=$(python3 -c "import json,sys; print(json.load(sys.stdin)['project_id'])" <<<"$BIND")
-USER_ID=$(python3 -c "import json,sys; print(json.load(sys.stdin)['user_id'])" <<<"$BIND")
-MD_KEY=$(python3 -c "import json,sys; print(json.load(sys.stdin).get('api_key') or '')" <<<"$BIND")
+ORG_ID=$(python3 -c "import json,sys; print(json.load(sys.stdin)['org_id'])" <<<"$WS")
+PROJ_ID=$(python3 -c "import json,sys; print(json.load(sys.stdin)['project_id'])" <<<"$WS")
+USER_ID=$(python3 -c "import json,sys; print(json.load(sys.stdin)['user_id'])" <<<"$WS")
+MD_KEY=$(python3 -c "import json,sys; print(json.load(sys.stdin).get('api_key') or '')" <<<"$WS")
 
 if [[ -z "$MD_KEY" ]]; then
   echo "ERROR: api_key missing on create" >&2
   exit 1
 fi
 
-echo "== idempotent re-bind =="
-AGAIN=$(curl -sf -X POST "$BASE/api/v1/host/bindings" \
+echo "== idempotent re-provision =="
+AGAIN=$(curl -sf -X POST "$BASE/api/v1/host/workspaces" \
   "${HDR[@]}" \
   -d "{\"external_org_id\":\"$EXT_ORG\",\"external_workspace_id\":\"$EXT_WS\"}")
 CREATED=$(python3 -c "import json,sys; print(json.load(sys.stdin)['created'])" <<<"$AGAIN")
 [[ "$CREATED" == "False" || "$CREATED" == "false" ]] || {
-  echo "ERROR: expected created=false on rebind, got $CREATED" >&2
+  echo "ERROR: expected created=false on re-provision, got $CREATED" >&2
   exit 1
 }
 
@@ -87,7 +87,7 @@ SEM=$(curl -sf -X POST "$BASE/api/v1/ai/query/semantic" \
 if [[ -n "$SEM" ]]; then
   echo "$SEM" | head -c 500; echo
 else
-  echo "(skip semantic — AI/embed unavailable; binding + ingest OK)"
+  echo "(skip semantic — AI/embed unavailable; workspace + ingest OK)"
 fi
 
 echo "OK host-saas smoke: org=$ORG_ID project=$PROJ_ID user=$USER_ID data=$DATA_ID"

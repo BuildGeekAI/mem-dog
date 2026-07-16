@@ -1,6 +1,6 @@
 # Plan: Host SaaS embedding contracts
 
-**Status:** Phase A in progress (binding API + project-scoped search + host-saas.md)  
+**Status:** Phase A in progress (workspace API + project-scoped search + host-saas.md)  
 **Owner:** mem-dog platform  
 **Companions:** [Document parsing upgrade](document-parsing-upgrade.md), [Scale to ~1k workspaces](scale-1k-workspaces.md) (capacity / SRE)
 
@@ -40,7 +40,7 @@ This plan makes mem-dog a reliable **multi-host memory platform**, not a single-
 
 | ID | Gap | mem-dog deliverable |
 |----|-----|---------------------|
-| G1 | Host tenant → memory workspace mapping | **Host binding** API or documented provision flow: external ids → `org_*` / `proj_*` / `user_id` + one-time `md_*` |
+| G1 | Host tenant → memory workspace mapping | **Host workspace** API or documented provision flow: external ids → `org_*` / `proj_*` / `user_id` + one-time `md_*` |
 | G2 | Host-driven OAuth without rebuilding Nango | Stable **integrations** APIs: authorize URL, list/delete connections, credential proxy |
 | G3 | No shared ingest conventions | **Canonical tags + metadata** for connectors and host domain events |
 | G4 | Re-sync creates duplicates | **`external_id` upsert** per project (preserve `data_id` when possible) |
@@ -127,10 +127,10 @@ Hosts may add product-specific tags; document reserved prefixes in `host-saas.md
 - Citations: `data_id`, snippet, score; optional `page` / `section_path` after Docling work
 - Empty project → `200` with empty hits (soft dependency)
 
-### Host binding (G1)
+### Host binding (G1) → workspace provision
 
 ```
-POST /api/v1/host/bindings
+POST /api/v1/host/workspaces
 Authorization: Bearer <platform API_KEY>
 
 {
@@ -152,7 +152,7 @@ If a dedicated route ships later, ship an official SDK/script that performs the 
 
 1. Author `docs/integrations/host-saas.md` (Connect via Nango → proxy → `/data`|/ingest` → search).
 2. Publish tagging conventions + OpenAPI examples.
-3. Host binding endpoint **or** official provision helper (TS + Python).
+3. Host workspace provision endpoint **or** official provision helper (TS + Python).
 4. Project isolation tests on semantic/chat.
 5. Document health/readiness for host circuit breakers.
 
@@ -227,7 +227,7 @@ Ship **before** meaningful multi-tenant volume (do not wait for a second host). 
 #### F4 — API stability & clients (G16)
 
 - Publish **host compatibility policy** in `host-saas.md` (what may change in `/api/v1` vs requires `/api/v2`).
-- Extend TS + Python SDKs: `createHostBinding`, `upsertData`, `semanticSearch`, `rotateApiKey`, `deleteWorkspace` (names indicative).
+- Extend TS + Python SDKs: `createHostWorkspace`, `upsertData`, `semanticSearch`, `rotateApiKey`, `deleteWorkspace` (names indicative).
 - OpenAPI examples tagged `host-saas` for codegen.
 
 #### F5 — Key rotation (G17)
@@ -412,7 +412,7 @@ Add to delivery (not optional fluff):
 
 ## Success criteria
 
-- [x] `host-saas.md` + binding happy path in-repo
+- [x] `host-saas.md` + workspace provision happy path in-repo
 - [x] Cross-project retrieval isolation covered by tests
 - [ ] `external_id` upsert on `/data` and `/ingest`
 - [ ] Host can complete file or Notion path → search without mem-dog UI
@@ -420,7 +420,7 @@ Add to delivery (not optional fluff):
 - [ ] Citation payload documented for host grounded generation
 - [ ] G1–G9 closed or deferred with owners; G10–G12 on a dated backlog
 - [ ] **Compose `minimal` (+ optional `nango`) profiles documented and smoke-scripted**
-- [x] **L0 verification matrix passes on a laptop without full `docker compose up`** (binding + ingest via `smoke-host-saas.sh`; semantic when AI configured)
+- [x] **L0 verification matrix passes on a laptop without full `docker compose up`** (workspace + ingest via `smoke-host-saas.sh`; semantic when AI configured)
 - [ ] **G13–G17 (Phase F) scheduled or done before multi-host production** — lifecycle, quotas, request ids / error envelope, SDK helpers, key rotation
 - [ ] Capacity path for ~1k workspaces tracked in [scale-1k-workspaces.md](scale-1k-workspaces.md) (quotas before raising KEDA max)
 
@@ -429,7 +429,7 @@ Add to delivery (not optional fluff):
 ## Suggested tickets
 
 1. `docs`: Host SaaS guide + tagging contract  
-2. `api`: Host binding helper (endpoint or SDK script)  
+2. `api`: Host workspace provision helper (endpoint or SDK script)  
 3. `api`: Project enforcement on semantic/chat + isolation tests  
 4. `api`: `external_id` upsert  
 5. `integrations`: Service-key auth audit (oauth / proxy / webhooks)  
@@ -443,7 +443,7 @@ Add to delivery (not optional fluff):
 13. `api`: Project/org purge + export job (G13)  
 14. `api`: Per-org/project quotas + `429` envelope (G14)  
 15. `api`: `X-Request-Id` / structured errors (G15)  
-16. `docs`+`clients`: Host compatibility policy + SDK bind/upsert/retrieve/rotate (G16)  
+16. `docs`+`clients`: Host compatibility policy + SDK provision/upsert/retrieve/rotate (G16)  
 17. `api`: API key rotate / revoke without rebind (G17)  
 
 ---

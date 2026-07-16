@@ -21,17 +21,17 @@ This guide is the Phase A contract. Full roadmap: [`docs/plans/host-saas-embeddi
 ## Happy path
 
 ```text
-1. Host → POST /api/v1/host/bindings   (platform API_KEY)
+1. Host → POST /api/v1/host/workspaces   (platform API_KEY)
 2. Host stores { org_id, project_id, user_id, api_key } server-side
-3. Host → POST /api/v1/data            (md_* key, tags + project_id)
-4. Host → POST /api/v1/ai/embeddings   (optional; or webhook enrich)
-5. Host → POST /api/v1/ai/query/semantic  { project_id, user_id, query }
+3. Host → POST /api/v1/data              (md_* key, tags + project_id)
+4. Host → POST /api/v1/ai/embeddings     (optional; or webhook enrich)
+5. Host → POST /api/v1/ai/query/semantic { project_id, user_id, query }
 ```
 
-### 1. Provision a workspace (binding)
+### 1. Provision a workspace
 
 ```bash
-curl -s -X POST "$MEMDOG_BASE_URL/api/v1/host/bindings" \
+curl -s -X POST "$MEMDOG_BASE_URL/api/v1/host/workspaces" \
   -H "x-api-key: $PLATFORM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -61,7 +61,7 @@ Idempotent: same external ids → same workspace, `created=false`, `api_key=null
 Lookup:
 
 ```bash
-curl -s "$MEMDOG_BASE_URL/api/v1/host/bindings?\
+curl -s "$MEMDOG_BASE_URL/api/v1/host/workspaces?\
 external_org_id=acme-account-1&external_workspace_id=acme-site-42" \
   -H "x-api-key: $PLATFORM_API_KEY"
 ```
@@ -80,7 +80,7 @@ curl -s -X POST "$MEMDOG_BASE_URL/api/v1/data" \
   -F "tags=source:host,tenant:acme-site-42,event:note"
 ```
 
-When `owner_user_id` is the binding’s service user, omitted `project_id` /
+When `owner_user_id` is the workspace service user, omitted `project_id` /
 `org_id` fall back to that user’s defaults.
 
 ### 3. Project-scoped semantic search
@@ -119,10 +119,10 @@ Hosts may add product-specific tags outside these prefixes.
 
 | Key | Header | Use |
 |-----|--------|-----|
-| Platform `API_KEY` | `x-api-key` | `POST/GET /api/v1/host/bindings` only |
+| Platform `API_KEY` | `x-api-key` | `POST/GET /api/v1/host/workspaces` only |
 | Workspace `md_*` | `x-api-key` | Data, embeddings, search, integrations |
 
-Local lean often runs with no `API_KEY` (open). Production must set `API_KEY` so bindings stay platform-gated.
+Local lean often runs with no `API_KEY` (open). Production must set `API_KEY` so workspace provision stays platform-gated.
 
 ## Health for host circuit breakers
 
@@ -146,7 +146,7 @@ Hosts should treat memory as optional: timeout or empty hits → degrade feature
 
 ```bash
 ./scripts/dev-lean.sh up -d
-# optional: export API_KEY=dev-platform-key  # if you want binding auth
+# optional: export API_KEY=dev-platform-key  # if you want provision auth
 
 ./scripts/smoke-host-saas.sh
 ```
@@ -159,7 +159,7 @@ cd api && pytest tests/test_host_saas.py -v
 
 ## Compatibility policy (preview)
 
-- `/api/v1/host/*` and `project_id` on semantic/chat are additive.
+- `/api/v1/host/workspaces` and `project_id` on semantic/chat are additive.
 - Breaking changes require `/api/v2` or a dated deprecation notice in this doc.
 - Standalone mem-dog UI is unchanged; Host SaaS is an embed contract on top.
 

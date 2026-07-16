@@ -243,7 +243,7 @@ Do **not** attempt full 1k soak on a 16GB laptop; use staging GKE (or equivalent
 - [ ] Search p95 &lt; 800 ms on staging corpus ≥5M rows with project filter (C3)
 - [ ] Per-org ingest + parse concurrency enforced (C4 / G14)
 - [ ] Embed/parse status + backpressure under provider failure (C5)
-- [ ] Graphiti default-off for host bindings unless tier enabled (C6)
+- [ ] Graphiti default-off for host-provisioned workspaces unless tier enabled (C6)
 - [ ] Metrics + alerts + runbooks (C9, C12)
 - [ ] Soak report for target ingest/search mix ≥2 hours (C8)
 - [ ] Host Phase F (G13–G17) marked done or blocking release
