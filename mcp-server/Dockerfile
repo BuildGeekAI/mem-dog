@@ -7,7 +7,7 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1
 
 # Install the client SDK (copied from repo root by docker build context)
-COPY client/ /tmp/client/
+COPY clients/python/ /tmp/client/
 RUN pip install --no-cache-dir /tmp/client/ && rm -rf /tmp/client/
 
 # Install MCP server dependencies

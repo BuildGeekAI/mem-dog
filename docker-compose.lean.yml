@@ -1,0 +1,105 @@
+# Overlay: lean local stack for laptops (esp. ≤16GB RAM).
+#
+# Use for ingest, document enrich, embeddings, UI, MCP, and Graphiti without
+# the full marketing stack. Do NOT start ollama-* with this overlay — they
+# fight Postgres + webhook-processor for RAM. Use host Ollama (Metal GPU on
+# Apple Silicon) or cloud keys.
+#
+# Document parser: default DOCUMENT_PARSER=pypdf (light). Docling PDF extract
+# is opt-in — set DOCUMENT_PARSER=docling (needs ~2–3 Gi processor headroom).
+# DOCUMENT_OCR_ENABLED / DOCUMENT_HARD_PARSER are Phase 3 stubs (no-ops today).
+#
+# Usage:
+#   ./scripts/dev-lean.sh up
+#   # or:
+#   docker compose -f docker-compose.yml -f docker-compose.lean.yml \
+#     up db redis neo4j api ui mcp-server webhook-gateway webhook-processor
+#   # Docling PDF path:
+#   DOCUMENT_PARSER=docling ./scripts/dev-lean.sh up -d webhook-processor
+#
+# Prerequisites:
+#   1. Docker Desktop → Resources → Memory ≥ 10 GB (8 GB is tight; 10–12 GB
+#      recommended if you opt into Docling)
+#   2. Cloud AI key in api/.env (recommended on 16GB — skip local Ollama):
+#        cp api/.env.example api/.env
+#        # then set OLLAMA_CLOUD_API_KEY=...  (and/or SYSTEM_GEMINI_API_KEY=...)
+#      Shell exports still work as overrides when set.
+
+services:
+  # Temporal knowledge graph (Graphiti). Cap RAM — lean omits in-cluster Ollama.
+  neo4j:
+    mem_limit: 1536m
+    cpus: "1.0"
+
+  api:
+    # Do NOT mirror secrets as empty environment: entries — those override env_file.
+    # NEO4J_* inherit from base compose (bolt://neo4j:7687).
+    env_file:
+      - path: ./api/.env
+        required: false
+    environment:
+      - OLLAMA_TIER=false
+      # Host Ollama (outside Docker) for embeddings + chat on lean 16GB boxes.
+      # Override or clear these if you use cloud Gemini instead.
+      - OLLAMA_LOCAL_API_BASE=${OLLAMA_LOCAL_API_BASE:-http://host.docker.internal:11434}
+      - MODEL_SERVER_URL=${MODEL_SERVER_URL:-http://host.docker.internal:11434}
+      - MODEL_SERVER_URL_SMALL=${MODEL_SERVER_URL_SMALL:-http://host.docker.internal:11434}
+      - MODEL_SERVER_URL_MEDIUM=${MODEL_SERVER_URL_MEDIUM:-http://host.docker.internal:11434}
+      - MODEL_SERVER_URL_LARGE=${MODEL_SERVER_URL_LARGE:-http://host.docker.internal:11434}
+      - MODEL_SERVER_MODEL=${MODEL_SERVER_MODEL:-llama3.2:1b}
+    mem_limit: 1g
+    cpus: "1.0"
+
+  # Next.js UI — production image is light at runtime; keep a tight cap on 16GB.
+  ui:
+    environment:
+      - API_URL=http://api:8080
+      - CHAT_API_URL=http://api:8080
+    mem_limit: 768m
+    cpus: "1.0"
+
+  # FastMCP SSE proxy — thin Python process talking to api.
+  mcp-server:
+    mem_limit: 256m
+    cpus: "0.5"
+
+  db:
+    mem_limit: 1536m
+    cpus: "1.0"
+
+  redis:
+    mem_limit: 128m
+    cpus: "0.25"
+
+  webhook-gateway:
+    env_file:
+      - path: ./api/.env
+        required: false
+    mem_limit: 512m
+    cpus: "0.5"
+
+  # 3 Gi headroom covers enrich + optional Docling PDF peaks. Default parser is
+  # pypdf; opt into Docling with DOCUMENT_PARSER=docling.
+  webhook-processor:
+    env_file:
+      - path: ./api/.env
+        required: false
+    environment:
+      - LOCAL_DEV=true
+      - MEM_DOG_API_URL=http://api:8080
+      - OLLAMA_TIER=false
+      # Opt-in: DOCUMENT_PARSER=docling (PDF-only via docling-slim). Default pypdf.
+      - DOCUMENT_PARSER=${DOCUMENT_PARSER:-pypdf}
+      # Phase 3 stubs — accepted but not wired until OCR / hard-doc router.
+      - DOCUMENT_OCR_ENABLED=${DOCUMENT_OCR_ENABLED:-false}
+      - DOCUMENT_HARD_PARSER=${DOCUMENT_HARD_PARSER:-none}
+      - GOOGLE_GENAI_USE_VERTEXAI=FALSE
+      # Host Ollama (Metal GPU) — never point at ollama-* (not started in lean)
+      - MODEL_SERVER_URL=${MODEL_SERVER_URL:-http://host.docker.internal:11434}
+      - MODEL_SERVER_URL_SMALL=${MODEL_SERVER_URL_SMALL:-http://host.docker.internal:11434}
+      - MODEL_SERVER_URL_MEDIUM=${MODEL_SERVER_URL_MEDIUM:-http://host.docker.internal:11434}
+      - MODEL_SERVER_URL_LARGE=${MODEL_SERVER_URL_LARGE:-http://host.docker.internal:11434}
+      - MODEL_SERVER_MODEL=${MODEL_SERVER_MODEL:-llama3.2:1b}
+      - OLLAMA_LOCAL_API_BASE=${OLLAMA_LOCAL_API_BASE:-http://host.docker.internal:11434}
+    mem_limit: 3g
+    cpus: "2.0"
