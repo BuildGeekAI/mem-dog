@@ -1,10 +1,13 @@
 """Tests for search mode models and backward compatibility."""
 
+import inspect
+
 import pytest
 from app.routers.ai_query import (
     SearchMode, RerankMethod, RerankConfig, TemporalFilter,
     SemanticQueryRequest, SemanticMatchChunk, ChatRequest,
 )
+from app.storage import RedisStorage, SupabaseStorage
 
 
 class TestSearchModeEnum:
@@ -96,3 +99,27 @@ class TestChatRequest:
         )
         assert req.search_mode == SearchMode.hybrid
         assert req.vector_weight == 0.7
+
+
+class TestBackendSearchAcceptsProjectId:
+    """ai_query always forwards project_id; Redis/Supabase must accept the kwarg."""
+
+    @pytest.mark.parametrize("cls", [RedisStorage, SupabaseStorage])
+    @pytest.mark.parametrize("method", ["fts_search", "hybrid_search", "similarity_search"])
+    def test_signature_has_project_id(self, cls, method):
+        sig = inspect.signature(getattr(cls, method))
+        assert "project_id" in sig.parameters
+
+    def test_redis_fts_and_hybrid_accept_project_id_kwarg(self, monkeypatch):
+        """Call paths used by ai_query must not TypeError when project_id is passed."""
+        storage = RedisStorage.__new__(RedisStorage)
+        monkeypatch.setattr(
+            storage, "similarity_search",
+            lambda *a, **k: [{"embedding_id": "e1", "data_id": "d1", "chunk_text": "t", "similarity": 0.9}],
+        )
+        assert storage.fts_search("q", limit=3, user_id="u1", project_id="proj_x") == []
+        hits = storage.hybrid_search(
+            [1.0], "q", limit=3, user_id="u1", project_id="proj_x",
+        )
+        assert len(hits) == 1
+        assert hits[0]["search_type"] == "vector"

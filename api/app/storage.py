@@ -6102,6 +6102,7 @@ class RedisStorage(BaseStorage):
         self, query_vector: List[float], query_text: str, limit: int = 5,
         user_id: str = "", memory_id: str = "",
         vector_weight: float = 0.5, fts_weight: float = 0.5,
+        project_id: str = "",
     ) -> List[dict]:
         """Hybrid cosine + BM25 search with RRF fusion.
 
@@ -6109,7 +6110,10 @@ class RedisStorage(BaseStorage):
         similarity, fts_rank, rrf_score, search_type.
         Default implementation falls back to similarity_search with empty FTS fields.
         """
-        results = self.similarity_search(query_vector, limit=limit, user_id=user_id, memory_id=memory_id)
+        results = self.similarity_search(
+            query_vector, limit=limit, user_id=user_id, memory_id=memory_id,
+            project_id=project_id,
+        )
         return [
             {
                 "embedding_id": r.get("embedding_id", ""),
@@ -6126,6 +6130,7 @@ class RedisStorage(BaseStorage):
 
     def fts_search(
         self, query_text: str, limit: int = 5, user_id: str = "", memory_id: str = "",
+        project_id: str = "",
     ) -> List[dict]:
         """BM25 full-text search (no embedding needed).
 
@@ -6858,6 +6863,7 @@ class SupabaseStorage(BaseStorage):
 
     def fts_search(
         self, query_text: str, limit: int = 5, user_id: str = "", memory_id: str = "",
+        project_id: str = "",
     ) -> List[dict]:
         """BM25 full-text search via ``match_embeddings_fts`` RPC."""
         self._check_ai_enabled()
@@ -6878,8 +6884,10 @@ class SupabaseStorage(BaseStorage):
                 rpc_params["filter_user_id"] = user_id
             if filter_data_ids is not None:
                 rpc_params["filter_data_ids"] = filter_data_ids
+            if project_id:
+                rpc_params["filter_project_id"] = project_id
             res = self._supa_client.rpc("match_embeddings_fts", rpc_params).execute()
-            return [
+            results = [
                 {
                     "embedding_id": row.get("embedding_id", ""),
                     "data_id": row.get("data_id", ""),
@@ -6889,9 +6897,13 @@ class SupabaseStorage(BaseStorage):
                     "rrf_score": None,
                     "search_type": "fts",
                     **({"page": row["page"]} if row.get("page") is not None else {}),
+                    **({"project_id": row["project_id"]} if row.get("project_id") is not None else {}),
                 }
                 for row in res.data or []
             ]
+            if project_id:
+                results = [r for r in results if r.get("project_id") == project_id]
+            return results
         except Exception as exc:
             logger.debug("fts_search RPC unavailable (%s), returning empty", exc)
             return []
