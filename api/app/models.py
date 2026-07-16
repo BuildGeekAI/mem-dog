@@ -1570,6 +1570,36 @@ class HostWorkspaceResponse(BaseModel):
     display_name: Optional[str] = None
 
 
+class HostWorkspacePurgeResponse(BaseModel):
+    """Result of sync workspace purge (Phase F1 L0)."""
+    external_org_id: str
+    external_workspace_id: str
+    org_id: Optional[str] = None
+    project_id: Optional[str] = None
+    user_id: Optional[str] = None
+    deleted_data_count: int = 0
+    deleted_memories_count: int = 0
+    deleted_api_keys_count: int = 0
+    deleted_connections_count: int = 0
+    purged: bool = True
+    already_gone: bool = False
+
+
+class HostWorkspaceExportResponse(BaseModel):
+    """Lightweight offboarding manifest (no full archive in L0)."""
+    exported_at: str
+    external_org_id: str
+    external_workspace_id: str
+    org_id: str
+    project_id: str
+    user_id: str
+    display_name: Optional[str] = None
+    data: List[Dict[str, Any]] = Field(default_factory=list)
+    memories: List[Dict[str, Any]] = Field(default_factory=list)
+    data_count: int = 0
+    memory_count: int = 0
+
+
 # =============================================================================
 # Session Management Models (DEPRECATED -- use Memory with type=session)
 # =============================================================================

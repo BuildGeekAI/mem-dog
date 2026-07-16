@@ -162,4 +162,27 @@ else
   echo "(skip semantic — AI/embed unavailable; workspace + ingest OK)"
 fi
 
-echo "OK host-saas smoke: org=$ORG_ID project=$PROJ_ID user=$USER_ID data=$DATA_ID"
+echo "== export then purge workspace =="
+EXP=$(curl -sf "$BASE/api/v1/host/workspaces/export?\
+external_org_id=$EXT_ORG&external_workspace_id=$EXT_WS" "${HDR[@]}")
+echo "$EXP" | head -c 300; echo
+DC=$(python3 -c "import json,sys; print(json.load(sys.stdin).get('data_count',0))" <<<"$EXP")
+[[ "$DC" -ge 1 ]] || { echo "ERROR: export data_count expected >=1 got $DC" >&2; exit 1; }
+
+PURGE=$(curl -sf -X DELETE "$BASE/api/v1/host/workspaces?\
+external_org_id=$EXT_ORG&external_workspace_id=$EXT_WS" "${HDR[@]}")
+echo "$PURGE" | head -c 300; echo
+python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('purged') is True; assert d.get('already_gone') is False" <<<"$PURGE"
+
+AGAIN=$(curl -sf -X DELETE "$BASE/api/v1/host/workspaces?\
+external_org_id=$EXT_ORG&external_workspace_id=$EXT_WS" "${HDR[@]}")
+python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('already_gone') is True" <<<"$AGAIN"
+
+LOOKUP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/api/v1/host/workspaces?\
+external_org_id=$EXT_ORG&external_workspace_id=$EXT_WS" "${HDR[@]}" || true)
+[[ "$LOOKUP_CODE" == "404" ]] || {
+  echo "ERROR: expected 404 after purge, got $LOOKUP_CODE" >&2
+  exit 1
+}
+
+echo "OK host-saas smoke: org=$ORG_ID project=$PROJ_ID user=$USER_ID data=$DATA_ID (purged)"

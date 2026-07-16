@@ -19,6 +19,8 @@ from app.models import (
     HostApiKeyRotateRequest,
     HostApiKeyRotateResponse,
     HostWorkspaceCreate,
+    HostWorkspaceExportResponse,
+    HostWorkspacePurgeResponse,
     HostWorkspaceResponse,
     OrganizationCreate,
     ProjectCreate,
@@ -248,6 +250,131 @@ async def get_host_workspace(
         external_workspace_id=external_workspace_id,
         display_name=existing.get("display_name"),
     )
+
+
+async def _purge_nango_connections(user_id: str) -> int:
+    """Best-effort delete of Nango connections for a workspace service user."""
+    try:
+        from app import nango_client
+    except Exception:
+        return 0
+    deleted = 0
+    try:
+        conns = await nango_client.list_connections(end_user_id=user_id)
+    except Exception as exc:
+        logger.warning("purge: list Nango connections failed: %s", exc)
+        return 0
+    for conn in conns or []:
+        conn_id = str(conn.get("id") or conn.get("connection_id") or "")
+        provider = conn.get("provider_config_key") or conn.get("provider")
+        if not conn_id:
+            continue
+        try:
+            await nango_client.delete_connection(conn_id, provider_config_key=provider)
+            deleted += 1
+        except Exception as exc:
+            logger.warning("purge: delete Nango connection %s failed: %s", conn_id, exc)
+    return deleted
+
+
+@router.delete("/workspaces", response_model=HostWorkspacePurgeResponse)
+async def purge_host_workspace(
+    request: Request,
+    external_org_id: str = Query(..., min_length=1),
+    external_workspace_id: str = Query(..., min_length=1),
+    delete_connections: bool = Query(
+        False, description="Also delete Nango connections for the workspace user"
+    ),
+    delete_service_user: bool = Query(
+        True, description="Remove the dedicated service user profile after purge"
+    ),
+) -> HostWorkspacePurgeResponse:
+    """Sync purge a host workspace (L0).
+
+    Deletes data (incl. embeddings/viewpoints/parsed artifacts), memories,
+    API keys, project/org, host index, and optionally Nango connections.
+
+    Idempotent: if the workspace record is already gone, returns
+    ``already_gone=true`` with ``purged=true``.
+    """
+    _require_platform_key(request)
+    storage = get_storage()
+    existing = storage.host_workspace_get(external_org_id, external_workspace_id)
+    if not existing:
+        return HostWorkspacePurgeResponse(
+            external_org_id=external_org_id,
+            external_workspace_id=external_workspace_id,
+            purged=True,
+            already_gone=True,
+        )
+
+    deleted_connections = 0
+    if delete_connections:
+        deleted_connections = await _purge_nango_connections(existing["user_id"])
+
+    counts = storage.purge_host_workspace(
+        existing, delete_service_user=delete_service_user
+    )
+    return HostWorkspacePurgeResponse(
+        external_org_id=external_org_id,
+        external_workspace_id=external_workspace_id,
+        org_id=existing.get("org_id"),
+        project_id=existing.get("project_id"),
+        user_id=existing.get("user_id"),
+        deleted_data_count=counts.get("deleted_data_count", 0),
+        deleted_memories_count=counts.get("deleted_memories_count", 0),
+        deleted_api_keys_count=counts.get("deleted_api_keys_count", 0),
+        deleted_connections_count=deleted_connections,
+        purged=True,
+        already_gone=False,
+    )
+
+
+@router.delete(
+    "/workspaces/by-project/{project_id}",
+    response_model=HostWorkspacePurgeResponse,
+)
+async def purge_host_workspace_by_project(
+    project_id: str,
+    request: Request,
+    delete_connections: bool = Query(False),
+    delete_service_user: bool = Query(True),
+) -> HostWorkspacePurgeResponse:
+    """Purge by ``project_id`` (looks up the host workspace index)."""
+    _require_platform_key(request)
+    storage = get_storage()
+    existing = storage.host_workspace_find_by_project_id(project_id)
+    if not existing:
+        return HostWorkspacePurgeResponse(
+            external_org_id="",
+            external_workspace_id="",
+            project_id=project_id,
+            purged=True,
+            already_gone=True,
+        )
+    return await purge_host_workspace(
+        request,
+        external_org_id=existing["external_org_id"],
+        external_workspace_id=existing["external_workspace_id"],
+        delete_connections=delete_connections,
+        delete_service_user=delete_service_user,
+    )
+
+
+@router.get("/workspaces/export", response_model=HostWorkspaceExportResponse)
+async def export_host_workspace(
+    request: Request,
+    external_org_id: str = Query(..., min_length=1),
+    external_workspace_id: str = Query(..., min_length=1),
+) -> HostWorkspaceExportResponse:
+    """Export a lightweight offboarding manifest (data + memory ids, no blobs)."""
+    _require_platform_key(request)
+    storage = get_storage()
+    existing = storage.host_workspace_get(external_org_id, external_workspace_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Host workspace not found")
+    manifest = storage.export_host_workspace_manifest(existing)
+    return HostWorkspaceExportResponse(**manifest)
 
 
 # =============================================================================

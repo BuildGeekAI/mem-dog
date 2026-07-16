@@ -192,10 +192,10 @@ Ship **before** meaningful multi-tenant volume (do not wait for a second host). 
 
 #### F1 — Workspace lifecycle (G13)
 
-- `DELETE /api/v1/host/workspaces/{project_id}` (or project delete under org) → async purge: data, embeddings, viewpoints, parsed artifacts, optional Nango connections for bound `user_id`.
-- `POST .../export` → archive (manifest + markdown/JSON) for host offboarding.
-- Status: `purge_status` / job id; idempotent re-delete.
-- Document retention: default hard-delete vs configurable soft-delete TTL.
+- ~~`DELETE /api/v1/host/workspaces/{project_id}` (or project delete under org) → async purge: data, embeddings, viewpoints, parsed artifacts, optional Nango connections for bound `user_id`.~~ (L0 **sync** purge via `DELETE /api/v1/host/workspaces` + `.../by-project/{project_id}`; async job deferred)
+- ~~`POST .../export` → archive (manifest + markdown/JSON) for host offboarding.~~ (L0 **GET** `/workspaces/export` manifest; full archive deferred)
+- Status: `purge_status` / job id; ~~idempotent re-delete.~~ (`already_gone`)
+- Document retention: default hard-delete vs configurable soft-delete TTL. (hard-delete for L0)
 
 **Local:** L0 + scripted create → ingest → delete → confirm semantic empty.
 
