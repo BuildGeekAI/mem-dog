@@ -156,6 +156,83 @@ class TestExternalIdUpsert:
         )
         assert a_id != b_id
 
+    def test_stale_index_cleared_when_metadata_missing(self, tmp_path, monkeypatch):
+        """Index pointing at a deleted data_id must be cleared before recreate."""
+        storage = self._local_storage(tmp_path, monkeypatch)
+        data_id, _, _, _ = storage.create_or_upsert_data(
+            content=b"v1",
+            content_type="text/plain",
+            user="u_host",
+            project_id="proj_x",
+            org_id="org_x",
+            external_id="stale:1",
+            exclusive_memory_ids=True,
+        )
+        storage._write_external_data_index(
+            user_id="u_host",
+            project_id="proj_x",
+            external_id="stale:1",
+            data_id=data_id,
+        )
+        monkeypatch.setattr(storage, "get_metadata", lambda *a, **k: None)
+
+        new_id, _, created, updated = storage.create_or_upsert_data(
+            content=b"v2",
+            content_type="text/plain",
+            user="u_host",
+            project_id="proj_x",
+            org_id="org_x",
+            external_id="stale:1",
+            exclusive_memory_ids=True,
+        )
+        assert created is True and updated is False
+        assert new_id != data_id
+        assert storage.find_data_by_external_id(
+            user_id="u_host", project_id="proj_x", external_id="stale:1"
+        ) == new_id
+
+    def test_stale_index_after_update_metadata_loss(self, tmp_path, monkeypatch):
+        """If update_data succeeds but metadata vanishes, clear index and recreate."""
+        storage = self._local_storage(tmp_path, monkeypatch)
+        data_id, _, _, _ = storage.create_or_upsert_data(
+            content=b"v1",
+            content_type="text/plain",
+            user="u_host",
+            project_id="proj_x",
+            org_id="org_x",
+            external_id="ghost:1",
+            exclusive_memory_ids=True,
+        )
+
+        calls = {"n": 0}
+        real_get = storage.get_metadata
+
+        def _get(did, uid=None):
+            if did == data_id:
+                calls["n"] += 1
+                if calls["n"] == 1:
+                    return real_get(did, uid)
+                return None
+            return real_get(did, uid)
+
+        monkeypatch.setattr(storage, "get_metadata", _get)
+        monkeypatch.setattr(storage, "update_data", lambda *a, **k: 2)
+
+        new_id, _, created, updated = storage.create_or_upsert_data(
+            content=b"v2",
+            content_type="text/plain",
+            user="u_host",
+            project_id="proj_x",
+            org_id="org_x",
+            external_id="ghost:1",
+            exclusive_memory_ids=True,
+        )
+        assert created is True and updated is False
+        assert new_id != data_id
+        assert storage.find_data_by_external_id(
+            user_id="u_host", project_id="proj_x", external_id="ghost:1"
+        ) == new_id
+
     def test_api_upsert_via_data_endpoint(self, client: TestClient):
         mock_storage = MagicMock()
         mock_storage.create_or_upsert_data.return_value = ("data_upsert1", 2, False, True)

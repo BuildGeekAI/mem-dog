@@ -2241,7 +2241,17 @@ class BaseStorage(ABC):
                 version = self.update_data(existing_id, content, content_type, user)
                 metadata = self.get_metadata(existing_id, user)
                 if metadata is None:
-                    data_id, version = self.create_data(**create_kwargs)
+                    # Stale index after update — clear and recreate
+                    self._delete_external_data_index(
+                        user_id=user,
+                        project_id=resolved_project_id,
+                        external_id=ext_id,
+                    )
+                    data_id, version = self.create_data(**{
+                        **create_kwargs,
+                        "org_id": resolved_org_id,
+                        "project_id": resolved_project_id,
+                    })
                     return data_id, version, True, False
 
                 if name is not None:
@@ -7077,6 +7087,8 @@ class SupabaseStorage(BaseStorage):
                 rpc_params["filter_user_id"] = user_id
             if filter_data_ids is not None:
                 rpc_params["filter_data_ids"] = filter_data_ids
+            if project_id:
+                rpc_params["filter_project_id"] = project_id
             res = self._supa_client.rpc("match_embeddings_hybrid", rpc_params).execute()
             results = [
                 {
@@ -7092,7 +7104,7 @@ class SupabaseStorage(BaseStorage):
                 }
                 for row in res.data or []
             ]
-            if project_id:
+            if project_id and any("project_id" in r for r in results):
                 results = [r for r in results if r.get("project_id") == project_id]
             return results
         except Exception as exc:
@@ -7142,7 +7154,7 @@ class SupabaseStorage(BaseStorage):
                 }
                 for row in res.data or []
             ]
-            if project_id:
+            if project_id and any("project_id" in r for r in results):
                 results = [r for r in results if r.get("project_id") == project_id]
             return results
         except Exception as exc:
