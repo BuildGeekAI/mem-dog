@@ -470,7 +470,7 @@ export default function OpenClawChat({ gatewayUrl: externalUrl, apiKey: external
       )}
 
       {/* Input bar */}
-      <div className="flex items-end gap-2 mt-3">
+      <div className="flex items-start gap-2 mt-3">
         <input
           ref={fileInputRef}
           type="file"
@@ -495,8 +495,7 @@ export default function OpenClawChat({ gatewayUrl: externalUrl, apiKey: external
             placeholder={gatewayUrl ? 'Type a message...' : 'Configure the Gateway URL first'}
             disabled={!gatewayUrl || sending}
             rows={1}
-            className="w-full px-4 py-2.5 pr-12 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none disabled:opacity-40"
-            style={{ minHeight: '2.5rem', maxHeight: '8rem' }}
+            className="w-full box-border min-h-10 max-h-32 px-4 py-2.5 pr-12 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none disabled:opacity-40"
             onInput={e => {
               const target = e.target as HTMLTextAreaElement;
               target.style.height = 'auto';
