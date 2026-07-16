@@ -527,7 +527,7 @@ export default function Home() {
               {activeTab === 'testing' && (
                 <div className="space-y-6 animate-in">
                   {/* Testing Sub-tab Toggle */}
-                  <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl max-w-lg">
+                  <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl max-w-full overflow-x-auto">
                     {([
                       { id: 'chat'       as const, label: 'Channel to Webhook',  icon: MessageSquare },
                       { id: 'upload'     as const, label: 'Data Insert',         icon: Upload        },
@@ -537,7 +537,7 @@ export default function Home() {
                       <button
                         key={tab.id}
                         onClick={() => setTestingSubTab(tab.id)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                        className={`shrink-0 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                           testingSubTab === tab.id
                             ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg'
                             : 'text-white/50 hover:text-white/70 hover:bg-white/5'
