@@ -1,6 +1,6 @@
 # Plan: Host SaaS embedding contracts
 
-**Status:** Proposed  
+**Status:** Phase A in progress (binding API + project-scoped search + host-saas.md)  
 **Owner:** mem-dog platform  
 **Companions:** [Document parsing upgrade](document-parsing-upgrade.md), [Scale to ~1k workspaces](scale-1k-workspaces.md) (capacity / SRE)
 
@@ -412,15 +412,15 @@ Add to delivery (not optional fluff):
 
 ## Success criteria
 
-- [ ] `host-saas.md` + binding happy path in-repo
-- [ ] Cross-project retrieval isolation covered by tests
+- [x] `host-saas.md` + binding happy path in-repo
+- [x] Cross-project retrieval isolation covered by tests
 - [ ] `external_id` upsert on `/data` and `/ingest`
 - [ ] Host can complete file or Notion path → search without mem-dog UI
 - [ ] Docling Phases 0–2 done or explicitly scheduled
 - [ ] Citation payload documented for host grounded generation
 - [ ] G1–G9 closed or deferred with owners; G10–G12 on a dated backlog
 - [ ] **Compose `minimal` (+ optional `nango`) profiles documented and smoke-scripted**
-- [ ] **L0 verification matrix passes on a laptop without full `docker compose up`**
+- [x] **L0 verification matrix passes on a laptop without full `docker compose up`** (binding + ingest via `smoke-host-saas.sh`; semantic when AI configured)
 - [ ] **G13–G17 (Phase F) scheduled or done before multi-host production** — lifecycle, quotas, request ids / error envelope, SDK helpers, key rotation
 - [ ] Capacity path for ~1k workspaces tracked in [scale-1k-workspaces.md](scale-1k-workspaces.md) (quotas before raising KEDA max)
 

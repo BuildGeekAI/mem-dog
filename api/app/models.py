@@ -1509,6 +1509,30 @@ class ProjectUpdate(BaseModel):
 
 
 # =============================================================================
+# Host SaaS binding models
+# =============================================================================
+
+class HostBindingCreate(BaseModel):
+    """Provision a mem-dog workspace for an external host tenant."""
+    external_org_id: str = Field(..., min_length=1, max_length=200)
+    external_workspace_id: str = Field(..., min_length=1, max_length=200)
+    display_name: Optional[str] = Field(default=None, max_length=200)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class HostBindingResponse(BaseModel):
+    """Result of host workspace provision. ``api_key`` is set only on create."""
+    org_id: str
+    project_id: str
+    user_id: str
+    api_key: Optional[str] = None
+    created: bool = True
+    external_org_id: str
+    external_workspace_id: str
+    display_name: Optional[str] = None
+
+
+# =============================================================================
 # Session Management Models (DEPRECATED -- use Memory with type=session)
 # =============================================================================
 

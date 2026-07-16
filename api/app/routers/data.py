@@ -165,6 +165,8 @@ async def _create_data_impl(
     device_memory_gb: Optional[float] = Form(None),
     device_connection_type: Optional[str] = Form(None),
     device_id: Optional[str] = Form(None),
+    org_id: Optional[str] = Form(None),
+    project_id: Optional[str] = Form(None),
 ) -> CreateDataResponse:
     """Create a new data entry for the given owner_user_id.
 
@@ -335,6 +337,8 @@ async def _create_data_impl(
                 mime_type=mime_type,
                 is_downloaded=flag_is_downloaded,
                 owner=data_owner,
+                org_id=(org_id or "").strip() or None,
+                project_id=(project_id or "").strip() or None,
             )
             span_ctx["attributes"]["data_id"] = data_id
             span_ctx["attributes"]["version"] = version
@@ -427,6 +431,8 @@ async def create_data(
     device_memory_gb: Optional[float] = Form(None),
     device_connection_type: Optional[str] = Form(None),
     device_id: Optional[str] = Form(None),
+    org_id: Optional[str] = Form(None, description="Optional org scope for this data item"),
+    project_id: Optional[str] = Form(None, description="Optional project scope for this data item"),
 ):
     """Create a new data entry. Owner is taken from form field ``owner_user_id``.
 
@@ -466,6 +472,8 @@ async def create_data(
         device_memory_gb=device_memory_gb,
         device_connection_type=device_connection_type,
         device_id=device_id,
+        org_id=org_id,
+        project_id=project_id,
     )
 
 

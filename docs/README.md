@@ -70,6 +70,7 @@
 | Document | Description |
 |----------|-------------|
 | [Integration Platform](integrations/integrations.md) | Nango architecture, OAuth2, credentials, proxy |
+| [Host SaaS](integrations/host-saas.md) | Embed mem-dog as a private memory backend (bindings, tags, project-scoped search) |
 | [86 App Guides](apps/) | Per-app setup guides (Slack, Gmail, GitHub, Jira, etc.) |
 
 ## DigiMe (OpenClaw)
