@@ -245,7 +245,11 @@ export class MemDogClient {
   async getUserByUsername(username: string) { return this.json<Record<string, unknown>>("GET", `/api/v1/users/username/${username}`); }
   async listApiKeys(userId: string) { return this.json("GET", `/api/v1/users/${userId}/api-keys`); }
   async createApiKey(userId: string, name: string) { return this.json<Record<string, unknown>>("POST", `/api/v1/users/${userId}/api-keys`, { json: { name } }); }
-  async deleteApiKey(userId: string, keyId: string) { await this.request("DELETE", `/api/v1/users/${userId}/api-keys/${keyId}`); }
+  async deleteApiKey(userId: string, keyId: string, opts: { allowEmpty?: boolean } = {}) {
+    await this.request("DELETE", `/api/v1/users/${userId}/api-keys/${keyId}`, {
+      params: { allow_empty: opts.allowEmpty === true ? "true" : undefined },
+    });
+  }
 
   // ===================== HOST SAAS =====================
 

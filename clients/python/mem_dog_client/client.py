@@ -541,10 +541,23 @@ class MemDogClient:
                 json={"name": name},
             )
 
-    def delete_api_key(self, user_id: str, key_id: str) -> httpx.Response:
-        """DELETE /api/v1/users/{user_id}/api-keys/{key_id}."""
+    def delete_api_key(
+        self,
+        user_id: str,
+        key_id: str,
+        *,
+        allow_empty: bool = False,
+    ) -> httpx.Response:
+        """DELETE /api/v1/users/{user_id}/api-keys/{key_id}.
+
+        Pass ``allow_empty=True`` to revoke the last remaining key.
+        """
+        params = {"allow_empty": "true"} if allow_empty else None
         with self._client() as c:
-            return c.delete(f"/api/v1/users/{user_id}/api-keys/{key_id}")
+            return c.delete(
+                f"/api/v1/users/{user_id}/api-keys/{key_id}",
+                params=params,
+            )
 
     def list_host_api_keys(self, *, user_id: Optional[str] = None) -> httpx.Response:
         """GET /api/v1/host/api-keys — list keys (prefix only; no raw material)."""
