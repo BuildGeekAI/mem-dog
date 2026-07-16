@@ -189,6 +189,8 @@ Send `X-Request-Id` on host → mem-dog calls (or omit to receive a generated UU
 }
 ```
 
+**Client tip:** keep reading top-level `detail` (FastAPI-compatible). The `error` object is additive. Strict schemas that reject unknown properties (`additionalProperties: false`) should allow `error` or only validate `detail`.
+
 ## Recipe: file / CSV sync (no Nango)
 
 Host SoR remains the source of truth. mem-dog stores searchable memory with upsert.
@@ -347,6 +349,7 @@ cd api && pytest tests/test_host_saas.py -v
 | Additive fields, new optional query/body params, new host routes under `/api/v1/host` | Allowed without major bump |
 | Renamed/removed required fields, auth header changes, semantic of `project_id` / `external_id` | Requires `/api/v2` **or** a dated deprecation notice in this doc (≥90 days) |
 | Error shape | `error.{code,message,details,request_id}` is stable; top-level `detail` retained for compatibility |
+| OAuth authorize without `user_id` (open/global caller) | Returns **400** (`user_id is required`) rather than FastAPI **422** validation |
 
 Stable host capabilities today: workspace provision/lookup, project-scoped semantic search, `external_id` upsert, `X-Request-Id`, structured errors, API-key create/list/rotate/revoke, workspace export/purge, env-gated quotas.
 

@@ -93,6 +93,7 @@ client = MemDogClient(
 
 ```python
 # Semantic search with 5 modes
+# limit maps to API max_results (honored server-side; older SDKs silently capped at 5)
 resp = client.semantic_search("quarterly revenue", search_mode="hybrid", reranker="rrf", limit=10)
 
 # RAG chat with citation markers
@@ -103,6 +104,9 @@ resp = client.chat("What happened last quarter?", search_mode="full", conversati
 
 # Temporal graph queries
 resp = client.query_facts(q="CEO of Acme", at="2024-06-01T00:00:00Z")
+
+# Last remaining API key requires allow_empty=True
+# client.delete_api_key(user_id, key_id, allow_empty=True)
 ```
 
 ## Framework Adapters
