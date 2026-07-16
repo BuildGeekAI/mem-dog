@@ -70,6 +70,7 @@ client = MemDogClient(
 | Memories            | `create_memory`, `list_memories`, `get_memory`, `update_memory`, `delete_memory`, `get_memory_data`, `add_data_to_memory`, `remove_data_from_memory`, `get_memory_entries`, `compress_memory` |
 | Bulk                | `bulk_delete_data`, `bulk_delete_memories`, `bulk_delete_user_data`, `bulk_delete_memory_data` |
 | Users               | `list_users`, `get_user`, `create_user`, `update_user`, `delete_user`, `get_user_by_username`, `list_api_keys`, `create_api_key`, `delete_api_key`, `dump_user_data`, `get_user_data`, `create_user_data` |
+| Host SaaS           | `create_host_workspace`, `get_host_workspace`, `purge_host_workspace`, `purge_host_workspace_by_project`, `export_host_workspace`, `list_host_api_keys`, `create_host_api_key`, `revoke_host_api_key`, `rotate_host_api_key`, `upsert_data` |
 | Organizations       | `create_organization`, `list_organizations`, `get_organization`, `update_organization`, `delete_organization`, `add_org_member`, `list_org_members`, `update_org_member`, `remove_org_member` |
 | Projects            | `create_project`, `list_projects`, `get_project`, `update_project`, `delete_project` |
 | Channels            | `create_channel_identity`, `get_channel_identity`, `update_channel_identity`, `delete_channel_identity`, `list_user_channel_identities`, `list_channels`, `get_channel`, `update_channel`, `delete_channel` |

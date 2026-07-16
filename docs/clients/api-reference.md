@@ -177,6 +177,21 @@ Complete list of all ~120 API endpoints covered by the mem-dog SDKs, organized b
 | `GET /api/v1/graph/facts` | `query_facts` |
 | `GET /api/v1/graph/facts/timeline` | `get_fact_timeline` |
 
+## Host SaaS
+
+Embed contract for host products. See [host-saas.md](../integrations/host-saas.md). Pin `mem-dog-client==0.1.1` / `@mem-dog/client@0.2.1`.
+
+| Endpoint | Python | TypeScript |
+|----------|--------|------------|
+| `POST /api/v1/host/workspaces` | `create_host_workspace` | `createHostWorkspace` |
+| `GET /api/v1/host/workspaces` | `get_host_workspace` | `getHostWorkspace` |
+| `DELETE /api/v1/host/workspaces` | `purge_host_workspace` | `purgeHostWorkspace` |
+| `DELETE /api/v1/host/workspaces/by-project/{id}` | `purge_host_workspace_by_project` | `purgeHostWorkspaceByProject` |
+| `GET /api/v1/host/workspaces/export` | `export_host_workspace` | `exportHostWorkspace` |
+| `GET/POST/DELETE /api/v1/host/api-keys` | `list/create/revoke_host_api_key` | `list/create/revokeHostApiKey` |
+| `POST /api/v1/host/api-keys/rotate` | `rotate_host_api_key` | `rotateHostApiKey` |
+| `POST /api/v1/data` + `external_id` | `upsert_data` | `upsertData` |
+
 ## Users, Organizations, Projects
 
 Standard CRUD operations for user management, organization multi-tenancy, and project scoping. See individual SDK docs for full signatures.

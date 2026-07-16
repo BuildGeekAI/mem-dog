@@ -13,3 +13,7 @@
 .dev-lean-k8s-pids
 .dev-lean-k8s-profile
 .dev-lean-k8s-ui-tag
+
+# Node / TypeScript clients
+**/node_modules/
+clients/typescript/dist/

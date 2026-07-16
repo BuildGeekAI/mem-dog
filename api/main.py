@@ -102,6 +102,14 @@ app = FastAPI(
         {"name": "Channel Identities", "description": "Correlate channel identities (channel_type + channel_unique_id) with user_id; CRUD and lookup"},
         {"name": "Channels", "description": "Per-channel metadata and config (how to communicate with each channel)"},
         {"name": "Integrations", "description": "Integration platform — 300+ providers, OAuth2/API-key connections, credential management, proactive token refresh"},
+        {
+            "name": "Host SaaS",
+            "description": (
+                "Embed contract for host products: provision workspaces, rotate "
+                "md_* keys, export/purge. Auth: platform API_KEY for provision/purge; "
+                "workspace md_* for ingest/search. Examples tagged host-saas."
+            ),
+        },
     ],
 )
 

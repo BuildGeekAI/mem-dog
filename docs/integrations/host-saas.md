@@ -338,14 +338,43 @@ Or with pytest:
 cd api && pytest tests/test_host_saas.py -v
 ```
 
-## Compatibility policy (preview)
+## Compatibility policy
 
-- Host workspace provision, project-scoped search, `external_id` upsert, `X-Request-Id`, structured `error`, API-key rotate/revoke, and workspace purge/export are additive (`detail` retained).
-- Breaking changes require `/api/v2` or a dated deprecation notice in this doc.
-- Standalone mem-dog UI is unchanged; Host SaaS is an embed contract on top.
+`/api/v1` is the Host SaaS stable surface for this embed contract.
+
+| Change type | Policy |
+|-------------|--------|
+| Additive fields, new optional query/body params, new host routes under `/api/v1/host` | Allowed without major bump |
+| Renamed/removed required fields, auth header changes, semantic of `project_id` / `external_id` | Requires `/api/v2` **or** a dated deprecation notice in this doc (≥90 days) |
+| Error shape | `error.{code,message,details,request_id}` is stable; top-level `detail` retained for compatibility |
+
+Stable host capabilities today: workspace provision/lookup, project-scoped semantic search, `external_id` upsert, `X-Request-Id`, structured errors, API-key create/list/rotate/revoke, workspace export/purge, env-gated quotas.
+
+Standalone mem-dog UI is unchanged; Host SaaS is an embed contract on top.
+
+### Pin a client
+
+| Language | Package | Pin (Host SaaS F4) |
+|----------|---------|-------------------|
+| Python | `mem-dog-client` | `==0.1.1` |
+| TypeScript | `@mem-dog/client` | `0.2.1` |
+
+Install from this repo (`clients/python`, `clients/typescript`) until packages are published. Both SDKs send `x-api-key` (and Bearer) for `api_key` / `apiKey`.
+
+### SDK method map
+
+| Host flow | HTTP | Python | TypeScript |
+|-----------|------|--------|------------|
+| Provision workspace | `POST /api/v1/host/workspaces` | `create_host_workspace` | `createHostWorkspace` |
+| Lookup workspace | `GET /api/v1/host/workspaces` | `get_host_workspace` | `getHostWorkspace` |
+| Upsert by external id | `POST /api/v1/data` + `external_id` | `upsert_data` | `upsertData` |
+| Project-scoped search | `POST /api/v1/ai/query/semantic` | `semantic_search(..., project_id=)` | `semanticSearch(..., { projectId })` |
+| Rotate API key | `POST /api/v1/host/api-keys/rotate` | `rotate_host_api_key` | `rotateHostApiKey` |
+| Export / purge | `GET .../export`, `DELETE .../workspaces` | `export_host_workspace` / `purge_host_workspace` | `exportHostWorkspace` / `purgeHostWorkspace` |
+
+OpenAPI tag **Host SaaS** (operations marked `x-host-saas: true`) is for codegen filters.
 
 ## Next (Phase F)
 
-- SDK polish / OpenAPI host tags (F4)
 - Notion / Slack Connect recipes (need Nango)
 - Async purge job + full archive export for large workspaces

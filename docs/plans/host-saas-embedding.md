@@ -226,9 +226,9 @@ Ship **before** meaningful multi-tenant volume (do not wait for a second host). 
 
 #### F4 — API stability & clients (G16)
 
-- Publish **host compatibility policy** in `host-saas.md` (what may change in `/api/v1` vs requires `/api/v2`).
-- Extend TS + Python SDKs: `createHostWorkspace`, `upsertData`, `semanticSearch`, `rotateApiKey`, `deleteWorkspace` (names indicative).
-- OpenAPI examples tagged `host-saas` for codegen.
+- ~~Publish **host compatibility policy** in `host-saas.md` (what may change in `/api/v1` vs requires `/api/v2`).~~
+- ~~Extend TS + Python SDKs: `createHostWorkspace`, `upsertData`, `semanticSearch`, `rotateApiKey`, `deleteWorkspace` (names indicative).~~ (Python already had helpers; TS added; both send `x-api-key`)
+- ~~OpenAPI examples tagged `host-saas` for codegen.~~ (`openapi_tags` + `x-host-saas` + schema examples)
 
 #### F5 — Key rotation (G17)
 

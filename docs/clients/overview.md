@@ -60,7 +60,7 @@ gem "memdog", path: "../clients/ruby"
 
 ## Authentication
 
-All SDKs accept an API key for `Authorization: Bearer <key>` authentication. The API supports three auth methods:
+All SDKs accept an API key. The API authenticates platform / `md_*` keys via `x-api-key` and browser sessions via JWT `Authorization: Bearer`. Official clients send **both** headers when `api_key` / `apiKey` is set so either credential type works.
 
 - **API keys** (`md_*` prefix) -- per-user keys for programmatic access
 - **JWT tokens** -- from Supabase auth for browser/app sessions

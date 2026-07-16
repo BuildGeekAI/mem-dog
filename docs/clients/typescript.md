@@ -69,6 +69,34 @@ const file = new File(["content"], "notes.txt", { type: "text/plain" });
 await client.createData({ file, name: "Notes", tags: ["document"] });
 ```
 
+## Host SaaS
+
+Pin `@mem-dog/client@0.2.1`. See [host-saas.md](../integrations/host-saas.md) for the full contract.
+
+```typescript
+const platform = new MemDogClient({
+  baseUrl: "http://localhost:8080",
+  apiKey: process.env.PLATFORM_API_KEY!,
+});
+const ws = await platform.createHostWorkspace({
+  externalOrgId: "acme-1",
+  externalWorkspaceId: "site-42",
+});
+
+const tenant = new MemDogClient({
+  baseUrl: "http://localhost:8080",
+  apiKey: ws.api_key as string,
+});
+await tenant.upsertData({
+  externalId: "page:home",
+  content: "Hello",
+  projectId: ws.project_id as string,
+  orgId: ws.org_id as string,
+});
+await tenant.semanticSearch("Hello", { projectId: ws.project_id as string });
+await tenant.rotateHostApiKey({ name: "rotated" });
+```
+
 ## Error Handling
 
 ```typescript

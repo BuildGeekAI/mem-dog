@@ -32,7 +32,8 @@ class MemDogClient:
 
         Args:
             base_url: API base URL (e.g. http://localhost:8080 or https://api.example.com).
-            api_key: API key for Authorization: Bearer <key>. Omit for public endpoints.
+            api_key: API key (``x-api-key``) or JWT (also sent as Bearer).
+                Omit for public endpoints.
             timeout: Request timeout in seconds.
             **kwargs: Passed to httpx.Client (e.g. headers, verify).
         """
@@ -46,6 +47,9 @@ class MemDogClient:
     def _client(self) -> httpx.Client:
         headers = dict(self._client_kwargs.get("headers", {}))
         if self._api_key:
+            # Platform / md_* keys authenticate via x-api-key; JWTs via Bearer.
+            # Send both so either credential type works when passed as api_key.
+            headers.setdefault("x-api-key", self._api_key)
             headers.setdefault("Authorization", f"Bearer {self._api_key}")
         return httpx.Client(
             base_url=self._base,

@@ -2,7 +2,11 @@
 export interface MemDogConfig {
   /** API base URL (e.g. "http://localhost:8080"). */
   baseUrl: string;
-  /** API key for Bearer auth. Omit for unauthenticated access. */
+  /**
+   * API key or JWT. Platform / ``md_*`` keys are sent as ``x-api-key``;
+   * JWTs authenticate via ``Authorization: Bearer``. Both headers are set so
+   * either credential type works.
+   */
   apiKey?: string;
   /** Default user ID scoped to all operations. */
   userId?: string;
@@ -82,6 +86,8 @@ export interface SemanticSearchOptions {
   reranker?: RerankerType;
   limit?: number;
   userId?: string;
+  /** Scope results to a host workspace project. */
+  projectId?: string;
   memoryType?: MemoryType;
   temporalFilter?: string;
 }
