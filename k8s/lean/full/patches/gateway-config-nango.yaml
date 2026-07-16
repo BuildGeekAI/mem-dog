@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webhook-gateway-config
+  namespace: webhook-gateway
+data:
+  NANGO_API_URL: "http://nango-server.nango.svc.cluster.local:3003"

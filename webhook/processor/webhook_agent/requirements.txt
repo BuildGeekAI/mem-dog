@@ -8,10 +8,12 @@ python-dotenv>=1.0.0
 # FastAPI + uvicorn power the direct /process-webhook server (server.py).
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
-# Document text extraction (PDF, Word, Excel, PowerPoint)
+# Document text extraction (PDF, Word, Excel, PowerPoint) — default pypdf path.
 pypdf>=4.0
 # PDF page → image conversion (for vision models that don't accept PDF natively)
 pymupdf>=1.24
 python-docx>=1.0
 openpyxl>=3.1
 python-pptx>=0.6
+# Docling is optional — see requirements-docling.txt / Dockerfile INSTALL_DOCLING.
+# Runtime: DOCUMENT_PARSER=docling (falls back to pypdf if not installed).

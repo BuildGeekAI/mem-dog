@@ -346,10 +346,16 @@ async def _bootstrap():
 
     # Initialize Graphiti (Neo4j knowledge graph) if configured
     try:
-        from app.graphiti_client import is_graphiti_enabled, get_graphiti
+        from app.graphiti_client import is_graphiti_enabled, get_graphiti, graphiti_unavailable_reason
         if is_graphiti_enabled():
-            await get_graphiti()
-            logger.info("Graphiti knowledge graph initialized")
+            client = await get_graphiti()
+            if client is not None:
+                logger.info("Graphiti knowledge graph initialized")
+            else:
+                logger.warning(
+                    "Graphiti soft-disabled at startup: %s",
+                    graphiti_unavailable_reason() or "unavailable",
+                )
     except Exception as exc:
         logger.warning("Graphiti initialization skipped: %s", exc)
 

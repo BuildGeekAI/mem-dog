@@ -1,0 +1,4 @@
+# Large binary fixtures — keep locally; do not commit.
+gold/
+# Generated baseline runs
+out/

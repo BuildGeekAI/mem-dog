@@ -1265,10 +1265,12 @@ export async function chatWithData(options: {
   if (options.rerank) {
     body.rerank = options.rerank;
   }
-  // Use dedicated chat proxy route to avoid Next.js rewrite proxy timeout
-  // on slow local Ollama inference (~60-120s).
+  // Use dedicated Next.js chat-proxy route (same-origin) to avoid rewrite proxy
+  // timeouts on slow local Ollama inference (~60-120s). Must not use API baseURL
+  // (e.g. http://localhost:8080) or the browser posts to FastAPI, which 404s.
   const response = await api.post('/api/chat-proxy', body, {
     timeout: 180000, // 3 min
+    baseURL: '',
   });
   return response.data;
 }

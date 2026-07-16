@@ -1,0 +1,13 @@
+# Lean stubs — Google OAuth disabled via gotrue patch (GOTRUE_EXTERNAL_GOOGLE_ENABLED=false).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: supabase-auth-oauth
+  namespace: supabase
+  labels:
+    app.kubernetes.io/part-of: mem-dog
+    app.kubernetes.io/component: lean-local
+type: Opaque
+stringData:
+  GOOGLE_CLIENT_ID: "lean-unused"
+  GOOGLE_CLIENT_SECRET: "lean-unused"

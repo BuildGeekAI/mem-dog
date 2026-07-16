@@ -16,17 +16,18 @@
 #   - curl, python3
 #
 # Usage:
-#   ./scripts/test-api.sh [--url http://localhost:8080]
+#   ./scripts/test-api.sh [--url http://localhost:8080] [--api-key KEY]
 #
 # Options:
-#   -u, --url    API base URL  (default: http://localhost:8080)
+#   -u, --url      API base URL  (default: http://localhost:8080)
+#   -k, --api-key  x-api-key header (also: API_KEY / MEM_DOG_API_KEY env)
 #   -v, --verbose  Print full response bodies
-#   -h, --help   Show this help
+#   -h, --help     Show this help
 #
 # Examples:
 #   ./scripts/test-api.sh
-#   ./scripts/test-api.sh --url https://mem-dog-api-dev-xxxxx.run.app
-#   ./scripts/test-api.sh --url http://localhost:8080 --verbose
+#   ./scripts/test-api.sh --url http://localhost:8080 --api-key dev-local-key
+#   API_KEY=dev-local-key ./scripts/test-api.sh --url http://localhost:8080 --verbose
 # =============================================================================
 
 set -euo pipefail
@@ -35,7 +36,10 @@ set -euo pipefail
 # Defaults
 # ---------------------------------------------------------------------------
 API_URL="http://localhost:8080"
+API_KEY="${API_KEY:-${MEM_DOG_API_KEY:-}}"
 VERBOSE=false
+# Must match api DEFAULT_USER_ID — memory GET/PUT require ?user_id=
+TEST_USER_ID="00000000-0000-0000-0000-000000000001"
 
 # ---------------------------------------------------------------------------
 # Colours
@@ -74,7 +78,11 @@ do_curl() {
   local url="${API_URL}${path}"
   local tmp; tmp=$(mktemp)
   local http_code
-  http_code=$(curl -s -o "$tmp" -w "%{http_code}" -X "$method" "$url" "$@" 2>/dev/null || echo "000")
+  local auth_args=()
+  if [[ -n "$API_KEY" ]]; then
+    auth_args=(-H "x-api-key: ${API_KEY}")
+  fi
+  http_code=$(curl -s -o "$tmp" -w "%{http_code}" -X "$method" "$url" "${auth_args[@]}" "$@" 2>/dev/null || echo "000")
   local body; body=$(cat "$tmp"); rm -f "$tmp"
   if $VERBOSE; then
     echo -e "    ${BLUE}${method} ${path} → ${http_code}${NC}"
@@ -106,8 +114,9 @@ assert_status() {
 while [[ $# -gt 0 ]]; do
   case $1 in
     -u|--url)     API_URL="$2"; shift 2;;
+    -k|--api-key) API_KEY="$2"; shift 2;;
     -v|--verbose) VERBOSE=true; shift;;
-    -h|--help)    head -30 "$0" | tail -25; exit 0;;
+    -h|--help)    head -35 "$0" | tail -30; exit 0;;
     *) echo "Unknown option: $1"; exit 1;;
   esac
 done
@@ -124,6 +133,11 @@ echo -e "${BOLD}${CYAN}║      Mem-Dog API End-to-End Test Suite       ║${NC}
 echo -e "${BOLD}${CYAN}╚══════════════════════════════════════════════╝${NC}"
 echo ""
 info "API URL : ${API_URL}"
+if [[ -n "$API_KEY" ]]; then
+  info "API key : set"
+else
+  info "API key : not set"
+fi
 info "Verbose : ${VERBOSE}"
 echo ""
 
@@ -299,15 +313,15 @@ if [[ -n "$DATA_ID_JSON" ]]; then
   r=$(do_curl GET "/api/v1/data/${DATA_ID_JSON}/tags")
   assert_status "$r" "200" "GET /api/v1/data/{id}/tags"
 
-  r=$(do_curl POST "/api/v1/data/${DATA_ID_JSON}/tags" \
+  r=$(do_curl POST "/api/v1/data/${DATA_ID_JSON}/tags/add" \
     -H "Content-Type: application/json" \
     -d '{"tags": ["extra-tag", "curl-test"]}')
-  assert_status "$r" "200" "POST /api/v1/data/{id}/tags (add)"
+  assert_status "$r" "200" "POST /api/v1/data/{id}/tags/add"
 
-  r=$(do_curl DELETE "/api/v1/data/${DATA_ID_JSON}/tags" \
+  r=$(do_curl POST "/api/v1/data/${DATA_ID_JSON}/tags/remove" \
     -H "Content-Type: application/json" \
     -d '{"tags": ["extra-tag"]}')
-  assert_status "$r" "200" "DELETE /api/v1/data/{id}/tags (remove)"
+  assert_status "$r" "200" "POST /api/v1/data/{id}/tags/remove"
 fi
 
 # ---------------------------------------------------------------------------
@@ -337,15 +351,15 @@ fi
 # ---------------------------------------------------------------------------
 section "12. Memories"
 
-# Create a session memory
+# Create a session memory (user_id must match GET/PUT/DELETE query default)
 r=$(do_curl POST "/api/v1/memories" \
   -H "Content-Type: application/json" \
-  -d '{
-    "memory_type": "session",
-    "name": "test-session-curl",
-    "user_id": "demo",
-    "device_id": "test-device-001"
-  }')
+  -d "{
+    \"memory_type\": \"session\",
+    \"name\": \"test-session-curl\",
+    \"user_id\": \"${TEST_USER_ID}\",
+    \"device_id\": \"test-device-001\"
+  }")
 assert_status "$r" "201" "POST /api/v1/memories (create session)"
 
 MEM_ID=$(json_get "$(body "$r")" "memory_id")
@@ -357,34 +371,34 @@ else
 fi
 
 # List memories
-r=$(do_curl GET "/api/v1/memories?limit=10")
+r=$(do_curl GET "/api/v1/memories?limit=10&user_id=${TEST_USER_ID}")
 assert_status "$r" "200" "GET /api/v1/memories"
 
 # Get the memory we just created
 if [[ -n "$MEM_ID" ]]; then
-  r=$(do_curl GET "/api/v1/memories/${MEM_ID}")
+  r=$(do_curl GET "/api/v1/memories/${MEM_ID}?user_id=${TEST_USER_ID}")
   assert_status "$r" "200" "GET /api/v1/memories/{memory_id}"
 
   # Associate test data with the memory
   if [[ -n "$DATA_ID_JSON" ]]; then
-    r=$(do_curl POST "/api/v1/memories/${MEM_ID}/data" \
+    r=$(do_curl POST "/api/v1/memories/${MEM_ID}/data?user_id=${TEST_USER_ID}" \
       -H "Content-Type: application/json" \
       -d "{\"data_ids\": [\"${DATA_ID_JSON}\"]}")
     assert_status "$r" "200" "POST /api/v1/memories/{id}/data (associate)"
 
     # Read data back from the memory
-    r=$(do_curl GET "/api/v1/memories/${MEM_ID}/data")
+    r=$(do_curl GET "/api/v1/memories/${MEM_ID}/data?user_id=${TEST_USER_ID}")
     assert_status "$r" "200" "GET /api/v1/memories/{id}/data"
     COUNT=$(json_get "$(body "$r")" "total")
     info "items in memory = ${COUNT:-?}"
 
     # Remove data from memory (data stays, association removed)
-    r=$(do_curl DELETE "/api/v1/memories/${MEM_ID}/data/${DATA_ID_JSON}")
+    r=$(do_curl DELETE "/api/v1/memories/${MEM_ID}/data/${DATA_ID_JSON}?user_id=${TEST_USER_ID}")
     assert_status "$r" "200" "DELETE /api/v1/memories/{id}/data/{data_id} (disassociate)"
   fi
 
   # Update memory
-  r=$(do_curl PUT "/api/v1/memories/${MEM_ID}" \
+  r=$(do_curl PUT "/api/v1/memories/${MEM_ID}?user_id=${TEST_USER_ID}" \
     -H "Content-Type: application/json" \
     -d '{"name": "updated-test-session", "active": false}')
   assert_status "$r" "200" "PUT /api/v1/memories/{id} (update)"
@@ -455,7 +469,7 @@ fi
 section "16. Postgres / AI layer tests"
 
 # Check if AI is enabled on this server
-AI_STATUS=$(do_curl GET "/api/v1/ai/query/test")
+AI_STATUS=$(do_curl POST "/api/v1/ai/query/test")
 AI_CODE=$(http_code "$AI_STATUS")
 AI_BODY=$(body "$AI_STATUS")
 POSTGRES_ENABLED=$(json_get "$AI_BODY" "postgres_enabled")
@@ -571,7 +585,7 @@ done
 # Delete test memories (from section 17 original cleanup)
 for mem_id in "${CREATED_MEMORY_IDS[@]:-}"; do
   [[ -z "$mem_id" ]] && continue
-  r=$(do_curl DELETE "/api/v1/memories/${mem_id}?delete_data=false")
+  r=$(do_curl DELETE "/api/v1/memories/${mem_id}?delete_data=false&user_id=${TEST_USER_ID}")
   CODE=$(http_code "$r")
   if [[ "$CODE" == "200" ]]; then
     pass "DELETE /api/v1/memories/${mem_id}"

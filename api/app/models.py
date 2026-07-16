@@ -615,6 +615,20 @@ class CreateDataResponse(BaseModel):
     message: str
 
 
+class ParsedDocumentStoreRequest(BaseModel):
+    """Request body for POST /data/{data_id}/parsed (webhook processor)."""
+    markdown: str = ""
+    document: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ParsedDocumentStoreResponse(BaseModel):
+    data_id: str
+    version_label: str
+    parse_status: str = "ready"
+    markdown_path: str
+    json_path: str
+
+
 class UpdateDataResponse(BaseModel):
     data_id: str
     version: int
@@ -1155,6 +1169,11 @@ class Embedding(BaseModel):
     # Organization/project scoping
     org_id: Optional[str] = None
     project_id: Optional[str] = None
+    # Parsed-document chunk localization (Phase 2)
+    page: Optional[int] = None
+    section_path: Optional[List[str]] = None
+    element_type: Optional[str] = None
+    embedding_kind: Optional[str] = None  # e.g. "body" | "viewpoint"
 
 
 class EmbeddingSummary(BaseModel):

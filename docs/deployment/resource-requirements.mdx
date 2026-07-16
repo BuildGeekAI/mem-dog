@@ -66,10 +66,16 @@ This checks: Docker version, available RAM, disk space, GPU availability, Kubern
 ## Mac Mini Recommendations
 
 <Info>
-  A Mac Mini M2 Pro (32 GB) comfortably runs the **Standard** profile with Apple Metal GPU acceleration. Set `N_GPU_LAYERS=99` to offload all model layers to GPU.
+  A Mac Mini M2 Pro (**32 GB**) comfortably runs the **Standard** profile with Apple Metal GPU acceleration. Set `N_GPU_LAYERS=99` to offload all model layers to GPU.
 </Info>
 
 For a Mac Mini M4 Pro (64 GB), the **Full** profile runs well with all three Ollama tiers using Metal acceleration.
+
+<Warning>
+  **Mac mini M2 Pro with 16 GB** cannot run the full compose stack (3× Ollama). Use the **lean** overlay: `./scripts/dev-lean.sh up -d` — `db` + `redis` + `neo4j` + `api` + `ui` + `mcp-server` + `webhook-gateway` + `webhook-processor`, with a cloud embedding/LLM key (or host Ollama). Give Docker Desktop **10–12 GB** RAM. See [local-dev](local-dev.md) and [document-parsing-upgrade](../plans/document-parsing-upgrade.md).
+</Warning>
+
+**Lean document parsing:** `DOCUMENT_PARSER` defaults to **`pypdf`**. Docling is **opt-in** (`DOCUMENT_PARSER=docling`) — PDF-only via `docling-slim[format-pdf]` (no torch / full DocumentConverter). Budget ~**2–3 Gi** on `webhook-processor` when enabled; UI **768 Mi**, MCP **256 Mi** in the lean overlay. Keep Docker Desktop at **10–12 GB**. OCR (`DOCUMENT_OCR_ENABLED`) and hard-doc routers (`DOCUMENT_HARD_PARSER`) remain Phase 3 stubs.
 
 <Warning>
   Running large models on CPU-only systems is possible but significantly slower. Expect 5-10x longer inference times without GPU offloading.

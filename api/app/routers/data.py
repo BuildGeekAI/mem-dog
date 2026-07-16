@@ -19,6 +19,8 @@ from app.models import (
     DataDeviceInfo,
     DataOwner,
     MarkDownloadedRequest,
+    ParsedDocumentStoreRequest,
+    ParsedDocumentStoreResponse,
     ErrorResponse,
     InfoUpdate,
 )
@@ -636,6 +638,58 @@ async def update_data(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.exception("Failed to update data", extra={"data_id": data_id})
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{data_id}/parsed", response_model=ParsedDocumentStoreResponse)
+async def store_parsed_document(
+    data_id: str,
+    body: ParsedDocumentStoreRequest,
+    user_id: str = Query(config.DEFAULT_USER_ID, description="User ID of the data owner"),
+):
+    """Store parsed document.md + document.json for the current data version."""
+    storage = get_storage()
+    try:
+        result = storage.store_parsed_artifacts(
+            data_id=data_id,
+            user_id=user_id,
+            markdown=body.markdown,
+            document=body.document,
+        )
+        return ParsedDocumentStoreResponse(**result)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.exception("Failed to store parsed document", extra={"data_id": data_id})
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{data_id}/parsed")
+async def get_parsed_document(
+    data_id: str,
+    fmt: str = Query("markdown", description="markdown or json"),
+    version: Optional[int] = None,
+    user_id: str = Query(config.DEFAULT_USER_ID, description="User ID of the data owner"),
+):
+    """Return parsed document body (markdown or JSON)."""
+    if fmt not in ("markdown", "json"):
+        raise HTTPException(status_code=400, detail="fmt must be markdown or json")
+    storage = get_storage()
+    try:
+        result = storage.get_parsed_artifact(
+            data_id=data_id,
+            user_id=user_id,
+            fmt=fmt,
+            version=version,
+        )
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"Parsed document not found for {data_id}")
+        content, content_type = result
+        return Response(content=content, media_type=content_type)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Failed to get parsed document", extra={"data_id": data_id})
         raise HTTPException(status_code=500, detail=str(e))
 
 

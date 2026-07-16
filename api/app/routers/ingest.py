@@ -254,6 +254,8 @@ async def _ingest_to_graphiti(data_id: str, user_id: str, text_content: str, mim
             return
 
         graphiti = await get_graphiti()
+        if graphiti is None:
+            return
 
         # Truncate very large texts for Graphiti (LLM context limits)
         body = text_content[:10000] if len(text_content) > 10000 else text_content

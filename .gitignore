@@ -1,0 +1,15 @@
+# Python bytecode (covers webhook/processor and other packages outside api/)
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# macOS
+.DS_Store
+
+# Local k8s lean port-forward PIDs
+.dev-lean-k8s-pids
+.dev-lean-k8s-profile
+.dev-lean-k8s-ui-tag
