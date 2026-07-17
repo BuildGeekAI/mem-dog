@@ -1166,6 +1166,12 @@ class BaseStorage(ABC):
             # Fetch metadata before deleting so we can pass tags to index cleanup
             metadata = self.get_metadata(data_id, user_id)
             tags = metadata.tags if metadata else None
+            if metadata and getattr(metadata, "external_id", None):
+                self._delete_external_data_index(
+                    user_id=user_id,
+                    project_id=getattr(metadata, "project_id", None),
+                    external_id=metadata.external_id,
+                )
 
             # Delete all raw data versions (new path: {user_id}/{data_id}/ver_*/data)
             prefix = f"{user_id}/{data_id}/"
@@ -1954,6 +1960,7 @@ class BaseStorage(ABC):
         source_service: Optional[str] = None,
         org_id: Optional[str] = None,
         project_id: Optional[str] = None,
+        external_id: Optional[str] = None,
     ) -> Tuple[str, int]:
         """Create new data entry and associate with memories. Returns (data_id, version).
 
@@ -2024,6 +2031,14 @@ class BaseStorage(ABC):
                 except Exception:
                     pass
 
+            ext_id = (external_id or "").strip() or None
+            if ext_id:
+                tag_list = list(unique_tags or [])
+                ext_tag = f"external_id:{ext_id}"
+                if ext_tag not in tag_list:
+                    tag_list.append(ext_tag)
+                unique_tags = tag_list
+
             # Always set url, mime_type, and is_downloaded on metadata (mime_type falls back to content_type).
             effective_mime_type = mime_type if mime_type is not None else content_type
             metadata = DataMetadata(
@@ -2056,11 +2071,19 @@ class BaseStorage(ABC):
                 data_version_label=version_label,
                 org_id=resolved_org_id,
                 project_id=resolved_project_id,
+                external_id=ext_id,
             )
             self.store_metadata(metadata)
 
             # Write reverse data index
             self._write_data_index(user, data_id, metadata)
+            if ext_id:
+                self._write_external_data_index(
+                    user_id=user,
+                    project_id=resolved_project_id,
+                    external_id=ext_id,
+                    data_id=data_id,
+                )
 
             # Associate data with each memory
             data_purpose = purpose or "user_data"
@@ -2140,6 +2163,148 @@ class BaseStorage(ABC):
             _data_ops_counter.add(1, {"operation": "update", "content_type": content_type})
             logger.info("Data updated", extra={"data_id": data_id, "version": new_version, "user": user})
             return new_version
+
+    def create_or_upsert_data(
+        self,
+        content: bytes,
+        content_type: str,
+        user: str = config.DEFAULT_USER_ID,
+        memory_ids: Optional[List[str]] = None,
+        device_info: Optional[DataDeviceInfo] = None,
+        tags: Optional[List[str]] = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        exclusive_memory_ids: bool = False,
+        purpose: Optional[str] = None,
+        url: Optional[str] = None,
+        mime_type: Optional[str] = None,
+        is_downloaded: bool = False,
+        owner: Optional[DataOwner] = None,
+        provenance: Optional[DataProvenance] = None,
+        source_service: Optional[str] = None,
+        org_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        external_id: Optional[str] = None,
+    ) -> Tuple[str, int, bool, bool]:
+        """Create data, or update in place when ``external_id`` already exists.
+
+        Unique key: ``(project_id | owner user_id, external_id)``.
+        Returns ``(data_id, version, created, updated)``.
+        """
+        ext_id = (external_id or "").strip() or None
+        create_kwargs = dict(
+            content=content,
+            content_type=content_type,
+            user=user,
+            memory_ids=memory_ids,
+            device_info=device_info,
+            tags=tags,
+            name=name,
+            description=description,
+            exclusive_memory_ids=exclusive_memory_ids,
+            purpose=purpose,
+            url=url,
+            mime_type=mime_type,
+            is_downloaded=is_downloaded,
+            owner=owner,
+            provenance=provenance,
+            source_service=source_service,
+            org_id=org_id,
+            project_id=project_id,
+            external_id=ext_id,
+        )
+        if not ext_id:
+            data_id, version = self.create_data(**create_kwargs)
+            return data_id, version, True, False
+
+        resolved_project_id = (project_id or "").strip() or None
+        resolved_org_id = (org_id or "").strip() or None
+        if not resolved_project_id or not resolved_org_id:
+            try:
+                profile = self.get_user(user)
+                if profile:
+                    resolved_org_id = resolved_org_id or getattr(profile, "default_org_id", None)
+                    resolved_project_id = resolved_project_id or getattr(
+                        profile, "default_project_id", None
+                    )
+            except Exception:
+                pass
+
+        existing_id = self.find_data_by_external_id(
+            user_id=user,
+            project_id=resolved_project_id,
+            external_id=ext_id,
+        )
+        if existing_id:
+            metadata = self.get_metadata(existing_id, user)
+            if metadata is not None:
+                version = self.update_data(existing_id, content, content_type, user)
+                metadata = self.get_metadata(existing_id, user)
+                if metadata is None:
+                    # Stale index after update — clear and recreate
+                    self._delete_external_data_index(
+                        user_id=user,
+                        project_id=resolved_project_id,
+                        external_id=ext_id,
+                    )
+                    data_id, version = self.create_data(**{
+                        **create_kwargs,
+                        "org_id": resolved_org_id,
+                        "project_id": resolved_project_id,
+                    })
+                    return data_id, version, True, False
+
+                if name is not None:
+                    metadata.name = name
+                if description is not None:
+                    metadata.description = description
+                if mime_type is not None:
+                    metadata.mime_type = mime_type
+                elif content_type:
+                    metadata.mime_type = content_type
+                if url is not None:
+                    metadata.url = url
+                metadata.is_downloaded = is_downloaded
+                if purpose is not None:
+                    metadata.purpose = purpose
+                if resolved_org_id:
+                    metadata.org_id = resolved_org_id
+                if resolved_project_id:
+                    metadata.project_id = resolved_project_id
+                metadata.external_id = ext_id
+
+                tag_list = list(metadata.tags or [])
+                if tags:
+                    for t in tags:
+                        if t and t not in tag_list:
+                            tag_list.append(t)
+                ext_tag = f"external_id:{ext_id}"
+                if ext_tag not in tag_list:
+                    tag_list.append(ext_tag)
+                metadata.tags = tag_list
+
+                self.store_metadata(metadata)
+                self._write_data_index(user, existing_id, metadata)
+                self._write_external_data_index(
+                    user_id=user,
+                    project_id=resolved_project_id,
+                    external_id=ext_id,
+                    data_id=existing_id,
+                )
+                logger.info(
+                    "Data upserted (updated)",
+                    extra={"data_id": existing_id, "version": version, "external_id": ext_id},
+                )
+                return existing_id, version, False, True
+            # Stale index — fall through to create
+            self._delete_external_data_index(
+                user_id=user,
+                project_id=resolved_project_id,
+                external_id=ext_id,
+            )
+
+        data_id, version = self.create_data(**{**create_kwargs, "org_id": resolved_org_id, "project_id": resolved_project_id})
+        return data_id, version, True, False
 
     # =========================================================================
     # AI Layer Storage Methods
@@ -5194,13 +5359,99 @@ class BaseStorage(ABC):
     _ORGS_PREFIX = "orgs/"
     _PROJECTS_PREFIX = "projects/"
     _HOST_WORKSPACES_PREFIX = "index/host_workspaces/"
+    _EXTERNAL_DATA_PREFIX = "index/external_data/"
+
+    @staticmethod
+    def _safe_index_token(s: str) -> str:
+        return re.sub(r"[^a-zA-Z0-9._-]+", "_", (s or "").strip())[:200] or "x"
 
     @staticmethod
     def _host_workspace_key(external_org_id: str, external_workspace_id: str) -> str:
-        def _safe(s: str) -> str:
-            return re.sub(r"[^a-zA-Z0-9._-]+", "_", (s or "").strip())[:120] or "x"
-
+        _safe = BaseStorage._safe_index_token
         return f"{_safe(external_org_id)}__{_safe(external_workspace_id)}"
+
+    def _external_data_scope(self, user_id: str, project_id: Optional[str] = None) -> str:
+        """Scope for external_id uniqueness: project preferred, else owner user."""
+        if project_id and str(project_id).strip():
+            return f"project/{self._safe_index_token(project_id)}"
+        return f"user/{self._safe_index_token(user_id)}"
+
+    def _external_data_path(
+        self, user_id: str, project_id: Optional[str], external_id: str
+    ) -> str:
+        scope = self._external_data_scope(user_id, project_id)
+        return (
+            f"{self._EXTERNAL_DATA_PREFIX}{scope}/"
+            f"{self._safe_index_token(external_id)}.json"
+        )
+
+    def find_data_by_external_id(
+        self,
+        *,
+        user_id: str,
+        external_id: str,
+        project_id: Optional[str] = None,
+    ) -> Optional[str]:
+        """Return data_id for (project|user, external_id), or None."""
+        ext = (external_id or "").strip()
+        if not ext:
+            return None
+        path = self._external_data_path(user_id, project_id, ext)
+        try:
+            raw = self.meta_store.read(path)
+            record = json.loads(raw.decode("utf-8"))
+            data_id = (record.get("data_id") or "").strip()
+            return data_id or None
+        except FileNotFoundError:
+            return None
+        except Exception as exc:
+            logger.warning("find_data_by_external_id failed: %s", exc)
+            return None
+
+    def _write_external_data_index(
+        self,
+        *,
+        user_id: str,
+        external_id: str,
+        data_id: str,
+        project_id: Optional[str] = None,
+    ) -> None:
+        """Persist reverse index for external_id upsert. Best-effort."""
+        ext = (external_id or "").strip()
+        if not ext or not data_id:
+            return
+        path = self._external_data_path(user_id, project_id, ext)
+        payload = {
+            "data_id": data_id,
+            "user_id": user_id,
+            "project_id": project_id,
+            "external_id": ext,
+            "updated_at": datetime.utcnow().isoformat() + "Z",
+        }
+        try:
+            self.meta_store.write(
+                path, json.dumps(payload, indent=2).encode("utf-8"), "application/json"
+            )
+        except Exception as exc:
+            logger.warning("_write_external_data_index failed (non-fatal): %s", exc)
+
+    def _delete_external_data_index(
+        self,
+        *,
+        user_id: str,
+        external_id: str,
+        project_id: Optional[str] = None,
+    ) -> None:
+        ext = (external_id or "").strip()
+        if not ext:
+            return
+        path = self._external_data_path(user_id, project_id, ext)
+        try:
+            self.meta_store.delete(path)
+        except FileNotFoundError:
+            pass
+        except Exception as exc:
+            logger.debug("_delete_external_data_index failed (non-fatal): %s", exc)
 
     def host_workspace_get(
         self, external_org_id: str, external_workspace_id: str
@@ -6836,6 +7087,8 @@ class SupabaseStorage(BaseStorage):
                 rpc_params["filter_user_id"] = user_id
             if filter_data_ids is not None:
                 rpc_params["filter_data_ids"] = filter_data_ids
+            if project_id:
+                rpc_params["filter_project_id"] = project_id
             res = self._supa_client.rpc("match_embeddings_hybrid", rpc_params).execute()
             results = [
                 {
@@ -6851,7 +7104,7 @@ class SupabaseStorage(BaseStorage):
                 }
                 for row in res.data or []
             ]
-            if project_id:
+            if project_id and any("project_id" in r for r in results):
                 results = [r for r in results if r.get("project_id") == project_id]
             return results
         except Exception as exc:
@@ -6901,7 +7154,7 @@ class SupabaseStorage(BaseStorage):
                 }
                 for row in res.data or []
             ]
-            if project_id:
+            if project_id and any("project_id" in r for r in results):
                 results = [r for r in results if r.get("project_id") == project_id]
             return results
         except Exception as exc:

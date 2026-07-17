@@ -91,8 +91,16 @@ class MemDogClient:
         memory_ids: Optional[list[str]] = None,
         tags: Optional[list[str]] = None,
         content_type: Optional[str] = None,
+        mime_type: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+        org_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        external_id: Optional[str] = None,
     ) -> httpx.Response:
-        """POST /api/v1/data - Create new data (file upload or JSON content)."""
+        """POST /api/v1/data - Create new data (file upload or JSON content).
+
+        Pass ``external_id`` for idempotent upsert (same id → same ``data_id``).
+        """
         form: dict[str, Any] = {}
         if name:
             form["name"] = name
@@ -102,6 +110,16 @@ class MemDogClient:
             form["memory_ids"] = ",".join(memory_ids)
         if tags:
             form["tags"] = ",".join(tags)
+        if mime_type:
+            form["mime_type"] = mime_type
+        if owner_user_id:
+            form["owner_user_id"] = owner_user_id
+        if org_id:
+            form["org_id"] = org_id
+        if project_id:
+            form["project_id"] = project_id
+        if external_id:
+            form["external_id"] = external_id
 
         if file is not None:
             file.seek(0)
@@ -119,6 +137,38 @@ class MemDogClient:
             with self._client() as c:
                 return c.post("/api/v1/data", data=form)
         raise ValueError("Either file or content must be provided")
+
+    def upsert_data(
+        self,
+        *,
+        external_id: str,
+        content: Optional[str] = None,
+        file: Optional[BinaryIO] = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        content_type: Optional[str] = None,
+        mime_type: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+        org_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+    ) -> httpx.Response:
+        """POST /api/v1/data with ``external_id`` for create-or-update."""
+        if not (external_id or "").strip():
+            raise ValueError("external_id is required for upsert_data")
+        return self.create_data(
+            file=file,
+            content=content,
+            name=name,
+            description=description,
+            tags=tags,
+            content_type=content_type,
+            mime_type=mime_type,
+            owner_user_id=owner_user_id,
+            org_id=org_id or self._org_id,
+            project_id=project_id or self._project_id,
+            external_id=external_id.strip(),
+        )
 
     def list_data(self) -> httpx.Response:
         """GET /api/v1/data - List all data items."""

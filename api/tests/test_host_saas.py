@@ -1,6 +1,8 @@
-"""Host SaaS Phase A — workspace provision + project isolation."""
+"""Host SaaS — workspace provision, project isolation, external_id upsert."""
 
 from __future__ import annotations
+
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -76,6 +78,184 @@ class TestProjectIsolationSearch:
         assert len(hits_a) == 1 and hits_a[0]["chunk_text"] == "secret from A"
         assert len(hits_b) == 1 and hits_b[0]["chunk_text"] == "secret from B"
         assert len(hits_all) == 2
+
+
+class TestExternalIdUpsert:
+    def _local_storage(self, tmp_path, monkeypatch):
+        from app.blob_store import LocalBlobStore
+        from app import config
+
+        monkeypatch.setattr(config, "ENABLE_MEMORIES", False, raising=False)
+
+        stores = {
+            name: LocalBlobStore(str(tmp_path / name))
+            for name in (
+                "raw", "meta", "memories", "index", "users", "prompts",
+                "embeddings", "viewpoints", "ai_config", "skills", "stats", "channels",
+            )
+        }
+
+        class _Local(BaseStorage):
+            def _build_stores(self):
+                return stores
+
+        return _Local()
+
+    def test_upsert_preserves_data_id(self, tmp_path, monkeypatch):
+        storage = self._local_storage(tmp_path, monkeypatch)
+        kwargs = dict(
+            content=b"v1 body",
+            content_type="text/plain",
+            user="u_host",
+            name="page",
+            project_id="proj_x",
+            org_id="org_x",
+            external_id="notion:page-1",
+            exclusive_memory_ids=True,
+        )
+        data_id, version, created, updated = storage.create_or_upsert_data(**kwargs)
+        assert created is True and updated is False
+        assert version == 1
+        assert data_id.startswith("data_")
+
+        data_id2, version2, created2, updated2 = storage.create_or_upsert_data(
+            **{**kwargs, "content": b"v2 body resynced"}
+        )
+        assert data_id2 == data_id
+        assert version2 == 2
+        assert created2 is False and updated2 is True
+
+        meta = storage.get_metadata(data_id, "u_host")
+        assert meta is not None
+        assert meta.external_id == "notion:page-1"
+        assert meta.project_id == "proj_x"
+        assert any(t == "external_id:notion:page-1" for t in (meta.tags or []))
+
+        content_ct = storage.get_raw_data(data_id, "u_host")
+        assert content_ct is not None
+        content, _ct = content_ct
+        assert content == b"v2 body resynced"
+
+    def test_different_projects_are_isolated(self, tmp_path, monkeypatch):
+        storage = self._local_storage(tmp_path, monkeypatch)
+        a_id, _, _, _ = storage.create_or_upsert_data(
+            content=b"a",
+            content_type="text/plain",
+            user="u_host",
+            project_id="proj_a",
+            external_id="same-key",
+            exclusive_memory_ids=True,
+        )
+        b_id, _, _, _ = storage.create_or_upsert_data(
+            content=b"b",
+            content_type="text/plain",
+            user="u_host",
+            project_id="proj_b",
+            external_id="same-key",
+            exclusive_memory_ids=True,
+        )
+        assert a_id != b_id
+
+    def test_stale_index_cleared_when_metadata_missing(self, tmp_path, monkeypatch):
+        """Index pointing at a deleted data_id must be cleared before recreate."""
+        storage = self._local_storage(tmp_path, monkeypatch)
+        data_id, _, _, _ = storage.create_or_upsert_data(
+            content=b"v1",
+            content_type="text/plain",
+            user="u_host",
+            project_id="proj_x",
+            org_id="org_x",
+            external_id="stale:1",
+            exclusive_memory_ids=True,
+        )
+        storage._write_external_data_index(
+            user_id="u_host",
+            project_id="proj_x",
+            external_id="stale:1",
+            data_id=data_id,
+        )
+        monkeypatch.setattr(storage, "get_metadata", lambda *a, **k: None)
+
+        new_id, _, created, updated = storage.create_or_upsert_data(
+            content=b"v2",
+            content_type="text/plain",
+            user="u_host",
+            project_id="proj_x",
+            org_id="org_x",
+            external_id="stale:1",
+            exclusive_memory_ids=True,
+        )
+        assert created is True and updated is False
+        assert new_id != data_id
+        assert storage.find_data_by_external_id(
+            user_id="u_host", project_id="proj_x", external_id="stale:1"
+        ) == new_id
+
+    def test_stale_index_after_update_metadata_loss(self, tmp_path, monkeypatch):
+        """If update_data succeeds but metadata vanishes, clear index and recreate."""
+        storage = self._local_storage(tmp_path, monkeypatch)
+        data_id, _, _, _ = storage.create_or_upsert_data(
+            content=b"v1",
+            content_type="text/plain",
+            user="u_host",
+            project_id="proj_x",
+            org_id="org_x",
+            external_id="ghost:1",
+            exclusive_memory_ids=True,
+        )
+
+        calls = {"n": 0}
+        real_get = storage.get_metadata
+
+        def _get(did, uid=None):
+            if did == data_id:
+                calls["n"] += 1
+                if calls["n"] == 1:
+                    return real_get(did, uid)
+                return None
+            return real_get(did, uid)
+
+        monkeypatch.setattr(storage, "get_metadata", _get)
+        monkeypatch.setattr(storage, "update_data", lambda *a, **k: 2)
+
+        new_id, _, created, updated = storage.create_or_upsert_data(
+            content=b"v2",
+            content_type="text/plain",
+            user="u_host",
+            project_id="proj_x",
+            org_id="org_x",
+            external_id="ghost:1",
+            exclusive_memory_ids=True,
+        )
+        assert created is True and updated is False
+        assert new_id != data_id
+        assert storage.find_data_by_external_id(
+            user_id="u_host", project_id="proj_x", external_id="ghost:1"
+        ) == new_id
+
+    def test_api_upsert_via_data_endpoint(self, client: TestClient):
+        mock_storage = MagicMock()
+        mock_storage.create_or_upsert_data.return_value = ("data_upsert1", 2, False, True)
+        mock_storage.create_data.return_value = ("data_new", 1)
+
+        with patch("app.routers.data.get_storage", return_value=mock_storage):
+            resp = client.post(
+                "/api/v1/data",
+                data={
+                    "content": "hello",
+                    "mime_type": "text/plain",
+                    "external_id": "ext-99",
+                    "project_id": "proj_z",
+                },
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["data_id"] == "data_upsert1"
+        assert body["version"] == 2
+        assert body["created"] is False
+        assert body["updated"] is True
+        mock_storage.create_or_upsert_data.assert_called_once()
+        assert mock_storage.create_or_upsert_data.call_args[1]["external_id"] == "ext-99"
 
 
 class TestHostWorkspaceAPI:

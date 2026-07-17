@@ -445,6 +445,10 @@ class ContextDescriptor(BaseModel):
     tags: List[str] = Field(default_factory=list)
     # mem-dog data_id when content is already stored (avoids duplicate write in pipeline)
     data_id: Optional[str] = None
+    # Host SaaS — org/project scope + idempotent upsert key
+    org_id: Optional[str] = None
+    project_id: Optional[str] = None
+    external_id: Optional[str] = None
 
 
 class UniversalEnvelope(BaseModel):
@@ -521,6 +525,8 @@ class DataMetadata(BaseModel):
     # Organization/project scoping (nullable for backward compat)
     org_id: Optional[str] = None
     project_id: Optional[str] = None
+    # Host SaaS upsert key (unique per project or owner user)
+    external_id: Optional[str] = None
 
 
 class DataListItem(BaseModel):
@@ -553,6 +559,7 @@ class DataListItem(BaseModel):
     # Organization/project scoping (nullable for backward compat)
     org_id: Optional[str] = None
     project_id: Optional[str] = None
+    external_id: Optional[str] = None
 
 
 class DataListResponse(BaseModel):
@@ -613,6 +620,8 @@ class CreateDataResponse(BaseModel):
     data_id: str
     version: int
     message: str
+    created: bool = True
+    updated: bool = False
 
 
 class ParsedDocumentStoreRequest(BaseModel):
