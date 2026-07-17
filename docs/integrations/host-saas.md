@@ -240,6 +240,28 @@ Hosts drive Nango from the **server** with the workspace `md_*` key. Never put `
 
 Sync job pattern: gateway proxy → normalize → `POST /api/v1/data` with `external_id` + `project_id`.
 
+## API key rotation (Phase F5)
+
+Hosts rotate without re-provisioning the workspace.
+
+| Call | Auth | Notes |
+|------|------|-------|
+| `GET /api/v1/host/api-keys` | `md_*` | Lists `key_id`, `name`, `key_prefix`, `last_used_at` — never raw key |
+| `POST /api/v1/host/api-keys` | `md_*` | Create additional key (raw key once) |
+| `POST /api/v1/host/api-keys/rotate` | `md_*` | Create new; optional `revoke_key_id` |
+| `DELETE /api/v1/host/api-keys/{key_id}` | `md_*` | Revoke; refuses last key unless `allow_empty=true` |
+
+Platform `API_KEY` may pass `user_id` (query or body) to manage any workspace user.
+
+**Recommended flow**
+
+1. `POST /api/v1/host/api-keys/rotate` with `{"name":"host-rotated"}` → store new `key`
+2. Switch host backends to the new key
+3. `POST /api/v1/host/api-keys/rotate` with `{"name":"host-rotated","revoke_key_id":"<old>"}`  
+   or `DELETE /api/v1/host/api-keys/{old_key_id}`
+
+Same-call rotate (create + revoke) is fine once the new key is persisted.
+
 ## Health for host circuit breakers
 
 | Endpoint | Meaning |
@@ -275,11 +297,12 @@ cd api && pytest tests/test_host_saas.py -v
 
 ## Compatibility policy (preview)
 
-- `/api/v1/host/workspaces`, `project_id` on semantic/chat, `external_id` upsert, `X-Request-Id`, and structured `error` are additive (`detail` retained).
+- `/api/v1/host/workspaces`, `project_id` on semantic/chat, `external_id` upsert, `X-Request-Id`, structured `error`, and host API-key rotate/revoke are additive (`detail` retained).
 - Breaking changes require `/api/v2` or a dated deprecation notice in this doc.
 - Standalone mem-dog UI is unchanged; Host SaaS is an embed contract on top.
 
-## Next (Phase B+ / F)
+## Next (Phase F)
 
+- Workspace purge / export (F1)
+- Quotas (F2)
 - Notion / Slack Connect recipes (need Nango)
-- Workspace purge / quotas / key rotation (Phase F1, F2, F5)

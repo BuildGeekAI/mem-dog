@@ -107,6 +107,36 @@ CREATED2=$(python3 -c "import json,sys; print(json.load(sys.stdin).get('created'
   exit 1
 }
 
+echo "== api key rotate =="
+KEYS=$(curl -sf "$BASE/api/v1/host/api-keys" "${WH[@]}")
+OLD_KEY_ID=$(python3 -c "import json,sys; ks=json.load(sys.stdin); print(ks[0]['key_id'] if ks else '')" <<<"$KEYS")
+[[ -n "$OLD_KEY_ID" ]] || { echo "ERROR: no keys listed" >&2; exit 1; }
+ROT=$(curl -sf -X POST "$BASE/api/v1/host/api-keys/rotate" \
+  "${WH[@]}" \
+  -H "Content-Type: application/json" \
+  -d "{\"name\":\"smoke-rotated\",\"revoke_key_id\":\"$OLD_KEY_ID\"}")
+echo "$ROT" | head -c 300; echo
+NEW_KEY=$(python3 -c "import json,sys; print(json.load(sys.stdin)['key'])" <<<"$ROT")
+REVOKED=$(python3 -c "import json,sys; print(json.load(sys.stdin).get('revoked_key_id'))" <<<"$ROT")
+[[ "$NEW_KEY" == md_* ]] || { echo "ERROR: rotate did not return md_ key" >&2; exit 1; }
+[[ "$REVOKED" == "$OLD_KEY_ID" ]] || {
+  echo "ERROR: expected revoked_key_id=$OLD_KEY_ID got $REVOKED" >&2
+  exit 1
+}
+# Old key must fail; new key must work
+OLD_CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "x-api-key: $MD_KEY" "$BASE/api/v1/host/api-keys" || true)
+NEW_CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "x-api-key: $NEW_KEY" "$BASE/api/v1/host/api-keys" || true)
+[[ "$OLD_CODE" == "401" || "$OLD_CODE" == "403" ]] || {
+  echo "ERROR: expected old key rejected, got HTTP $OLD_CODE" >&2
+  exit 1
+}
+[[ "$NEW_CODE" == "200" ]] || {
+  echo "ERROR: expected new key OK, got HTTP $NEW_CODE" >&2
+  exit 1
+}
+MD_KEY="$NEW_KEY"
+WH=(-H "x-api-key: $MD_KEY")
+
 echo "== metadata has project_id =="
 META=$(curl -sf "$BASE/api/v1/data/$DATA_ID/metadata?user_id=$USER_ID" "${WH[@]}" || true)
 if [[ -n "$META" ]]; then
