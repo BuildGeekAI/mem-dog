@@ -750,6 +750,9 @@ class BaseStorage(ABC):
                             url=metadata.get("url"),
                             mime_type=metadata.get("mime_type") or ct,
                             is_downloaded=metadata.get("is_downloaded", False),
+                            org_id=metadata.get("org_id"),
+                            project_id=metadata.get("project_id"),
+                            external_id=metadata.get("external_id"),
                         ))
                     except Exception as e:
                         logger.warning(
@@ -780,6 +783,8 @@ class BaseStorage(ABC):
         SupabaseStorage overrides to use a single DB query.
         """
         all_items = self.list_all_metadata(user_id=user_id)
+        if project_id:
+            all_items = [i for i in all_items if getattr(i, "project_id", None) == project_id]
         if tags:
             search_tags = set(tags)
             filtered = []
@@ -5512,6 +5517,199 @@ class BaseStorage(ABC):
         self.meta_store.write(
             path, json.dumps(payload, indent=2).encode("utf-8"), "application/json"
         )
+
+    def host_workspace_delete(
+        self, external_org_id: str, external_workspace_id: str
+    ) -> bool:
+        """Remove the host workspace index record. Returns True if deleted."""
+        path = (
+            self._HOST_WORKSPACES_PREFIX
+            + self._host_workspace_key(external_org_id, external_workspace_id)
+            + ".json"
+        )
+        try:
+            self.meta_store.delete(path)
+            return True
+        except FileNotFoundError:
+            return False
+        except Exception as exc:
+            logger.warning("host_workspace_delete failed: %s", exc)
+            return False
+
+    def host_workspace_find_by_project_id(self, project_id: str) -> Optional[dict]:
+        """Scan host workspace index for a record with this project_id."""
+        target = (project_id or "").strip()
+        if not target:
+            return None
+        try:
+            for info in self.meta_store.list_blobs(prefix=self._HOST_WORKSPACES_PREFIX):
+                if not info.name.endswith(".json"):
+                    continue
+                try:
+                    raw = self.meta_store.read(info.name)
+                    rec = json.loads(raw.decode("utf-8"))
+                    if rec.get("project_id") == target:
+                        return rec
+                except Exception:
+                    continue
+        except Exception as exc:
+            logger.warning("host_workspace_find_by_project_id failed: %s", exc)
+        return None
+
+    def _clear_external_data_prefix(self, *, user_id: str, project_id: Optional[str]) -> int:
+        """Delete reverse external_id index entries for a project/user scope."""
+        deleted = 0
+        prefixes = []
+        if project_id:
+            prefixes.append(
+                f"{self._EXTERNAL_DATA_PREFIX}project/{self._safe_index_token(project_id)}/"
+            )
+        prefixes.append(
+            f"{self._EXTERNAL_DATA_PREFIX}user/{self._safe_index_token(user_id)}/"
+        )
+        for prefix in prefixes:
+            try:
+                for info in self.meta_store.list_blobs(prefix=prefix):
+                    try:
+                        self.meta_store.delete(info.name)
+                        deleted += 1
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+        return deleted
+
+    def purge_host_workspace(
+        self,
+        record: dict,
+        *,
+        delete_service_user: bool = True,
+    ) -> dict:
+        """Sync purge of a host workspace (data, memories, keys, org/project, index).
+
+        Returns counts dict. Does not touch Nango (caller handles async).
+        """
+        user_id = record["user_id"]
+        project_id = record["project_id"]
+        org_id = record["org_id"]
+        deleted_data = 0
+        deleted_memories = 0
+        deleted_keys = 0
+
+        # 1) Delete all data owned by the service user (host users are dedicated)
+        try:
+            items = self.list_all_metadata(user_id=user_id)
+        except Exception:
+            items = []
+        for item in items:
+            try:
+                self.delete_data(item.data_id, user_id)
+                deleted_data += 1
+            except Exception as exc:
+                logger.warning(
+                    "purge: delete_data failed data_id=%s: %s", item.data_id, exc
+                )
+
+        # 2) Delete memories (may already be empty)
+        try:
+            memories, _ = self.list_memories(user_id=user_id, limit=10_000)
+        except Exception:
+            memories = []
+        for mem in memories:
+            try:
+                self.delete_memory(mem.memory_id, user_id)
+                deleted_memories += 1
+            except Exception:
+                pass
+
+        # 3) External-id indexes
+        try:
+            self._clear_external_data_prefix(user_id=user_id, project_id=project_id)
+        except Exception:
+            pass
+
+        # 4) API keys
+        try:
+            for key in self.list_api_keys(user_id):
+                try:
+                    if self.delete_api_key(user_id, key.key_id):
+                        deleted_keys += 1
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        # 5) Project + org
+        try:
+            self.delete_project(project_id)
+        except Exception as exc:
+            logger.warning("purge: delete_project failed: %s", exc)
+        try:
+            self.delete_organization(org_id)
+        except Exception as exc:
+            logger.warning("purge: delete_organization failed: %s", exc)
+
+        # 6) Service user profile
+        if delete_service_user:
+            try:
+                self.delete_user(user_id)
+            except Exception as exc:
+                logger.warning("purge: delete_user failed: %s", exc)
+
+        # 7) Host workspace index
+        self.host_workspace_delete(
+            record["external_org_id"], record["external_workspace_id"]
+        )
+
+        return {
+            "deleted_data_count": deleted_data,
+            "deleted_memories_count": deleted_memories,
+            "deleted_api_keys_count": deleted_keys,
+        }
+
+    def export_host_workspace_manifest(self, record: dict) -> dict:
+        """Build a lightweight JSON manifest for offboarding (L0, no archive)."""
+        user_id = record["user_id"]
+        project_id = record["project_id"]
+        items, _ = self.list_all_metadata_paginated(
+            user_id=user_id, skip=0, limit=10_000, project_id=project_id
+        )
+        # If project filter empty (legacy items), fall back to all user data
+        if not items:
+            items = self.list_all_metadata(user_id=user_id)
+        memories, _ = self.list_memories(user_id=user_id, limit=10_000)
+        return {
+            "exported_at": datetime.utcnow().isoformat() + "Z",
+            "external_org_id": record.get("external_org_id"),
+            "external_workspace_id": record.get("external_workspace_id"),
+            "org_id": record.get("org_id"),
+            "project_id": project_id,
+            "user_id": user_id,
+            "display_name": record.get("display_name"),
+            "data": [
+                {
+                    "data_id": i.data_id,
+                    "name": i.name,
+                    "mime_type": i.mime_type,
+                    "tags": i.tags or [],
+                    "external_id": getattr(i, "external_id", None),
+                    "project_id": getattr(i, "project_id", None),
+                    "updated_at": i.updated_at,
+                }
+                for i in items
+            ],
+            "memories": [
+                {
+                    "memory_id": m.memory_id,
+                    "memory_type": str(getattr(m, "memory_type", "")),
+                    "name": getattr(m, "name", None),
+                    "data_ids": list(getattr(m, "data_ids", []) or []),
+                }
+                for m in memories
+            ],
+            "data_count": len(items),
+            "memory_count": len(memories),
+        }
 
     def set_user_defaults(
         self,

@@ -262,6 +262,26 @@ Platform `API_KEY` may pass `user_id` (query or body) to manage any workspace us
 
 Same-call rotate (create + revoke) is fine once the new key is persisted.
 
+## Workspace purge & export (Phase F1)
+
+Platform key only. Sync purge is L0 (fine for laptop-sized workspaces; large tenants may need async later).
+
+| Call | Notes |
+|------|-------|
+| `GET /api/v1/host/workspaces/export?external_org_id=&external_workspace_id=` | Manifest of data/memory ids (no blobs) |
+| `DELETE /api/v1/host/workspaces?external_org_id=&external_workspace_id=` | Purge data, memories, keys, org/project, index |
+| `DELETE /api/v1/host/workspaces/by-project/{project_id}` | Same purge via `project_id` |
+
+Query flags: `delete_connections=true` (Nango), `delete_service_user=true` (default).
+
+Idempotent: re-delete returns `already_gone=true`, `purged=true`.
+
+```bash
+curl -s -X DELETE "$MEMDOG_BASE_URL/api/v1/host/workspaces?\
+external_org_id=acme-account-1&external_workspace_id=acme-site-42" \
+  -H "x-api-key: $PLATFORM_API_KEY"
+```
+
 ## Health for host circuit breakers
 
 | Endpoint | Meaning |
@@ -297,12 +317,12 @@ cd api && pytest tests/test_host_saas.py -v
 
 ## Compatibility policy (preview)
 
-- `/api/v1/host/workspaces`, `project_id` on semantic/chat, `external_id` upsert, `X-Request-Id`, structured `error`, and host API-key rotate/revoke are additive (`detail` retained).
+- Host workspace provision, project-scoped search, `external_id` upsert, `X-Request-Id`, structured `error`, API-key rotate/revoke, and workspace purge/export are additive (`detail` retained).
 - Breaking changes require `/api/v2` or a dated deprecation notice in this doc.
 - Standalone mem-dog UI is unchanged; Host SaaS is an embed contract on top.
 
 ## Next (Phase F)
 
-- Workspace purge / export (F1)
 - Quotas (F2)
 - Notion / Slack Connect recipes (need Nango)
+- Async purge job + full archive export for large workspaces

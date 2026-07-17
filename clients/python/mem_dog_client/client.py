@@ -671,6 +671,55 @@ class MemDogClient:
                 },
             )
 
+    def purge_host_workspace(
+        self,
+        external_org_id: str,
+        external_workspace_id: str,
+        *,
+        delete_connections: bool = False,
+        delete_service_user: bool = True,
+    ) -> httpx.Response:
+        """DELETE /api/v1/host/workspaces — sync purge (platform key)."""
+        params: dict[str, Any] = {
+            "external_org_id": external_org_id,
+            "external_workspace_id": external_workspace_id,
+            "delete_connections": str(delete_connections).lower(),
+            "delete_service_user": str(delete_service_user).lower(),
+        }
+        with self._client() as c:
+            return c.delete("/api/v1/host/workspaces", params=params)
+
+    def purge_host_workspace_by_project(
+        self,
+        project_id: str,
+        *,
+        delete_connections: bool = False,
+        delete_service_user: bool = True,
+    ) -> httpx.Response:
+        """DELETE /api/v1/host/workspaces/by-project/{project_id}."""
+        params = {
+            "delete_connections": str(delete_connections).lower(),
+            "delete_service_user": str(delete_service_user).lower(),
+        }
+        with self._client() as c:
+            return c.delete(
+                f"/api/v1/host/workspaces/by-project/{project_id}",
+                params=params,
+            )
+
+    def export_host_workspace(
+        self, external_org_id: str, external_workspace_id: str
+    ) -> httpx.Response:
+        """GET /api/v1/host/workspaces/export — offboarding manifest."""
+        with self._client() as c:
+            return c.get(
+                "/api/v1/host/workspaces/export",
+                params={
+                    "external_org_id": external_org_id,
+                    "external_workspace_id": external_workspace_id,
+                },
+            )
+
     def add_org_member(self, org_id: str, user_id: str, role: str = "member") -> httpx.Response:
         """POST /api/v1/organizations/{org_id}/members - Add member."""
         with self._client() as c:
