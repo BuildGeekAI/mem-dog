@@ -153,8 +153,12 @@ async def list_webhooks(
 
 @router.get("/{webhook_id}", response_model=WebhookResponse)
 async def get_webhook(webhook_id: str, request: Request):
-    """Get a single webhook by ID. Must belong to the authenticated user."""
-    user_id = _get_user_id(request)
+    """Get a single webhook by ID.
+
+    Workspace keys must own the webhook. Platform ``API_KEY`` (auth_type=global)
+    may look up any webhook for gateway service resolution (secret never returned).
+    """
+    auth_type = getattr(request.state, "auth_type", None)
     client = _get_supabase_client()
 
     try:
@@ -173,8 +177,10 @@ async def get_webhook(webhook_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Webhook not found")
 
     row = res.data[0]
-    if row["user_id"] != user_id:
-        raise HTTPException(status_code=404, detail="Webhook not found")
+    if auth_type != "global":
+        user_id = _get_user_id(request)
+        if row["user_id"] != user_id:
+            raise HTTPException(status_code=404, detail="Webhook not found")
 
     return _row_to_response(row)
 

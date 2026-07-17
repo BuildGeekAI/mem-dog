@@ -19,8 +19,16 @@ if [[ -n "$PLATFORM_KEY" ]]; then
 fi
 
 echo "== health / ready =="
-curl -sf "$BASE/health" | head -c 200; echo
+curl -sf "$BASE/health" -D /tmp/host-saas-headers.txt | head -c 200; echo
+grep -i x-request-id /tmp/host-saas-headers.txt || true
 curl -sf "$BASE/ready" | head -c 200; echo
+
+echo "== request id echo =="
+RID=$(curl -sf -D - -o /dev/null -H "X-Request-Id: smoke-req-1" "$BASE/health" | tr -d '\r' | awk -F': ' 'tolower($1)=="x-request-id"{print $2; exit}')
+[[ "$RID" == "smoke-req-1" ]] || {
+  echo "ERROR: expected X-Request-Id=smoke-req-1, got '$RID'" >&2
+  exit 1
+}
 
 EXT_ORG="smoke-org-$(date +%s)"
 EXT_WS="smoke-ws-1"
