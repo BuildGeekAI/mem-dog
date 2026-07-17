@@ -1277,9 +1277,18 @@ paths:
           required: true
           schema:
             type: string
+        - name: allow_empty
+          in: query
+          required: false
+          description: If true, allow revoking the last remaining key.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Revoked
+        '400':
+          description: Cannot revoke the last API key without allow_empty=true
 
   # ---------- Channel Identities ----------
   /api/v1/channel-identities:

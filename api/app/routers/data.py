@@ -314,6 +314,16 @@ async def _create_data_impl(
 
         # owner / data_owner set at top of _create_data_impl from owner_user_id (path or form)
 
+        from app import quotas
+
+        quotas.check_body_size(len(file_content))
+        quotas.check_project_storage(
+            storage,
+            user_id=owner,
+            project_id=(project_id or "").strip() or None,
+            additional_bytes=len(file_content),
+        )
+
         with processing_span(
             storage,
             user_id=owner,

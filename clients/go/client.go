@@ -414,7 +414,16 @@ func (c *MemDogClient) DeleteUser(userID string) error { _, err := c.doRequest("
 func (c *MemDogClient) GetUserByUsername(username string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/users/username/%s", username), nil) }
 func (c *MemDogClient) ListAPIKeys(userID string) ([]byte, error) { return c.doGet(fmt.Sprintf("/api/v1/users/%s/api-keys", userID), nil) }
 func (c *MemDogClient) CreateAPIKey(userID, name string) ([]byte, error) { return c.doJSON("POST", fmt.Sprintf("/api/v1/users/%s/api-keys", userID), map[string]any{"name": name}) }
-func (c *MemDogClient) DeleteAPIKey(userID, keyID string) error { _, err := c.doRequest("DELETE", fmt.Sprintf("/api/v1/users/%s/api-keys/%s", userID, keyID), "", nil); return err }
+// DeleteAPIKey revokes a user API key. Optional allowEmpty (true) permits
+// revoking the last remaining key.
+func (c *MemDogClient) DeleteAPIKey(userID, keyID string, allowEmpty ...bool) error {
+	path := fmt.Sprintf("/api/v1/users/%s/api-keys/%s", userID, keyID)
+	if len(allowEmpty) > 0 && allowEmpty[0] {
+		path += "?allow_empty=true"
+	}
+	_, err := c.doRequest("DELETE", path, "", nil)
+	return err
+}
 
 // ========================= ORGANIZATIONS =========================
 

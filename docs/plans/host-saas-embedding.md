@@ -201,9 +201,9 @@ Ship **before** meaningful multi-tenant volume (do not wait for a second host). 
 
 #### F2 — Quotas & abuse (G14)
 
-- Configurable limits (env or org settings): requests/min ingest, max body bytes, max pages/doc, max storage/project, max concurrent parses.
-- Responses: `429` with `Retry-After` and structured `code=rate_limited|quota_exceeded`.
-- Metrics counters per `org_id` / `project_id` for host dashboards (export Prometheus or log fields).
+- ~~Configurable limits (env or org settings): requests/min ingest, max body bytes, max pages/doc, max storage/project, max concurrent parses.~~ (L0 env: `QUOTA_INGEST_RPM`, `QUOTA_MAX_BODY_BYTES`, `QUOTA_MAX_STORAGE_BYTES_PER_PROJECT`; pages/parse concurrency deferred)
+- ~~Responses: `429` with `Retry-After` and structured `code=rate_limited|quota_exceeded`.~~
+- Metrics counters per `org_id` / `project_id` for host dashboards (export Prometheus or log fields). (partial — structured error details only)
 
 **Local:** L0 unit/integration tests with artificially low limits.
 
@@ -226,9 +226,9 @@ Ship **before** meaningful multi-tenant volume (do not wait for a second host). 
 
 #### F4 — API stability & clients (G16)
 
-- Publish **host compatibility policy** in `host-saas.md` (what may change in `/api/v1` vs requires `/api/v2`).
-- Extend TS + Python SDKs: `createHostWorkspace`, `upsertData`, `semanticSearch`, `rotateApiKey`, `deleteWorkspace` (names indicative).
-- OpenAPI examples tagged `host-saas` for codegen.
+- ~~Publish **host compatibility policy** in `host-saas.md` (what may change in `/api/v1` vs requires `/api/v2`).~~
+- ~~Extend TS + Python SDKs: `createHostWorkspace`, `upsertData`, `semanticSearch`, `rotateApiKey`, `deleteWorkspace` (names indicative).~~ (Python already had helpers; TS added; both send `x-api-key`)
+- ~~OpenAPI examples tagged `host-saas` for codegen.~~ (`openapi_tags` + `x-host-saas` + schema examples)
 
 #### F5 — Key rotation (G17)
 

@@ -166,7 +166,10 @@ module MemDog
     def get_user_by_username(username);         json_get("/api/v1/users/username/#{username}"); end
     def list_api_keys(user_id);                json_get("/api/v1/users/#{user_id}/api-keys"); end
     def create_api_key(user_id, name);         json_post("/api/v1/users/#{user_id}/api-keys", { name: name }); end
-    def delete_api_key(user_id, key_id);       json_delete("/api/v1/users/#{user_id}/api-keys/#{key_id}"); end
+    def delete_api_key(user_id, key_id, allow_empty: false)
+      params = allow_empty ? { allow_empty: true } : {}
+      json_delete("/api/v1/users/#{user_id}/api-keys/#{key_id}", params)
+    end
 
     # ========================= ORGANIZATIONS =========================
 

@@ -189,6 +189,8 @@ Send `X-Request-Id` on host → mem-dog calls (or omit to receive a generated UU
 }
 ```
 
+**Client tip:** keep reading top-level `detail` (FastAPI-compatible). The `error` object is additive. Strict schemas that reject unknown properties (`additionalProperties: false`) should allow `error` or only validate `detail`.
+
 ## Recipe: file / CSV sync (no Nango)
 
 Host SoR remains the source of truth. mem-dog stores searchable memory with upsert.
@@ -282,6 +284,29 @@ external_org_id=acme-account-1&external_workspace_id=acme-site-42" \
   -H "x-api-key: $PLATFORM_API_KEY"
 ```
 
+## Quotas (Phase F2)
+
+Defaults are **off** (`0`) so lean/local stays unrestricted. Set env on the API to enforce:
+
+| Env | Meaning |
+|-----|---------|
+| `QUOTA_INGEST_RPM` | Max POST/PUT ingest requests per minute per tenant (`user:` / `key:` / `ip:`) |
+| `QUOTA_MAX_BODY_BYTES` | Max request body (Content-Length + actual upload size) |
+| `QUOTA_MAX_STORAGE_BYTES_PER_PROJECT` | Max sum of data sizes in a project for the owner |
+
+Applies to `/api/v1/data`, `/api/v1/ingest`, embeddings create, and user data uploads.
+
+Over limit → `429` with `Retry-After` and:
+
+```json
+{
+  "detail": { "code": "rate_limited", "message": "…", "details": {} },
+  "error": { "code": "rate_limited", "message": "…", "details": {}, "request_id": "…" }
+}
+```
+
+(`quota_exceeded` for body/storage limits.)
+
 ## Health for host circuit breakers
 
 | Endpoint | Meaning |
@@ -315,14 +340,44 @@ Or with pytest:
 cd api && pytest tests/test_host_saas.py -v
 ```
 
-## Compatibility policy (preview)
+## Compatibility policy
 
-- Host workspace provision, project-scoped search, `external_id` upsert, `X-Request-Id`, structured `error`, API-key rotate/revoke, and workspace purge/export are additive (`detail` retained).
-- Breaking changes require `/api/v2` or a dated deprecation notice in this doc.
-- Standalone mem-dog UI is unchanged; Host SaaS is an embed contract on top.
+`/api/v1` is the Host SaaS stable surface for this embed contract.
+
+| Change type | Policy |
+|-------------|--------|
+| Additive fields, new optional query/body params, new host routes under `/api/v1/host` | Allowed without major bump |
+| Renamed/removed required fields, auth header changes, semantic of `project_id` / `external_id` | Requires `/api/v2` **or** a dated deprecation notice in this doc (≥90 days) |
+| Error shape | `error.{code,message,details,request_id}` is stable; top-level `detail` retained for compatibility |
+| OAuth authorize without `user_id` (open/global caller) | Returns **400** (`user_id is required`) rather than FastAPI **422** validation |
+
+Stable host capabilities today: workspace provision/lookup, project-scoped semantic search, `external_id` upsert, `X-Request-Id`, structured errors, API-key create/list/rotate/revoke, workspace export/purge, env-gated quotas.
+
+Standalone mem-dog UI is unchanged; Host SaaS is an embed contract on top.
+
+### Pin a client
+
+| Language | Package | Pin (Host SaaS F4) |
+|----------|---------|-------------------|
+| Python | `mem-dog-client` | `==0.1.1` |
+| TypeScript | `@mem-dog/client` | `0.2.1` |
+
+Install from this repo (`clients/python`, `clients/typescript`) until packages are published. Both SDKs send `x-api-key` (and Bearer) for `api_key` / `apiKey`.
+
+### SDK method map
+
+| Host flow | HTTP | Python | TypeScript |
+|-----------|------|--------|------------|
+| Provision workspace | `POST /api/v1/host/workspaces` | `create_host_workspace` | `createHostWorkspace` |
+| Lookup workspace | `GET /api/v1/host/workspaces` | `get_host_workspace` | `getHostWorkspace` |
+| Upsert by external id | `POST /api/v1/data` + `external_id` | `upsert_data` | `upsertData` |
+| Project-scoped search | `POST /api/v1/ai/query/semantic` | `semantic_search(..., project_id=)` | `semanticSearch(..., { projectId })` |
+| Rotate API key | `POST /api/v1/host/api-keys/rotate` | `rotate_host_api_key` | `rotateHostApiKey` |
+| Export / purge | `GET .../export`, `DELETE .../workspaces` | `export_host_workspace` / `purge_host_workspace` | `exportHostWorkspace` / `purgeHostWorkspace` |
+
+OpenAPI tag **Host SaaS** (operations marked `x-host-saas: true`) is for codegen filters.
 
 ## Next (Phase F)
 
-- Quotas (F2)
 - Notion / Slack Connect recipes (need Nango)
 - Async purge job + full archive export for large workspaces

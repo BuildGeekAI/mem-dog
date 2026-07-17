@@ -60,7 +60,7 @@ gem "memdog", path: "../clients/ruby"
 
 ## Authentication
 
-All SDKs accept an API key for `Authorization: Bearer <key>` authentication. The API supports three auth methods:
+All SDKs accept an API key. The API authenticates platform / `md_*` keys via `x-api-key` and browser sessions via JWT `Authorization: Bearer`. Official clients send **both** headers when `api_key` / `apiKey` is set so either credential type works.
 
 - **API keys** (`md_*` prefix) -- per-user keys for programmatic access
 - **JWT tokens** -- from Supabase auth for browser/app sessions
@@ -162,3 +162,9 @@ See the individual language docs for the complete method reference:
 - [Go SDK](./go.md)
 - [Rust SDK](./rust.md)
 - [Ruby SDK](./ruby.md)
+
+## Compatibility notes (Host SaaS)
+
+- **Errors:** HTTP error bodies include additive `error.{code,message,details,request_id}` plus the classic FastAPI `detail` field. Prefer `detail` if you already parse it; allow `error` if your client schema rejects unknown properties.
+- **Python `semantic_search(limit=…)`:** the SDK now maps `limit` → request field `max_results`. Older builds sent `limit`, which the API ignored (always defaulted to 5). Passing `limit=10` (or higher) now returns that many hits.
+- **`delete_api_key` / `deleteApiKey`:** revoking the last remaining key returns 400 unless you pass `allow_empty=true` / `allowEmpty: true` (Go: optional third arg; Rust: `delete_api_key_with`).

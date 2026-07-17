@@ -198,7 +198,18 @@ impl MemDogClient {
     pub async fn get_user_by_username(&self, username: &str) -> Result<Value> { self.get_json(&format!("/api/v1/users/username/{}", username), &[]).await }
     pub async fn list_api_keys(&self, user_id: &str) -> Result<Value> { self.get_json(&format!("/api/v1/users/{}/api-keys", user_id), &[]).await }
     pub async fn create_api_key(&self, user_id: &str, name: &str) -> Result<Value> { self.post_json(&format!("/api/v1/users/{}/api-keys", user_id), &serde_json::json!({"name": name})).await }
-    pub async fn delete_api_key(&self, user_id: &str, key_id: &str) -> Result<()> { self.delete_path(&format!("/api/v1/users/{}/api-keys/{}", user_id, key_id)).await }
+    pub async fn delete_api_key(&self, user_id: &str, key_id: &str) -> Result<()> {
+        self.delete_api_key_with(user_id, key_id, false).await
+    }
+
+    /// Revoke an API key. Set `allow_empty` to allow deleting the last remaining key.
+    pub async fn delete_api_key_with(&self, user_id: &str, key_id: &str, allow_empty: bool) -> Result<()> {
+        let mut path = format!("/api/v1/users/{}/api-keys/{}", user_id, key_id);
+        if allow_empty {
+            path.push_str("?allow_empty=true");
+        }
+        self.delete_path(&path).await
+    }
 
     // ========================= ORGANIZATIONS =========================
 

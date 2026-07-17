@@ -99,7 +99,12 @@ def _resolve_host_user_id(request: Request, explicit_user_id: str | None = None)
     raise HTTPException(status_code=401, detail="Authentication required")
 
 
-@router.post("/workspaces", response_model=HostWorkspaceResponse, status_code=201)
+@router.post(
+    "/workspaces",
+    response_model=HostWorkspaceResponse,
+    status_code=201,
+    openapi_extra={"x-host-saas": True},
+)
 async def create_host_workspace(
     body: HostWorkspaceCreate, request: Request
 ) -> HostWorkspaceResponse:
@@ -277,7 +282,11 @@ async def _purge_nango_connections(user_id: str) -> int:
     return deleted
 
 
-@router.delete("/workspaces", response_model=HostWorkspacePurgeResponse)
+@router.delete(
+    "/workspaces",
+    response_model=HostWorkspacePurgeResponse,
+    openapi_extra={"x-host-saas": True},
+)
 async def purge_host_workspace(
     request: Request,
     external_org_id: str = Query(..., min_length=1),
@@ -439,7 +448,11 @@ async def revoke_host_api_key(
     return {"message": "API key revoked", "key_id": key_id, "user_id": target}
 
 
-@router.post("/api-keys/rotate", response_model=HostApiKeyRotateResponse)
+@router.post(
+    "/api-keys/rotate",
+    response_model=HostApiKeyRotateResponse,
+    openapi_extra={"x-host-saas": True},
+)
 async def rotate_host_api_key(
     body: HostApiKeyRotateRequest, request: Request
 ) -> HostApiKeyRotateResponse:

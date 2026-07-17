@@ -1437,12 +1437,24 @@ class HostApiKeyRotateRequest(BaseModel):
     revoke_key_id: Optional[str] = Field(
         default=None,
         description="If set, revoke this key_id after the new key is created.",
+        examples=["a1b2c3d4"],
     )
     user_id: Optional[str] = Field(
         default=None,
         description="Target user (platform key only). md_* rotates for itself.",
     )
     expires_in_days: Optional[int] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "name": "host-rotated",
+                    "revoke_key_id": "a1b2c3d4",
+                }
+            ]
+        }
+    }
 
 
 class HostApiKeyRotateResponse(BaseModel):
@@ -1552,10 +1564,37 @@ class ProjectUpdate(BaseModel):
 
 class HostWorkspaceCreate(BaseModel):
     """Provision a mem-dog workspace for an external host tenant."""
-    external_org_id: str = Field(..., min_length=1, max_length=200)
-    external_workspace_id: str = Field(..., min_length=1, max_length=200)
-    display_name: Optional[str] = Field(default=None, max_length=200)
+    external_org_id: str = Field(
+        ...,
+        min_length=1,
+        max_length=200,
+        examples=["acme-account-1"],
+    )
+    external_workspace_id: str = Field(
+        ...,
+        min_length=1,
+        max_length=200,
+        examples=["acme-site-42"],
+    )
+    display_name: Optional[str] = Field(
+        default=None,
+        max_length=200,
+        examples=["Acme Site 42"],
+    )
     metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "external_org_id": "acme-account-1",
+                    "external_workspace_id": "acme-site-42",
+                    "display_name": "Acme Site 42",
+                    "metadata": {"plan": "pro"},
+                }
+            ]
+        }
+    }
 
 
 class HostWorkspaceResponse(BaseModel):

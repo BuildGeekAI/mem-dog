@@ -27,7 +27,12 @@ export class MemDogClient {
 
   private headers(extra?: Record<string, string>): Record<string, string> {
     const h: Record<string, string> = { ...extra };
-    if (this.apiKey) h["Authorization"] = `Bearer ${this.apiKey}`;
+    if (this.apiKey) {
+      // API keys (platform / md_*) authenticate via x-api-key; JWTs via Bearer.
+      // Send both so either credential type works when passed as apiKey.
+      h["x-api-key"] = this.apiKey;
+      h["Authorization"] = `Bearer ${this.apiKey}`;
+    }
     return h;
   }
 
@@ -86,7 +91,21 @@ export class MemDogClient {
   // ===================== DATA =====================
 
   /** POST /api/v1/data (multipart) */
-  async createData(opts: { file?: File | Blob; content?: string; name?: string; description?: string; tags?: string[]; memoryIds?: string[]; forwardToWebhook?: boolean } = {}) {
+  async createData(opts: {
+    file?: File | Blob;
+    content?: string;
+    name?: string;
+    description?: string;
+    tags?: string[];
+    memoryIds?: string[];
+    forwardToWebhook?: boolean;
+    mimeType?: string;
+    ownerUserId?: string;
+    orgId?: string;
+    projectId?: string;
+    /** Idempotent upsert key (same external_id → same data_id). */
+    externalId?: string;
+  } = {}) {
     const form = new FormData();
     if (opts.content !== undefined) form.append("content", opts.content);
     if (opts.file) form.append("file", opts.file);
@@ -95,8 +114,32 @@ export class MemDogClient {
     if (opts.tags?.length) form.append("tags", opts.tags.join(","));
     if (opts.memoryIds?.length) form.append("memory_ids", opts.memoryIds.join(","));
     if (opts.forwardToWebhook) form.append("forward_to_webhook", "true");
+    if (opts.mimeType) form.append("mime_type", opts.mimeType);
+    if (opts.ownerUserId) form.append("owner_user_id", opts.ownerUserId);
+    if (opts.orgId) form.append("org_id", opts.orgId);
+    if (opts.projectId) form.append("project_id", opts.projectId);
+    if (opts.externalId) form.append("external_id", opts.externalId);
     const res = await this.request("POST", "/api/v1/data", { body: form });
     return (await res.json()) as Record<string, unknown>;
+  }
+
+  /** POST /api/v1/data with ``external_id`` for create-or-update. */
+  async upsertData(opts: {
+    externalId: string;
+    file?: File | Blob;
+    content?: string;
+    name?: string;
+    description?: string;
+    tags?: string[];
+    mimeType?: string;
+    ownerUserId?: string;
+    orgId?: string;
+    projectId?: string;
+  }) {
+    if (!(opts.externalId || "").trim()) {
+      throw new Error("externalId is required for upsertData");
+    }
+    return this.createData({ ...opts, externalId: opts.externalId.trim() });
   }
 
   /** GET /api/v1/data */
@@ -202,7 +245,112 @@ export class MemDogClient {
   async getUserByUsername(username: string) { return this.json<Record<string, unknown>>("GET", `/api/v1/users/username/${username}`); }
   async listApiKeys(userId: string) { return this.json("GET", `/api/v1/users/${userId}/api-keys`); }
   async createApiKey(userId: string, name: string) { return this.json<Record<string, unknown>>("POST", `/api/v1/users/${userId}/api-keys`, { json: { name } }); }
-  async deleteApiKey(userId: string, keyId: string) { await this.request("DELETE", `/api/v1/users/${userId}/api-keys/${keyId}`); }
+  async deleteApiKey(userId: string, keyId: string, opts: { allowEmpty?: boolean } = {}) {
+    await this.request("DELETE", `/api/v1/users/${userId}/api-keys/${keyId}`, {
+      params: { allow_empty: opts.allowEmpty === true ? "true" : undefined },
+    });
+  }
+
+  // ===================== HOST SAAS =====================
+
+  /** POST /api/v1/host/workspaces — provision org/project/user/md_* (platform key). */
+  async createHostWorkspace(opts: {
+    externalOrgId: string;
+    externalWorkspaceId: string;
+    displayName?: string;
+    metadata?: Record<string, unknown>;
+  }) {
+    const payload: Record<string, unknown> = {
+      external_org_id: opts.externalOrgId,
+      external_workspace_id: opts.externalWorkspaceId,
+    };
+    if (opts.displayName !== undefined) payload.display_name = opts.displayName;
+    if (opts.metadata !== undefined) payload.metadata = opts.metadata;
+    return this.json<Record<string, unknown>>("POST", "/api/v1/host/workspaces", { json: payload });
+  }
+
+  /** GET /api/v1/host/workspaces */
+  async getHostWorkspace(externalOrgId: string, externalWorkspaceId: string) {
+    return this.json<Record<string, unknown>>("GET", "/api/v1/host/workspaces", {
+      params: { external_org_id: externalOrgId, external_workspace_id: externalWorkspaceId },
+    });
+  }
+
+  /** DELETE /api/v1/host/workspaces — sync purge (platform key). */
+  async purgeHostWorkspace(
+    externalOrgId: string,
+    externalWorkspaceId: string,
+    opts: { deleteConnections?: boolean; deleteServiceUser?: boolean } = {},
+  ) {
+    return this.json<Record<string, unknown>>("DELETE", "/api/v1/host/workspaces", {
+      params: {
+        external_org_id: externalOrgId,
+        external_workspace_id: externalWorkspaceId,
+        delete_connections: opts.deleteConnections ?? false,
+        delete_service_user: opts.deleteServiceUser ?? true,
+      },
+    });
+  }
+
+  /** DELETE /api/v1/host/workspaces/by-project/{projectId} */
+  async purgeHostWorkspaceByProject(
+    projectId: string,
+    opts: { deleteConnections?: boolean; deleteServiceUser?: boolean } = {},
+  ) {
+    return this.json<Record<string, unknown>>(
+      "DELETE",
+      `/api/v1/host/workspaces/by-project/${projectId}`,
+      {
+        params: {
+          delete_connections: opts.deleteConnections ?? false,
+          delete_service_user: opts.deleteServiceUser ?? true,
+        },
+      },
+    );
+  }
+
+  /** GET /api/v1/host/workspaces/export */
+  async exportHostWorkspace(externalOrgId: string, externalWorkspaceId: string) {
+    return this.json<Record<string, unknown>>("GET", "/api/v1/host/workspaces/export", {
+      params: { external_org_id: externalOrgId, external_workspace_id: externalWorkspaceId },
+    });
+  }
+
+  /** GET /api/v1/host/api-keys — list keys (prefix only). */
+  async listHostApiKeys(opts: { userId?: string } = {}) {
+    return this.json("GET", "/api/v1/host/api-keys", { params: { user_id: opts.userId } });
+  }
+
+  /** POST /api/v1/host/api-keys */
+  async createHostApiKey(name: string, opts: { userId?: string; expiresInDays?: number } = {}) {
+    const payload: Record<string, unknown> = { name };
+    if (opts.expiresInDays !== undefined) payload.expires_in_days = opts.expiresInDays;
+    return this.json<Record<string, unknown>>("POST", "/api/v1/host/api-keys", {
+      json: payload,
+      params: { user_id: opts.userId },
+    });
+  }
+
+  /** DELETE /api/v1/host/api-keys/{keyId} */
+  async revokeHostApiKey(keyId: string, opts: { userId?: string; allowEmpty?: boolean } = {}) {
+    await this.request("DELETE", `/api/v1/host/api-keys/${keyId}`, {
+      params: { user_id: opts.userId, allow_empty: opts.allowEmpty },
+    });
+  }
+
+  /** POST /api/v1/host/api-keys/rotate */
+  async rotateHostApiKey(opts: {
+    name?: string;
+    revokeKeyId?: string;
+    userId?: string;
+    expiresInDays?: number;
+  } = {}) {
+    const payload: Record<string, unknown> = { name: opts.name ?? "host-rotated" };
+    if (opts.revokeKeyId) payload.revoke_key_id = opts.revokeKeyId;
+    if (opts.userId) payload.user_id = opts.userId;
+    if (opts.expiresInDays !== undefined) payload.expires_in_days = opts.expiresInDays;
+    return this.json<Record<string, unknown>>("POST", "/api/v1/host/api-keys/rotate", { json: payload });
+  }
 
   // ===================== ORGANIZATIONS =====================
 
@@ -241,6 +389,7 @@ export class MemDogClient {
     if (opts.reranker) payload.reranker = opts.reranker;
     if (opts.limit) payload.limit = opts.limit;
     if (opts.userId) payload.user_id = opts.userId;
+    if (opts.projectId) payload.project_id = opts.projectId;
     if (opts.memoryType) payload.memory_type = opts.memoryType;
     if (opts.temporalFilter) payload.temporal_filter = opts.temporalFilter;
     return this.json("POST", "/api/v1/ai/query/semantic", { json: payload });
