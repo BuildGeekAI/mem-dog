@@ -48,6 +48,8 @@
 | [Deployment](deployment/deployment.md) | Deploy targets, namespaces, scripts |
 | [Local Development](deployment/local-dev.md) | Docker Compose setup, env files |
 | [GCP / GKE](deployment/gcp.md) | Google Cloud deployment |
+| [GKE Implementation](gke/implementation.md) | Kubernetes estate: namespaces, manifests, known issues |
+| [GCP Production](gcp/prod/implementation.md) | Serverless production plan — Cloud Run, no cluster |
 | [AWS](deployment/aws.md) | ECS, RDS, S3 deployment |
 | [Azure](deployment/azure.md) | ACI, SQL, Blob deployment |
 | [Mac Mini](deployment/gke-setup-mac.md) | Mac Mini home server setup |
