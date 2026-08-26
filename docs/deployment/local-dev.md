@@ -6,6 +6,12 @@
 docker compose up
 ```
 
+> **Host ports are overridable.** Every published port in `docker-compose.yml` takes an env
+> override with the current value as default — `DB_PORT`, `REDIS_PORT`, `API_PORT`, `UI_PORT`,
+> `GATEWAY_PORT`, `MCP_PORT`, `PROCESSOR_PORT`, `NEO4J_HTTP_PORT`, `NEO4J_BOLT_PORT`, and
+> `OLLAMA_{SMALL,MEDIUM,LARGE}_PORT`. Use them when another project already holds a port:
+> `DB_PORT=55433 docker compose up -d`.
+
 Full `docker compose up` starts **everything**, including Neo4j and 3× Ollama. That needs roughly a **32GB** machine (see [resource-requirements](resource-requirements.mdx)). On a **16GB Mac mini**, use the **lean** profile below instead.
 
 ### Profile: lean (≤16GB / Mac mini M2 Pro)

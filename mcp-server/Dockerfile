@@ -10,9 +10,13 @@ ENV UV_COMPILE_BYTECODE=1
 COPY clients/python/ /tmp/client/
 RUN pip install --no-cache-dir /tmp/client/ && rm -rf /tmp/client/
 
-# Install MCP server dependencies
+# Install MCP server dependencies from pyproject.toml — single source of truth.
+# mem-dog-client is filtered out: it is installed above from the local repo
+# checkout, and is not published to PyPI.
 COPY mcp-server/pyproject.toml ./pyproject.toml
-RUN pip install --no-cache-dir "mcp[cli]>=1.9.0" "fastapi>=0.115.0" "uvicorn[standard]>=0.27.0" "httpx>=0.28.1,<1.0.0" "pydantic>=2.11.0"
+RUN python -c "import tomllib; deps = tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']; open('/tmp/requirements.txt', 'w').write(chr(10).join(d for d in deps if not d.startswith('mem-dog-client')))" \
+    && pip install --no-cache-dir -r /tmp/requirements.txt \
+    && rm -f /tmp/requirements.txt
 
 # Copy server code
 COPY mcp-server/app/ ./app/
