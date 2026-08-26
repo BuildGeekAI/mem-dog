@@ -95,9 +95,12 @@
       "group": "Deployment",
       "pages": [
         "deployment/local-dev",
+        "deployment/paths",
         "deployment/mac-mini",
         "deployment/gke-setup-mac",
-        "deployment/resource-requirements"
+        "deployment/resource-requirements",
+        "gke/implementation",
+        "gcp/prod/implementation"
       ]
     },
     {

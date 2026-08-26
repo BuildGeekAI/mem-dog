@@ -1,11 +1,16 @@
 # GKE Implementation
 
-Reference for the Kubernetes estate: what runs on GKE today, how it is deployed, and the
-known issues that must not be carried into a production environment.
+Reference for the Kubernetes estate: what runs on GKE, how it is deployed, and the known
+issues to fix.
 
-> **Production does not use GKE.** The production plan is serverless — see
-> [GCP Production Implementation](../gcp/prod/implementation.md). This document remains the
-> reference for the development cluster and for the cases where Kubernetes is still required.
+> This is **one of two maintained deployment paths**. The serverless path is
+> [GCP Production Implementation](../gcp/prod/implementation.md); the rule governing both and
+> the seams between them are in [Deployment Paths](../deployment/paths.md).
+>
+> **The GKE path is not being retired.** The Cloud path does not delete manifests here — it
+> declines to deploy them. Changes made for production must leave this estate working; the
+> auth seam is the sharp case, since GoTrue issues HS256 and a straight swap to RS256 would
+> take dev login down.
 
 ---
 
@@ -213,16 +218,29 @@ These are development-cluster conditions. **None of them may be carried into pro
 | 1 | Plaintext secrets committed to git | `k8s/nango/nango-secrets.yaml` (`NANGO_ENCRYPTION_KEY`, `NANGO_SECRET_KEY`), `k8s/lean/supabase-secrets.yaml` and `api-supabase-secrets.yaml` (demo JWTs), `k8s/lean/*` (`dev-local-key`). They are in history — rotate, do not merely delete. |
 | 2 | Every workload scales to zero | all of `k8s/autoscaling/*.yaml` — cold start on a user request |
 | 3 | Unpinned image tags | `mcp-server:latest`, `webhook-gateway:latest`, `ollama/ollama:latest`, `ghcr.io/openclaw/openclaw:latest` |
-| 4 | API state on a PVC | `api/app/routers/gmail_push.py` writes Gmail watch state only to `/data/gmail_watches.json`. It defines `_WATCH_BLOB_KEY` (L37) for blob persistence but never uses it. |
+| 4 | API state on a PVC | `api/app/routers/gmail_push.py` writes Gmail watch state only to `/data/gmail_watches.json`. It defines `_WATCH_BLOB_KEY` (L37) for blob persistence but never uses it. **Fixed once for both paths** — mandatory on Cloud Run, and it removes a PVC dependency here. Needs a one-time migration of existing watch state off the API PVC, or live Gmail watches drop on deploy. |
 
-## When Kubernetes is actually required
+## What only this path can do
 
-Production runs without a cluster. GKE becomes necessary again only for:
+The Cloud path covers the stateless stack. Choose GKE when you need:
 
-- **Self-hosted Ollama** — GPU node pools and ~120Gi of model PVCs. Avoided by using Ollama Cloud.
-- **Self-hosted Neo4j** — a PVC-backed StatefulSet. Neo4j AuraDB avoids this.
-- **openclaw-node** — PVC `openclaw-home`. Cut from the first production version.
-- **Self-hosted Nango** — only if OAuth token residency must stay in your own infrastructure.
-  Nango Cloud, or Nango on Cloud Run with Cloud SQL, both avoid it.
+- **Self-hosted Ollama** — GPU node pools and ~120Gi of model PVCs. Inference stays in-VPC.
+- **Self-hosted Neo4j** — a PVC-backed StatefulSet, rather than AuraDB.
+- **openclaw-node / DigiMe** — PVC `openclaw-home`. Out of scope for the Cloud path entirely.
+- **Self-hosted Nango** — when OAuth token residency must stay in your own infrastructure.
+- **In-VPC data residency** — the Cloud path sends all open-model inference and embeddings to
+  `api.ollama.com`. Where that is unacceptable, this path is the answer.
 
-Everything else in the stack is stateless and runs on Cloud Run.
+Everything else in the stack is stateless and runs on either path unchanged.
+
+## What must not diverge
+
+Both estates run one codebase. Per [Deployment Paths](../deployment/paths.md), these are
+invariants, not per-path choices:
+
+- **All 15 SQL migrations in `api/supabase/`** — schema is identical on both paths.
+- **The UniversalEnvelope contract and agent-invocation logic** — `webhook/receiver/gke_app.py`
+  (NATS) and `main.py` (Pub/Sub) are separate entrypoints by design, but must stay behaviourally
+  identical. Shared logic belongs in a module both import.
+- **Secret rotation** — the committed values are in git history. Rotating for production without
+  rotating here leaves this estate on compromised credentials.
