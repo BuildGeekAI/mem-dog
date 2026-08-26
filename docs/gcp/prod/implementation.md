@@ -1,10 +1,14 @@
 # GCP Production Implementation
 
-Plan for moving mem-dog from `memdog-dev` to a production estate on Google Cloud
-with **no Kubernetes cluster**.
+Plan for a production estate on Google Cloud with **no Kubernetes cluster**.
 
 > Status: **plan**. Nothing in this document has been implemented yet.
-> The development cluster is documented separately in [GKE Implementation](../../gke/implementation.md).
+>
+> This is **one of two maintained deployment paths**, not a migration away from the other.
+> The GKE path stays supported — see [GKE Implementation](../../gke/implementation.md).
+> The rule governing both, and the seams that keep them from colliding, are in
+> [Deployment Paths](../../deployment/paths.md). **Read that first**: every item below is
+> additive, and nothing here deletes an asset the GKE path uses.
 
 ---
 
@@ -12,11 +16,11 @@ with **no Kubernetes cluster**.
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **Platform** | Cloud Run, no cluster | Nothing left in the stack requires Kubernetes |
-| **Scope** | openclaw / DigiMe cut | Out of scope for this version |
+| **Platform** | Cloud Run, no cluster | Nothing in this path's scope requires Kubernetes |
+| **Scope** | openclaw / DigiMe cut | Out of scope for this path; stays on GKE |
 | **Inference** | Ollama Cloud, Gemini fallback | Open weights to Ollama Cloud; already the code default |
 | **Tenancy** | Single-tenant, SaaS-ready | Host SaaS is Phase A; scale-1k is unstarted |
-| **Auth** | Firebase replaces GoTrue | Not yet written — no Firebase code in the repo |
+| **Auth** | Firebase, GoTrue retained | Selected by `AUTH_PROVIDER`; no RS256/JWKS code in the repo yet |
 | **Integrations** | Nango (Cloud preferred) | 56 providers; `NANGO_API_URL` makes Cloud a config change |
 
 ---
@@ -72,18 +76,21 @@ graph LR
 Two lanes converge on the API: **ingest** (channels → gateway → Pub/Sub → receiver → agents →
 back into the API) and **query** (browser / MCP → API → Kong → PostgREST → Cloud SQL).
 
-## How the cluster disappeared
+## How this path avoids a cluster
 
-| Component | Why it needed GKE | Resolution |
-|-----------|-------------------|------------|
-| openclaw-node | PVC `openclaw-home` | **Cut** from this version |
-| Nango | Assumed background sync workers | Request-scoped only — see below |
-| Ollama ×3 | GPU pool + ~120Gi model PVCs | **Deleted** — Ollama Cloud |
-| NATS JetStream | Durable pull consumers | → Pub/Sub |
-| Supabase Postgres | StatefulSet + PVC | → Cloud SQL |
-| Kong + PostgREST | — | Stateless: configMap + emptyDir, DB-less |
-| API | `/data` gmail watches | Fixed in Phase 0 — now mandatory |
-| Neo4j | PVC | Deferred; AuraDB if it returns |
+Each row is something this path **does not deploy**. The manifests stay in `k8s/` and the GKE
+path keeps using them.
+
+| Component | Why it needed GKE | Cloud path | GKE path |
+|-----------|-------------------|------------|----------|
+| openclaw-node | PVC `openclaw-home` | Not deployed | **Unchanged** |
+| Nango | Assumed background sync workers | Nango Cloud — request-scoped only, see below | Self-hosted, unchanged |
+| Ollama ×3 | GPU pool + ~120Gi model PVCs | Ollama Cloud | **Manifests retained**, unchanged |
+| NATS JetStream | Durable pull consumers | Pub/Sub via `receiver/main.py` | NATS via `receiver/gke_app.py` |
+| Supabase Postgres | StatefulSet + PVC | Cloud SQL | In-cluster, unchanged |
+| Kong + PostgREST | — | Cloud Run, DB-less | In-cluster, unchanged |
+| API | `/data` gmail watches | Blob store — **shared fix, benefits both** | Blob store |
+| Neo4j | PVC | Deferred; AuraDB if it returns | In-cluster, unchanged |
 
 ### The Nango finding
 
@@ -131,19 +138,23 @@ Every scaler in `k8s/autoscaling/*.yaml` sits at `minReplicaCount: 0`. On Cloud 
 
 ## Phase 0 — prepare in dev
 
-**Gate: nothing in Phase 1 starts until the auth swap is verified in dev.**
-Migrating user IDs on live production data is strictly worse.
+**Gate: nothing in Phase 1 starts until the auth seam is verified in dev — with the GKE path
+still logging in.** Migrating user IDs on live production data is strictly worse.
 
-| Work item | Location | Change | Effort | Risk |
-|-----------|----------|--------|--------|------|
-| API token verification | `api/main.py` L263–278, L296–311 | HS256 + shared secret → RS256 against Google JWKS with key caching; `verify_aud` becomes true. Two sites. | L | High |
-| User-ID migration | profiles + all owned rows | Firebase UIDs are 28-char strings; existing IDs are UUIDs. Needs a mapping table. **The sharp edge.** | M | High |
-| Profile bootstrap | `api/app/auth.py:32` | `ensure_jwt_user_profile()` — Firebase claim shape differs from Supabase `user_metadata` | S | Med |
-| UI auth | `ui/src/lib/supabase.ts`, `auth-context.tsx`, `app/page.tsx` | Firebase SDK; drop `@supabase/supabase-js` | M | Med |
-| Retire GoTrue | `k8s/supabase/gotrue-*.yaml`, `auth-oauth-secrets.yaml` | Kills the `/auth/v1/*` rewrite, `SUPABASE_AUTH_URL`, and the `NEXT_PUBLIC_SUPABASE_ANON_KEY` build-time trap | S | Low |
-| Gmail watch → blob store | `api/app/routers/gmail_push.py` | Route both functions through `_WATCH_BLOB_KEY`. **Hard prerequisite.** | S | Med |
-| Cut openclaw deploy | `k8s/openclaw-node/`, 2 UI components | Drop manifests and `deploy-openclaw-node-gke`; unroute `OpenClawExplorer.tsx` / `OpenClawChat.tsx`. Gateway needs no change — its `openclaw` strings are legacy naming only. | S | Low |
-| Secret rotation | `k8s/nango/`, `k8s/lean/` | New values into Secret Manager | M | High |
+Every item is additive. The **GKE impact** column is the acceptance criterion: anything other
+than "none" needs a migration step, not just a code change.
+
+| Work item | Location | Change | GKE impact | Effort | Risk |
+|-----------|----------|--------|------------|--------|------|
+| `AUTH_PROVIDER` seam | `api/main.py` L263–278, L296–311 | **Add** an RS256/JWKS verifier with key caching alongside the existing HS256 path; select by env. Do not replace — GKE's GoTrue issues HS256, and there is no RS256 code in the API today. Two sites. | None if additive; **dev login outage** if replaced | L | High |
+| User-ID mapping | profiles + all owned rows | Firebase UIDs are 28-char strings; existing IDs are UUIDs. Mapping table serves both paths. **The sharp edge.** | Shared table; dev rows must map cleanly | M | High |
+| Profile bootstrap | `api/app/auth.py:32` | `ensure_jwt_user_profile()` normalizes both claim shapes | None if branched on provider | S | Med |
+| UI auth | `ui/src/lib/supabase.ts`, `auth-context.tsx`, `project-context.tsx`, `app/page.tsx` | Add Firebase SDK; **keep** `@supabase/supabase-js` for the GKE path | None if both retained | M | Med |
+| GoTrue | `k8s/supabase/gotrue-*.yaml` | **Retained.** Cloud path skips the `/auth/v1/*` rewrite, `SUPABASE_AUTH_URL`, and the `NEXT_PUBLIC_SUPABASE_ANON_KEY` build-time trap by not setting them | None — not deleted | S | Low |
+| Gmail watch → blob store | `api/app/routers/gmail_push.py` | Route both functions through `_WATCH_BLOB_KEY`. **Hard prerequisite.** Shared fix — no seam | Removes a PVC dependency; **needs one-time migration** of `/data/gmail_watches.json` off the API PVC or live watches drop | S | Med |
+| `config/ai.env` split | `config/ai.env` | Shared base + per-path overlays. Single file today, pinned to the in-cluster Ollama address | **Blocker** — without it, a prod edit silently repoints dev | S | Med |
+| openclaw flag | `ui/src/components/OpenClaw*.tsx` | Follow the `NEXT_PUBLIC_READ_ONLY` pattern. Both components are **unimported in `ui/src` today**, so the Cloud path already excludes them. Manifests and `deploy-openclaw-node-gke` retained. Gateway needs no change — its `openclaw` strings are legacy naming only | None | S | Low |
+| Secret rotation | `k8s/nango/`, `k8s/lean/` | New values into Secret Manager **and** the k8s Secrets. Required for both paths — the old values are in git history | **Coordinated rotation**; dev breaks if only one side rotates | M | High |
 
 ## Phase 1 — provision the estate
 
@@ -176,8 +187,8 @@ Open weights run on Ollama Cloud; Gemini is fallback only. **This is already the
 
 | Action | Detail | Risk |
 |--------|--------|------|
-| `OLLAMA_TIER=false` | **The trap.** `api/app/storage.py:3760–3776` prefers local Ollama whenever `OLLAMA_LOCAL_API_BASE` is set *and* `OLLAMA_TIER` is on. `config/ai.env` ships that base URL pointing at `ollama.webhook-pipeline.svc` — an address that will not exist. | High |
-| Delete in-cluster Ollama | `k8s/webhook-pipeline/ollama-deployment.yaml`, `ollama-chat-deployment.yaml`, both services, `k8s/autoscaling/ollama-chat.yaml`, `ollama-embedding.yaml` | Low |
+| `OLLAMA_TIER=false` | **The trap.** `api/app/storage.py:3760–3776` prefers local Ollama whenever `OLLAMA_LOCAL_API_BASE` is set *and* `OLLAMA_TIER` is on. `config/ai.env` ships that base URL pointing at `ollama.webhook-pipeline.svc` — an address that will not exist on Cloud Run. Note `OLLAMA_TIER` is **not in `ai.env`** at all; it defaults from `config.py`, which is what makes the trap invisible. Fixed by the `config/ai.env` split in Phase 0. | High |
+| Do **not** deploy in-cluster Ollama | Cloud path skips `k8s/webhook-pipeline/ollama-deployment.yaml`, `ollama-chat-deployment.yaml`, both services, and `k8s/autoscaling/ollama-chat.yaml` / `ollama-embedding.yaml`. **Manifests are retained** — the GKE path still runs them | Low |
 | Both keys required | `OLLAMA_CLOUD_API_KEY` **and** `SYSTEM_GEMINI_API_KEY`. Without the Gemini key the fallback chain is a single point of failure. | Med |
 | Embedding dimensions | `embeddinggemma` and `gemini-embedding-001` emit different dimensions. `api/supabase/mem_dog_embeddings.sql` stores variable-width vectors so both coexist, but each needs its own partial index (noted at L55), and a fallback event silently writes vectors of the other width. Treat an embedding fallback as an alert. | High |
 | Egress posture | All open-model inference and embeddings leave the VPC to `api.ollama.com`. Fine for single-tenant; revisit before the first external host with data-residency terms. | Med |
@@ -186,8 +197,8 @@ Open weights run on Ollama Cloud; Gemini is fallback only. **This is already the
 
 | Component | Action | Detail |
 |-----------|--------|--------|
-| SQL migrations | Apply to Cloud SQL | Five files in `api/supabase/`: blobs, embeddings, graph, embeddings_fts, embeddings_page |
-| PostgREST + Kong | **Keep**, on Cloud Run, pointed at Cloud SQL | Non-negotiable: `api/app/blob_store.py:317–332` drives all data access through `supabase-py` → PostgREST, and `api/app/storage.py` is ~6,400 lines. Cloud SQL replaces the Supabase *Postgres*, not the Supabase *stack*. |
+| SQL migrations | Apply **all 15** files in `api/supabase/` | Not just the vector set. `profiles.sql`, `api_keys.sql`, `organizations.sql`, `webhooks.sql`, `integration_tables.sql`, `store_kv.sql`, `agent_configs.sql` + `seed_agent_configs.sql`, `list_data_paginated.sql`, and `migrate_default_org_project.sql` are all required. Applying only the vector files yields a database with no profiles, no `md_*` API keys, and no orgs — auth and host-SaaS fail at runtime, not at migration time. **Schema is an invariant: identical on both paths.** |
+| PostgREST + Kong | **Keep**, on Cloud Run, pointed at Cloud SQL | Non-negotiable: `api/app/blob_store.py:317–332` drives all data access through `supabase-py` → PostgREST, and `api/app/storage.py` is ~8,300 lines. Cloud SQL replaces the Supabase *Postgres*, not the Supabase *stack*. |
 | Nango | Nango Cloud, or Cloud Run + Cloud SQL | Port 3003 only; `--min-instances 1` if self-hosted |
 | Neo4j / Graphiti | Deferred | `is_graphiti_enabled()` makes it optional. If it returns, use AuraDB — self-hosting reintroduces a cluster. |
 
@@ -225,7 +236,11 @@ Most serverless tooling already exists in `scripts/manual-deploy.sh`.
 
 ## The queue migration
 
-The largest single item, and now unavoidable — there is no cluster to run NATS in.
+The largest conceptual item — but **not a code migration**. Both transports already exist as
+separate entrypoints: `webhook/receiver/main.py` (Pub/Sub, `functions_framework`) and
+`webhook/receiver/gke_app.py` (NATS), which explicitly does not import `main.py` so it stays free
+of the cloud dependencies. `pull_worker.py` is NATS-only and simply goes unused on this path.
+Nothing here changes GKE code. What follows is a *semantics* gap to close in the Pub/Sub path.
 
 ```mermaid
 graph LR
@@ -251,7 +266,7 @@ rather than ported, and the dead-letter path is new behavior. Scope this before 
 
 | Item | Detail |
 |------|--------|
-| NATS → Pub/Sub | On the critical path. Both paths exist in the repo, but `pull_worker.py` semantics do not map cleanly onto push delivery. |
+| NATS → Pub/Sub | On the critical path, but GKE-neutral — the two receivers are already separate files. `pull_worker.py` semantics do not map cleanly onto push delivery. Keep the envelope contract and agent-invocation logic identical across both receivers. |
 | Nango Cloud `/config` | Confirm the admin API permits the runtime provider-config creation `integrations.py` performs. |
 | Cold-start budget | Warm floors on API, Kong, PostgREST, and Nango erode the scale-to-zero saving. Price against the GKE baseline before committing. |
 | Host SaaS timing | Phases B–F unbuilt, scale-1k unstarted. Ship Phase F quotas before the first external host. |

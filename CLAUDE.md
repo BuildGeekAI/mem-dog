@@ -40,10 +40,12 @@ pytest                                    # All tests (uses pytest-asyncio)
 pytest tests/test_foo.py -v               # Single test file
 pytest tests/test_foo.py::test_bar -v     # Single test
 
-# Database migrations (requires POSTGRES_URL env var)
-alembic upgrade head                      # Apply all migrations
-alembic revision --autogenerate -m "msg"  # Create migration from model changes
-alembic downgrade -1                      # Rollback last migration
+# Database schema
+# NOTE: alembic is NOT usable — api/alembic.ini exists but there is no api/alembic/
+# directory (no env.py, no versions/), so all three alembic commands fail.
+# Schema comes from two places instead:
+#   - api/supabase/*.sql  — 15 files, applied manually (supabase/GKE/Cloud paths)
+#   - CREATE TABLE IF NOT EXISTS in code (e.g. store_kv in api/app/store.py)
 ```
 
 ### UI (from ui/)

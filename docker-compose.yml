@@ -7,7 +7,7 @@ services:
   db:
     image: pgvector/pgvector:pg16
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: memdog
       POSTGRES_PASSWORD: memdog
@@ -26,7 +26,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -39,7 +39,7 @@ services:
   api:
     build: ./api
     ports:
-      - "8080:8080"
+      - "${API_PORT:-8080}:8080"
     environment:
       - STORAGE_BACKEND=local
       - MEM_DOG_DATA_DIR=/data
@@ -107,7 +107,7 @@ services:
         # Server-side rewrite base baked at build; overridden at runtime by env below.
         API_URL: http://api:8080
     ports:
-      - "3000:8080"
+      - "${UI_PORT:-3000}:8080"
     environment:
       # Runtime server-side fetch (chat-proxy + any Node route) must use the compose DNS name.
       - API_URL=http://api:8080
@@ -123,7 +123,7 @@ services:
   ollama-small:
     image: ollama/ollama:latest
     ports:
-      - "8081:11434"
+      - "${OLLAMA_SMALL_PORT:-8081}:11434"
     volumes:
       - ollama-small-data:/root/.ollama
     healthcheck:
@@ -136,7 +136,7 @@ services:
   ollama-medium:
     image: ollama/ollama:latest
     ports:
-      - "8082:11434"
+      - "${OLLAMA_MEDIUM_PORT:-8082}:11434"
     volumes:
       - ollama-medium-data:/root/.ollama
     healthcheck:
@@ -149,7 +149,7 @@ services:
   ollama-large:
     image: ollama/ollama:latest
     ports:
-      - "8083:11434"
+      - "${OLLAMA_LARGE_PORT:-8083}:11434"
     volumes:
       - ollama-large-data:/root/.ollama
     healthcheck:
@@ -166,8 +166,8 @@ services:
   neo4j:
     image: neo4j:5.26-community
     ports:
-      - "7474:7474"   # HTTP browser
-      - "7687:7687"   # Bolt protocol
+      - "${NEO4J_HTTP_PORT:-7474}:7474"   # HTTP browser
+      - "${NEO4J_BOLT_PORT:-7687}:7687"   # Bolt protocol
     environment:
       NEO4J_AUTH: neo4j/memdog_neo4j
       NEO4J_PLUGINS: '["apoc"]'
@@ -189,7 +189,7 @@ services:
   webhook-gateway:
     build: ./webhook-gateway
     ports:
-      - "8070:8080"
+      - "${GATEWAY_PORT:-8070}:8080"
     environment:
       - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
       - LLM_MODEL=${LLM_MODEL:-}
@@ -235,7 +235,7 @@ services:
       context: .
       dockerfile: mcp-server/Dockerfile
     ports:
-      - "8091:8080"
+      - "${MCP_PORT:-8091}:8080"
     environment:
       - MEM_DOG_API_URL=http://api:8080
       - LOG_LEVEL=DEBUG
@@ -266,7 +266,7 @@ services:
     build: ./webhook/processor
     ports:
       # Host 8090 → container 8080 (same pattern as gateway 8070:8080, mcp 8091:8080)
-      - "8090:8080"
+      - "${PROCESSOR_PORT:-8090}:8080"
     environment:
       - MEM_DOG_API_URL=http://api:8080
       - MODEL_SERVER_URL=http://ollama-medium:11434
